@@ -1,0 +1,28 @@
+{
+  "name": "h5g-slot-art",
+  "metadata": {
+    "description": "High 5 Games slot machine art generation — Nano Banana 2, dual-provider (Gemini + fal.ai), numbered slot-step workflow.",
+    "version": "1.1.0"
+  },
+  "owner": {
+    "name": "High 5 Games",
+    "email": "michael.erickson@high5games.com"
+  },
+  "plugins": [
+    {
+      "name": "slot-art-creator-node",
+      "source": "./",
+      "description": "Generate, QA, and resize mobile slot art (symbols, UI, backgrounds, key art) with NB2. 11 numbered slash commands, persistent project memory, dual-provider routing.",
+      "version": "1.1.0",
+      "author": {
+        "name": "High 5 Games",
+        "email": "michael.erickson@high5games.com"
+      },
+      "homepage": "https://github.com/michaelericksonh5/slot-art-creator-node",
+      "repository": "https://github.com/michaelericksonh5/slot-art-creator-node",
+      "license": "MIT",
+      "category": "creative",
+      "tags": ["slot-machine", "image-generation", "nano-banana", "gemini", "fal-ai", "game-art"]
+    }
+  ]
+}
