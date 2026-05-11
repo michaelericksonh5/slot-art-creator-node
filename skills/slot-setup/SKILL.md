@@ -1,6 +1,6 @@
 ---
 name: slot-setup
-description: FIRST RUN — Configure the slot-art-creator-node plugin for use. Walks the user through getting Google Gemini, fal.ai, and/or OpenAI API keys and saving them to the correct location WITHOUT ever putting the keys in chat. The plugin supports two model families with independent keys — NB2 (Gemini/fal.ai, runs the 4 nb2_* tools) and gpt-image-2 (OpenAI, runs the 3 gpt2_* tools — gpt2_generate, gpt2_edit, and gpt2_smart_resize). Use this whenever a user has just installed the plugin, is hitting "no API key" errors, wants to add a new provider, change which provider runs, or is generally setting up for the first time. Also use it when the user says "set up my keys", "add my OpenAI key", "configure the plugin", "I need to add my API key", or similar. Run this BEFORE any /slot-step-* skill if keys aren't configured.
+description: FIRST RUN — Configure the slot-art-creator-node plugin for use. Walks the user through getting Google Gemini, fal.ai, and/or OpenAI API keys and saving them to the correct location WITHOUT ever putting the keys in chat. The plugin supports two model families with independent keys — NB2 (Gemini/fal.ai, runs the 4 nb2_* tools) and gpt-image-2 (OpenAI, runs the 2 gpt2_* tools — gpt2_generate and gpt2_edit). Use this whenever a user has just installed the plugin, is hitting "no API key" errors, wants to add a new provider, change which provider runs, or is generally setting up for the first time. Also use it when the user says "set up my keys", "add my OpenAI key", "configure the plugin", "I need to add my API key", or similar. Run this BEFORE any /slot-step-* skill if keys aren't configured.
 ---
 
 # Setup — API Keys & First-Run Configuration
@@ -51,11 +51,10 @@ Two key families with independent requirements:
 
 - **NB2 family** (the 4 `nb2_*` tools): needs `GEMINI_API_KEY` and/or
   `FAL_KEY`. Either alone is sufficient.
-- **GPT Image 2 family** (the 3 `gpt2_*` tools — `gpt2_generate`,
-  `gpt2_edit`, `gpt2_smart_resize`): needs `OPENAI_API_KEY`. Optional —
-  only required if the user wants to use gpt-image-2 for text rendering,
-  stable-2K photorealism (4K is experimental), multi-image composition,
-  or text-preserving multi-aspect resize.
+- **GPT Image 2 family** (the 2 `gpt2_*` tools — `gpt2_generate` and
+  `gpt2_edit`): needs `OPENAI_API_KEY`. Optional — only required if the
+  user wants to use gpt-image-2 for text rendering, stable-2K
+  photorealism, or multi-image composition.
 
 **State A — fully configured for both families:**
 GEMINI and/or FAL set AND OPENAI set. Confirm everything's ready, skip
@@ -92,10 +91,9 @@ the platform-specific safe entry instructions below.
 >
 > **GPT Image 2 family** (powers `gpt2_generate` / `gpt2_edit`). Optional —
 > set this if you want OpenAI's gpt-image-2 for paytables, logos, banners
-> with text, stable-2K photorealism, compositional multi-image edits, or
-> text-preserving multi-aspect resize. Note: gpt-image-2's 4K targets are
-> experimental — for genuine 4K, generate at 2K with gpt2 then upscale
-> with `nb2_upscale`. More expensive per call than NB2 — use selectively.
+> with text, stable-2K photorealism, or compositional multi-image edits.
+> For genuine 4K, generate at 2K with gpt2 then upscale with `nb2_upscale`
+> (that's a tested path). More expensive per call than NB2 — use selectively.
 > - OpenAI: https://platform.openai.com/api-keys
 >
 > See `shared/nb2_prompting.md` for the NB2 routing table and

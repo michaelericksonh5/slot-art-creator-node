@@ -9,40 +9,29 @@ Generates multi-aspect-ratio variants from one source asset. Unlike a
 crop, smart-resize **recomposes** the subject for each target — useful
 for marketing crops, lobby thumbnails, ad variants.
 
-## Backends — which one runs depends on which key is set AND whether the source has text
-
-There are now **three tools** to choose from. Pick by source content first,
-then by which keys are available:
-
-| Source has critical text? | Best tool | Underlying model | Cost |
-|---|---|---|---|
-| **No** (symbols, characters, scenes, abstract art) | `nb2_smart_resize` | fal.ai NB Pro or Gemini NB2 fallback | Cheapest — single API call for fal.ai, N calls for Gemini |
-| **Yes** (paytable, logo, banner with copy, anything with a wordmark) | `gpt2_smart_resize` | OpenAI gpt-image-2 | More expensive — N calls (one per target size), but text stays readable across the resize |
-
-`nb2_smart_resize` routing within NB2:
+## Backends — which one runs depends on which key is set
 
 | Keys present | Backend | Underlying model | Notes |
 |---|---|---|---|
-| `FAL_KEY` (with or without Gemini) | fal.ai | **nano-banana-pro** | Single API call, purpose-built endpoint. Preferred for non-text sources. |
+| `FAL_KEY` (with or without Gemini) | fal.ai | **nano-banana-pro** (Nano Banana Pro) | Single API call, purpose-built endpoint. Preferred. |
 | Only `GEMINI_API_KEY` | Gemini | **gemini-3.1-flash-image-preview** (NB2) | One Gemini call per target + pngjs center-crop locally. |
+| Neither | error | — | Need at least one NB2 key. |
 
-`gpt2_smart_resize`:
+Both backends produce **pixel-perfect** output at the requested dimensions.
+The recipe is the same idea — generate at the smallest preset that fully
+covers the target, then center-crop to the exact W×H — but the fal.ai
+version does it as one server-side call, while the Gemini version does
+it client-side in Node (using pngjs for the crop, no native deps).
 
-| Keys present | Behavior |
-|---|---|
-| `OPENAI_API_KEY` | Issues one `gpt2_edit` call per target size with a recompose prompt. gpt-image-2 preserves text rendering across the resize. STABLE production sizes: up to 2K; 4K targets are experimental. |
-| OPENAI key missing | Tool errors with a helpful message pointing at `/slot-setup`. |
-
-**Both NB2 backends produce pixel-perfect output** at the requested
-dimensions. The recipe is the same idea — generate at the smallest
-preset that fully covers the target, then center-crop to the exact
-W×H — but the fal.ai version does it as one server-side call, while
-the Gemini version does it client-side here in Node (using pngjs for
-the crop, no native deps).
-
-**`gpt2_smart_resize` is one full edit call per target size**, so cost
-scales linearly with the number of targets. Worth it when text fidelity
-matters; not worth it otherwise.
+> [!NOTE]
+> A gpt-image-2-based smart-resize tool was prototyped in earlier versions
+> but not shipped — we couldn't verify the output quality matched fal.ai's
+> well-tested path, so it didn't meet the "we only ship skills that work"
+> bar. For multi-aspect resize of text-heavy sources (paytables, logos),
+> the current recommendation is: if fal.ai's NB Pro garbles the text on a
+> specific asset, regenerate that asset directly at each target aspect ratio
+> via `gpt2_generate` with explicit text instructions. Not as convenient as
+> a one-call smart-resize, but reliable.
 
 ## Startup protocol
 
