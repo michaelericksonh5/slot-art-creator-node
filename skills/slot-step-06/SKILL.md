@@ -1,6 +1,6 @@
 ---
 name: slot-step-06
-description: STEP 6 — Generate slot machine UI surfaces — reel frames/bezels, HUD chrome, paytable, win banners, bonus screens, multiplier badges, lobby tiles, logos. Reads the locked key art, symbol sheet, and background as references so chrome lives in the same world. UI must always rank below symbols in visual hierarchy. Run after /slot-step-05.
+description: STEP 6 — Generate slot machine UI surfaces — reel frames/bezels, HUD chrome, paytable, win banners, bonus screens, multiplier badges, lobby tiles, logos, spin/bet buttons, and control panels. Reads the locked key art, symbol sheet, and background as references so chrome lives in the same world. UI must always rank below symbols in visual hierarchy. Run after /slot-step-05.
 ---
 
 # Step 6 — UI Designer
