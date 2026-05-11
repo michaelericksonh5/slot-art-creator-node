@@ -19,9 +19,18 @@
  *                     model than NB2), single API call.
  *                     https://fal.ai/dashboard
  *
- * Routing when both keys are set:
+ *   OPENAI_API_KEY  — OpenAI's gpt-image-2 model (separate from NB2).
+ *                     Enables the gpt2_generate and gpt2_edit tools — best
+ *                     for assets with accurate in-image text, photorealism
+ *                     at 4K, or compositional multi-reference edits.
+ *                     https://platform.openai.com/api-keys
+ *
+ * Routing when both NB2 keys are set:
  *   generate / edit / upscale  → Gemini (one fewer API hop; same NB2 model)
  *   smart_resize               → fal.ai (NB Pro endpoint is better for resize)
+ *
+ * gpt2_* tools always route to OpenAI when OPENAI_API_KEY is set.
+ * NB2 tools and gpt2 tools are independent — set whichever keys you need.
  *
  * Keys are written to a `.env` file at a STABLE user-level location:
  *   ~/.h5g-slot-art-creator/.env  (Mac/Linux)
@@ -179,6 +188,26 @@ async function validateGemini(key) {
   }
 }
 
+async function validateOpenAI(key) {
+  // OpenAI keys start with "sk-" and are typically 40+ chars; project keys
+  // start with "sk-proj-". A cheap auth check is GET /v1/models, which is a
+  // free, low-quota call that returns 401 for bad keys.
+  if (!key || key.length < 20) return { ok: false, msg: "Key too short to be a real OpenAI key." };
+  if (!key.startsWith("sk-")) return { ok: false, msg: "Doesn't look like an OpenAI key (expected to start with sk-)." };
+  try {
+    const resp = await fetch("https://api.openai.com/v1/models?limit=1", {
+      headers: { "Authorization": `Bearer ${key}` },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (resp.status === 200) return { ok: true, msg: "Validated against OpenAI API — key works." };
+    if (resp.status === 401) return { ok: false, msg: "OpenAI rejected the key (401). Verify at https://platform.openai.com/api-keys" };
+    if (resp.status === 429) return { ok: true, msg: "Key authenticated (got 429 rate-limit; that means OpenAI accepted the key)." };
+    return { ok: false, msg: `Unexpected response ${resp.status} from OpenAI API.` };
+  } catch (err) {
+    return { ok: true, msg: `Network check skipped (${err.message}). Key saved; re-run --check to verify.` };
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Commands
 // ---------------------------------------------------------------------------
@@ -225,10 +254,34 @@ async function cmdSetGemini() {
   return 0;
 }
 
+async function cmdSetOpenAI() {
+  console.log("\nOpenAI API key setup for slot-art-creator-node");
+  console.log("-----------------------------------------------");
+  console.log("Get a key at https://platform.openai.com/api-keys");
+  console.log("Input is hidden; paste your key and press Enter.\n");
+
+  const key = await hiddenInput("OPENAI_API_KEY: ");
+  if (!key) { console.log("No key entered. Nothing written."); return 1; }
+
+  const { ok, msg } = await validateOpenAI(key);
+  console.log(`${ok ? "OK" : "FAIL"}: ${msg}`);
+  if (!ok) return 1;
+
+  const values = readEnv();
+  values["OPENAI_API_KEY"] = key;
+  writeEnv(values);
+  console.log(`\nWrote ${ENV_PATH}`);
+  console.log("OpenAI's gpt-image-2 is now available via gpt2_generate and gpt2_edit.");
+  console.log("Note: gpt-image-2 is more expensive than NB2 — use it for text-heavy");
+  console.log("assets (paytables, logos) and hero composition, not routine symbols.");
+  return 0;
+}
+
 async function cmdCheck() {
   const values = readEnv();
   const falKey = values["FAL_KEY"] || process.env.FAL_KEY || "";
   const geminiKey = values["GEMINI_API_KEY"] || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+  const openaiKey = values["OPENAI_API_KEY"] || process.env.OPENAI_API_KEY || "";
 
   let rc = 0;
 
@@ -246,22 +299,42 @@ async function cmdCheck() {
     console.log("FAL_KEY         MISSING — run: node setup-keys.js --fal");
   }
 
+  if (openaiKey) {
+    const { ok, msg } = await validateOpenAI(openaiKey);
+    console.log(`OPENAI_API_KEY  ${ok ? "OK" : "FAIL"}: ${msg}`);
+    if (!ok) rc = 1;
+  } else {
+    console.log("OPENAI_API_KEY  MISSING (optional — only needed for gpt2_generate / gpt2_edit) — run: node setup-keys.js --openai");
+  }
+
   // Routing summary — based on what's actually set.
   console.log("");
-  if (!falKey && !geminiKey) {
-    console.log("Neither key is set. At least one is required (either alone works for all 4 tools).");
+  if (!falKey && !geminiKey && !openaiKey) {
+    console.log("No keys set. At least one of GEMINI_API_KEY or FAL_KEY is required for the NB2 tools.");
+    console.log("OPENAI_API_KEY is optional and only powers gpt2_generate / gpt2_edit.");
     rc = 1;
-  } else if (geminiKey && falKey) {
-    console.log("Both keys set. Routing:");
-    console.log("  generate / edit / upscale  → Gemini (one fewer API hop, same NB2 model)");
-    console.log("  smart_resize               → fal.ai (purpose-built NB Pro endpoint)");
-  } else if (geminiKey) {
-    console.log("Gemini only. All 4 tools route through Gemini.");
-    console.log("  smart_resize uses NB2 + pngjs center-crop (one call per target).");
-    console.log("  Add FAL_KEY to switch smart_resize to fal.ai's purpose-built NB Pro endpoint.");
   } else {
-    console.log("fal.ai only. All 4 tools route through fal.ai.");
-    console.log("  Add GEMINI_API_KEY to switch generate/edit/upscale to Gemini's direct API.");
+    console.log("NB2 tools (nb2_generate / nb2_edit / nb2_upscale / nb2_smart_resize):");
+    if (!falKey && !geminiKey) {
+      console.log("  ✗ Disabled — neither GEMINI_API_KEY nor FAL_KEY is set.");
+    } else if (geminiKey && falKey) {
+      console.log("  ✓ generate / edit / upscale  → Gemini (one fewer API hop, same NB2 model)");
+      console.log("  ✓ smart_resize               → fal.ai (purpose-built NB Pro endpoint)");
+    } else if (geminiKey) {
+      console.log("  ✓ All 4 tools route through Gemini (smart_resize uses NB2 + pngjs center-crop).");
+      console.log("    Add FAL_KEY to switch smart_resize to fal.ai's purpose-built NB Pro endpoint.");
+    } else {
+      console.log("  ✓ All 4 tools route through fal.ai.");
+      console.log("    Add GEMINI_API_KEY to switch generate/edit/upscale to Gemini's direct API.");
+    }
+
+    console.log("");
+    console.log("GPT Image 2 tools (gpt2_generate / gpt2_edit):");
+    if (openaiKey) {
+      console.log("  ✓ Enabled — gpt-image-2 available for text rendering / 4K / multi-image composition.");
+    } else {
+      console.log("  ✗ Disabled — set OPENAI_API_KEY to enable.");
+    }
   }
 
   return rc;
@@ -285,24 +358,44 @@ async function cmdClearGemini() {
   return 0;
 }
 
+async function cmdClearOpenAI() {
+  const values = readEnv();
+  if (!values["OPENAI_API_KEY"]) { console.log("No OPENAI_API_KEY to clear."); return 0; }
+  values["OPENAI_API_KEY"] = "";
+  writeEnv(values);
+  console.log(`Cleared OPENAI_API_KEY in ${ENV_PATH}`);
+  return 0;
+}
+
 async function cmdInteractive() {
   console.log("\nslot-art-creator-node — API key setup");
   console.log("======================================");
-  console.log("This plugin can use Google Gemini and/or fal.ai.");
-  console.log("Either key alone is fully sufficient for all 4 tools — both providers can");
-  console.log("do everything. Setting both only matters because each tool gets routed to");
-  console.log("its strongest backend:");
+  console.log("This plugin uses two model families with independent keys:");
   console.log("");
-  console.log("  generate / edit / upscale  → Gemini (same NB2 model, one fewer API hop)");
-  console.log("  smart_resize               → fal.ai (purpose-built NB Pro endpoint)");
+  console.log("  NB2 family (Nano Banana 2):");
+  console.log("    GEMINI_API_KEY  — Google AI Studio. Direct API, same NB2 model as fal.");
+  console.log("    FAL_KEY         — fal.ai. Wraps NB2 plus a purpose-built smart-resize");
+  console.log("                      endpoint (Nano Banana Pro).");
+  console.log("    Either alone runs all 4 NB2 tools. Both routes each tool to its");
+  console.log("    strongest backend.");
   console.log("");
-  console.log("Either key alone is sufficient. Setting BOTH gives each tool its optimal backend.\n");
+  console.log("  GPT Image 2 family (separate model, OpenAI-only):");
+  console.log("    OPENAI_API_KEY  — Enables gpt2_generate / gpt2_edit. Strong text");
+  console.log("                      rendering, 4K, multi-image composition. More");
+  console.log("                      expensive — use for hero / text-heavy assets.");
+  console.log("");
 
-  const choice = await prompt("Which key would you like to set? [1] GEMINI_API_KEY  [2] FAL_KEY  [3] both  > ");
+  const choice = await prompt("Which key(s) would you like to set? [1] GEMINI  [2] FAL  [3] OPENAI  [4] NB2 (Gemini+FAL)  [5] all three  > ");
 
-  if (choice === "3") {
+  if (choice === "5") {
     await cmdSetGemini();
     await cmdSetFal();
+    await cmdSetOpenAI();
+  } else if (choice === "4") {
+    await cmdSetGemini();
+    await cmdSetFal();
+  } else if (choice === "3") {
+    await cmdSetOpenAI();
   } else if (choice === "2") {
     await cmdSetFal();
   } else {
@@ -324,10 +417,14 @@ if (args.includes("--check")) {
   rc = await cmdClearFal();
 } else if (args.includes("--clear-gemini")) {
   rc = await cmdClearGemini();
+} else if (args.includes("--clear-openai")) {
+  rc = await cmdClearOpenAI();
 } else if (args.includes("--fal")) {
   rc = await cmdSetFal();
 } else if (args.includes("--gemini")) {
   rc = await cmdSetGemini();
+} else if (args.includes("--openai")) {
+  rc = await cmdSetOpenAI();
 } else {
   rc = await cmdInteractive();
 }

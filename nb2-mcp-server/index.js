@@ -1,13 +1,24 @@
 /**
  * slot-art-creator-node — MCP server (Node.js)
  *
- * Exposes five MCP tools:
- *   nb2_generate       — text-to-image
- *   nb2_edit           — image-to-image edit / reskin
- *   nb2_upscale        — 4K upscale
- *   nb2_smart_resize   — pixel-perfect multi-size resize
- *   nb2_stage_image    — copy an external/chat-pasted image into the safe inputs
- *                        folder so it can be used as a source for the others
+ * Exposes seven MCP tools across two model families:
+ *
+ *   Nano Banana 2 family (Gemini / fal.ai routing):
+ *     nb2_generate       — text-to-image
+ *     nb2_edit           — image-to-image edit / reskin
+ *     nb2_upscale        — 4K upscale
+ *     nb2_smart_resize   — pixel-perfect multi-size resize
+ *
+ *   GPT Image 2 family (OpenAI; OPENAI_API_KEY required):
+ *     gpt2_generate      — text-to-image with gpt-image-2; strong text rendering,
+ *                          4K resolution support, agentic prompt planning
+ *     gpt2_edit          — image-to-image edit with optional mask; accepts
+ *                          MULTIPLE reference images for compositional editing
+ *
+ *   Cross-family helper:
+ *     nb2_stage_image    — copy an external/chat-pasted image into the safe inputs
+ *                          folder so it can be used as a source for ANY of the above
+ *                          (gpt2_edit, nb2_edit, nb2_upscale, nb2_smart_resize)
  *
  * EITHER KEY ALONE is fully sufficient for all four tools — both providers have
  * a complete implementation of every tool. With both keys set, the plugin routes
@@ -42,6 +53,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { fal } from "@fal-ai/client";
 import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 import { PNG } from "pngjs";
 import * as fs from "fs";
 import * as path from "path";
@@ -687,6 +699,14 @@ function writeSidecar(pngPath, meta) {
 const FAL_KEY = process.env.FAL_KEY || "";
 const GEMINI_KEY =
   process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+const OPENAI_KEY = process.env.OPENAI_API_KEY || "";
+
+// OpenAI client for the gpt2_* tools. Lazy: only instantiated if the key
+// is set, so installs without the OpenAI key don't even load the client.
+let openaiClient = null;
+if (OPENAI_KEY) {
+  openaiClient = new OpenAI({ apiKey: OPENAI_KEY });
+}
 
 // Configure the fal singleton once at module init. Previous versions called
 // fal.config({ credentials }) at the top of every tool handler — the fal
@@ -1318,6 +1338,207 @@ async function dispatchEdit(args) {
 }
 
 // ---------------------------------------------------------------------------
+// GPT Image 2 (OpenAI) helpers
+//
+// gpt-image-2 is a separate model from NB2 and behaves differently:
+//   - Strong text rendering (use for paytables, logos, banners with copy)
+//   - Native 4K support (3840x2160 / 2160x3840 / 2048x2048)
+//   - Agentic planning — better at compositional briefs
+//   - Returns base64 (no temp URL — write straight to disk)
+//   - Edit accepts up to ~16 reference images for compositional editing
+//
+// We translate our abstract size ("1K"/"2K"/"4K") + aspect_ratio to
+// gpt-image-2's literal pixel-size strings since gpt-image-2 doesn't
+// accept aspect-ratio shorthand.
+// ---------------------------------------------------------------------------
+
+// Map (image_size, aspect_ratio) → gpt-image-2 literal size string.
+// gpt-image-2 supports a fixed set; we pick the closest. Source:
+// https://developers.openai.com/api/docs/guides/image-generation
+//   1024x1024  square 1K
+//   1536x1024  landscape ~3:2 1K
+//   1024x1536  portrait ~2:3 1K
+//   2048x2048  square 2K
+//   2048x1152  landscape 16:9 2K
+//   3840x2160  landscape 4K (16:9)
+//   2160x3840  portrait 4K (9:16)
+//   "auto"     model picks
+// Constraints: max edge ≤3840, multiples of 16, ratio ≤3:1.
+const GPT2_SIZE_TABLE = {
+  // [size][aspect_ratio] → literal string
+  "1K":  { "1:1": "1024x1024", "3:2": "1536x1024", "2:3": "1024x1536",
+           "16:9": "1536x1024", "9:16": "1024x1536", "default": "1024x1024" },
+  "2K":  { "1:1": "2048x2048", "16:9": "2048x1152", "9:16": "1152x2048",
+           "3:2": "2048x1152", "2:3": "1152x2048", "default": "2048x2048" },
+  "4K":  { "1:1": "2048x2048", "16:9": "3840x2160", "9:16": "2160x3840",
+           "3:2": "3840x2160", "2:3": "2160x3840", "default": "2048x2048" },
+};
+
+function pickGpt2Size(imageSize, aspectRatio) {
+  const tier = GPT2_SIZE_TABLE[imageSize] || GPT2_SIZE_TABLE["2K"];
+  if (aspectRatio && tier[aspectRatio]) return tier[aspectRatio];
+  return tier.default;
+}
+
+// Decode an OpenAI base64 image response and write to disk.
+function saveB64Image(b64Data, outputFormat, outputDir, baseName) {
+  const ext = outputFormat === "jpeg" ? ".jpg"
+            : outputFormat === "webp" ? ".webp"
+            : ".png";
+  const dest = uniqueName(outputDir, baseName, ext);
+  const buf = Buffer.from(b64Data, "base64");
+  fs.writeFileSync(dest, buf);
+  return dest;
+}
+
+// Read a local image into a File-compatible object for the OpenAI SDK.
+// The SDK accepts either a Node fs.ReadStream or a Web File (we use toFile).
+async function gpt2ReadImageInput(srcPath) {
+  if (srcPath.startsWith("http://") || srcPath.startsWith("https://")) {
+    const { buffer, mimeType } = await fetchRemoteImageBuffer(srcPath);
+    const ext = mimeToImageExtension(mimeType).slice(1);
+    return await OpenAI.toFile(buffer, `image.${ext}`, { type: mimeType });
+  }
+  const buf = fs.readFileSync(srcPath);
+  const ext = path.extname(srcPath).toLowerCase().slice(1) || "png";
+  const mime = imageMimeType(path.extname(srcPath).toLowerCase());
+  return await OpenAI.toFile(buf, `image.${ext}`, { type: mime });
+}
+
+async function gpt2Generate({ prompt, outputDir, assetName, imageSize, aspectRatio, quality, n }) {
+  if (!openaiClient) {
+    throw new Error(
+      "OPENAI_API_KEY is not set. → Run /slot-setup in chat to configure it safely, " +
+      "or get a key at https://platform.openai.com/api-keys and add it via setup-keys."
+    );
+  }
+  const size = pickGpt2Size(imageSize || "2K", aspectRatio || null);
+  const q = quality || "high";  // default to "high"; "low"/"medium"/"high"/"auto"
+  const numImages = Math.max(1, Math.min(10, n || 1));
+
+  const t0 = Date.now();
+  const result = await openaiClient.images.generate({
+    model: "gpt-image-2",
+    prompt,
+    size,
+    quality: q,
+    n: numImages,
+    output_format: "png",
+  });
+  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+
+  const data = result.data || [];
+  if (!data.length) throw new Error(
+    "OpenAI returned no images. → Often transient — retry once. If it persists, " +
+    "the prompt may have hit OpenAI's content policy; soften aggressive imagery and try again."
+  );
+
+  ensureDir(outputDir);
+  const saved = [];
+  for (let i = 0; i < data.length; i++) {
+    const b64 = data[i].b64_json;
+    if (!b64) {
+      throw new Error("OpenAI returned a result without b64_json. SDK shape may have changed; check openai package version.");
+    }
+    const suffix = data.length > 1 ? `_${i + 1}` : "";
+    const dest = saveB64Image(b64, "png", outputDir, `${assetName}${suffix}`);
+    saved.push(dest);
+    writeSidecar(dest, {
+      tool: "gpt2_generate",
+      provider: "OpenAI",
+      model: "gpt-image-2",
+      prompt,
+      image_size: imageSize || "2K",
+      gpt2_literal_size: size,
+      aspect_ratio: aspectRatio || null,
+      quality: q,
+      reference_images: [],
+      source_image: null,
+      duration_seconds: Number(elapsed),
+    });
+  }
+
+  return {
+    provider: "OpenAI",
+    model: "gpt-image-2",
+    resolution: size,
+    elapsed,
+    paths: saved,
+  };
+}
+
+async function gpt2Edit({ prompt, source, mask, outputDir, assetName, imageSize, aspectRatio, quality, n, extraReferences }) {
+  if (!openaiClient) {
+    throw new Error(
+      "OPENAI_API_KEY is not set. → Run /slot-setup in chat to configure it safely, " +
+      "or get a key at https://platform.openai.com/api-keys and add it via setup-keys."
+    );
+  }
+  const size = pickGpt2Size(imageSize || "2K", aspectRatio || null);
+  const q = quality || "high";
+  const numImages = Math.max(1, Math.min(10, n || 1));
+
+  // gpt-image-2's edit endpoint accepts an array of images for compositional
+  // editing — the source plus any extra references go in together. mask is
+  // optional and standalone.
+  const sources = [source, ...(extraReferences || [])];
+  const imageFiles = await Promise.all(sources.map(gpt2ReadImageInput));
+  const maskFile = mask ? await gpt2ReadImageInput(mask) : undefined;
+
+  const t0 = Date.now();
+  const result = await openaiClient.images.edit({
+    model: "gpt-image-2",
+    image: imageFiles.length === 1 ? imageFiles[0] : imageFiles,
+    ...(maskFile ? { mask: maskFile } : {}),
+    prompt,
+    size,
+    quality: q,
+    n: numImages,
+    output_format: "png",
+  });
+  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+
+  const data = result.data || [];
+  if (!data.length) throw new Error(
+    "OpenAI returned no edited images. → Often transient — retry once. If it persists, " +
+    "the prompt may have hit OpenAI's content policy, or the source/reference set may be " +
+    "outside the model's supported configurations."
+  );
+
+  ensureDir(outputDir);
+  const saved = [];
+  for (let i = 0; i < data.length; i++) {
+    const b64 = data[i].b64_json;
+    if (!b64) throw new Error("OpenAI returned a result without b64_json.");
+    const suffix = data.length > 1 ? `_${i + 1}` : "";
+    const dest = saveB64Image(b64, "png", outputDir, `${assetName}${suffix}`);
+    saved.push(dest);
+    writeSidecar(dest, {
+      tool: "gpt2_edit",
+      provider: "OpenAI",
+      model: "gpt-image-2",
+      prompt,
+      image_size: imageSize || "2K",
+      gpt2_literal_size: size,
+      aspect_ratio: aspectRatio || null,
+      quality: q,
+      reference_images: extraReferences || [],
+      source_image: source,
+      mask: mask || null,
+      duration_seconds: Number(elapsed),
+    });
+  }
+
+  return {
+    provider: "OpenAI",
+    model: "gpt-image-2",
+    resolution: size,
+    elapsed,
+    paths: saved,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Format result as MCP text content
 // ---------------------------------------------------------------------------
 
@@ -1502,6 +1723,100 @@ const TOOLS = [
       required: ["source"],
     },
   },
+  {
+    name: "gpt2_generate",
+    description:
+      "Generate an image with OpenAI's **gpt-image-2** model (separate from NB2). " +
+      "Use this when the user explicitly asks for gpt-image-2, OR when the task " +
+      "benefits from gpt-image-2's strengths over NB2: " +
+      "(1) accurate text rendering in the image (paytable labels, multipliers, banner copy, logos with specific wordmarks — gpt-image-2 substantially outperforms NB2 here); " +
+      "(2) high-resolution photorealism at 4K (3840x2160 / 2160x3840 / 2048x2048); " +
+      "(3) compositional briefs with very specific multi-element layouts. " +
+      "Requires OPENAI_API_KEY. Per-image cost is meaningfully higher than NB2 — use for hero assets and text-heavy surfaces, not routine symbol generation. " +
+      "Output: PNG saved to output_dir.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        prompt: { type: "string", description: "The text prompt for gpt-image-2. Plain prose works well — gpt-image-2 plans the composition internally." },
+        output_dir: { type: "string", description: "Output directory. Defaults to ~/Pictures/claude_nb2." },
+        asset_name: { type: "string", description: "Base filename (no extension). Default: image.", default: "image" },
+        image_size: {
+          type: "string",
+          enum: ["1K", "2K", "4K"],
+          description: "Abstract size tier (mapped to gpt-image-2 literal sizes internally). Default: 2K.",
+          default: "2K",
+        },
+        aspect_ratio: {
+          type: "string",
+          enum: ["1:1", "16:9", "9:16", "3:2", "2:3", "auto"],
+          description: "Aspect ratio. Combined with image_size to pick the literal gpt-image-2 size. Default: 1:1 (square).",
+        },
+        quality: {
+          type: "string",
+          enum: ["low", "medium", "high", "auto"],
+          description: "gpt-image-2 quality tier. Higher = better but slower and more expensive. Default: high.",
+          default: "high",
+        },
+        n: {
+          type: "integer",
+          minimum: 1,
+          maximum: 10,
+          description: "Number of variants to generate in one call. Default: 1.",
+          default: 1,
+        },
+      },
+      required: ["prompt"],
+    },
+  },
+  {
+    name: "gpt2_edit",
+    description:
+      "Edit an image (or compose multiple images) using OpenAI's **gpt-image-2** model. " +
+      "Use when the user explicitly asks for gpt-image-2, OR when the edit needs: " +
+      "(1) preserving or adding precise text in the output; " +
+      "(2) compositional editing combining 2+ source images (the source plus extra_references are all passed together); " +
+      "(3) high-resolution edits at 4K. " +
+      "Optional mask narrows the edit to a specific region. " +
+      "Requires OPENAI_API_KEY. " +
+      "If the source is a chat-attached image, run nb2_stage_image first (the staging tool works for any downstream tool including this one). " +
+      "Output: PNG saved to output_dir.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        prompt: { type: "string", description: "Describe the desired edit — what to change, add, or compose." },
+        source: { type: "string", description: "Absolute path or URL of the primary source image. Must be inside an allowed root (run nb2_stage_image first if it's chat-attached)." },
+        mask: { type: "string", description: "Optional: absolute path to a mask image. Transparent regions in the mask indicate where edits are allowed; opaque regions are preserved." },
+        extra_references: {
+          type: "array",
+          items: { type: "string" },
+          description: "Additional reference images to combine compositionally with the source. gpt-image-2 accepts multiple images for compositional editing.",
+        },
+        output_dir: { type: "string", description: "Output directory. Defaults to ~/Pictures/claude_nb2." },
+        asset_name: { type: "string", description: "Base filename (no extension). Default: edit.", default: "edit" },
+        image_size: {
+          type: "string",
+          enum: ["1K", "2K", "4K"],
+          default: "2K",
+        },
+        aspect_ratio: {
+          type: "string",
+          enum: ["1:1", "16:9", "9:16", "3:2", "2:3", "auto"],
+        },
+        quality: {
+          type: "string",
+          enum: ["low", "medium", "high", "auto"],
+          default: "high",
+        },
+        n: {
+          type: "integer",
+          minimum: 1,
+          maximum: 10,
+          default: 1,
+        },
+      },
+      required: ["prompt", "source"],
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1619,9 +1934,43 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return {
         content: formatResult(
           result,
-          "nb2_stage_image OK — image is now usable as `source` or `references` for nb2_edit / nb2_upscale / nb2_smart_resize"
+          "nb2_stage_image OK — image is now usable as `source` or `references` for nb2_edit / nb2_upscale / nb2_smart_resize / gpt2_edit"
         ),
       };
+    }
+
+    if (name === "gpt2_generate") {
+      const assetName = sanitizeAssetName(args.asset_name, "image");
+      const result = await gpt2Generate({
+        prompt: args.prompt,
+        outputDir: resolveOutputDir(args.output_dir),
+        assetName,
+        imageSize: args.image_size || "2K",
+        aspectRatio: args.aspect_ratio || null,
+        quality: args.quality || "high",
+        n: args.n || 1,
+      });
+      return { content: formatResult(result, "gpt2_generate OK (OpenAI / gpt-image-2)") };
+    }
+
+    if (name === "gpt2_edit") {
+      const assetName = sanitizeAssetName(args.asset_name, "edit");
+      const source = await validateImageInput(args.source, "source");
+      const mask = args.mask ? await validateImageInput(args.mask, "mask") : null;
+      const extraReferences = await validateImageInputs(args.extra_references || null, "extra_references");
+      const result = await gpt2Edit({
+        prompt: args.prompt,
+        source,
+        mask,
+        extraReferences,
+        outputDir: resolveOutputDir(args.output_dir),
+        assetName,
+        imageSize: args.image_size || "2K",
+        aspectRatio: args.aspect_ratio || null,
+        quality: args.quality || "high",
+        n: args.n || 1,
+      });
+      return { content: formatResult(result, "gpt2_edit OK (OpenAI / gpt-image-2)") };
     }
 
     throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);

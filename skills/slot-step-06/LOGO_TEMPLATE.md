@@ -4,6 +4,27 @@ Every game needs **three logo lockups**: hero (full premium), standard
 (smooth gradients, fewer flourishes), and compact (flat or near-flat,
 readable at 40 px). Generate all three when asked for "the logo."
 
+## Model choice — strongly prefer gpt-image-2 if available
+
+Logos are **wordmark-driven**, and getting the spelling exactly right
+matters. NB2 frequently misspells or scrambles letterforms in stylized
+fonts — a real production failure mode. **gpt-image-2 (`gpt2_generate`)
+renders wordmarks substantially more reliably** and is the preferred
+tool when `OPENAI_API_KEY` is configured.
+
+Recipe:
+1. If `OPENAI_API_KEY` is set: use `gpt2_generate` with the game's
+   wordmark in quotes and a clear style description.
+2. If only NB2 keys are set: use `nb2_generate` but be ready to
+   regenerate — expect 2-4 attempts to get the wordmark right, and
+   verify every letter at the post-gen QA gate.
+
+For the hero lockup specifically (the marketing one), `gpt2_generate`
+at `quality: high` and `image_size: 4K` is worth the extra cost — this
+asset gets the most exposure of anything in the game.
+
+See `shared/gpt_image2_prompting.md` for full gpt2 guidance.
+
 ## Surface rules (all lockups)
 
 - **Background:** flat solid black, no gradients

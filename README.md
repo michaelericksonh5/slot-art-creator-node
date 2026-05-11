@@ -3,7 +3,14 @@
 High 5 Games slot machine art generation plugin for Claude Code and Claude Cowork.
 **Node.js edition — no Python required.**
 
-Powered by [Nano Banana 2](https://fal.ai/models/fal-ai/nano-banana-2). Either Google Gemini OR fal.ai works fully for all 4 generation tools. With both keys set, the plugin routes `nb2_generate` / `nb2_edit` / `nb2_upscale` to Gemini (direct API, one fewer hop, same NB2 model) and `nb2_smart_resize` to fal.ai (purpose-built Nano Banana Pro endpoint).
+**Two model families, your choice per call:**
+
+- **Nano Banana 2** ([fal.ai/models/fal-ai/nano-banana-2](https://fal.ai/models/fal-ai/nano-banana-2)) — 4 tools (`nb2_generate`, `nb2_edit`, `nb2_upscale`, `nb2_smart_resize`). Either Google Gemini OR fal.ai works fully. With both keys set, generate/edit/upscale routes to Gemini (direct API, same NB2 model) and smart-resize routes to fal.ai (purpose-built Nano Banana Pro endpoint).
+- **GPT Image 2** ([OpenAI gpt-image-2](https://developers.openai.com/api/docs/models/gpt-image-2), released April 2026) — 2 tools (`gpt2_generate`, `gpt2_edit`). Best for **accurate in-image text** (paytables, logos, banners with copy), **photorealistic 4K**, and **compositional multi-image edits**. More expensive per call than NB2 — use selectively for hero and text-heavy assets.
+
+Both families are independent — set whichever keys you need. The NB2
+family powers the bulk of the slot-step-* workflow; the gpt2 family is
+opt-in for the surfaces where its strengths matter.
 
 ---
 
@@ -125,19 +132,36 @@ Should show `slot-art-creator-node@h5g-plugins ... Status: √ enabled`.
 
 ## API keys
 
-**Either key alone is fully sufficient for all 4 tools.** Both providers can do everything. The two keys aren't a "primary + fallback" pair — they're two complete paths to the same capability. Setting both is only useful because the plugin routes each tool to the backend best suited for it.
+**Two key families with independent requirements:**
 
-| Provider | Get a key |
-|---|---|
-| **Google Gemini** | https://aistudio.google.com/apikey |
-| **fal.ai** | https://fal.ai/dashboard |
+- **NB2 family** (4 `nb2_*` tools): either `GEMINI_API_KEY` OR `FAL_KEY` is fully sufficient. Both routes each tool to its strongest backend.
+- **GPT Image 2 family** (2 `gpt2_*` tools): `OPENAI_API_KEY`. Optional — only needed if you want gpt-image-2 for paytables, logos, banners with required copy, photorealistic 4K, or compositional multi-image edits.
 
-### What each provider does
+| Provider | Get a key | Powers |
+|---|---|---|
+| **Google Gemini** | https://aistudio.google.com/apikey | NB2 tools (`nb2_*`) |
+| **fal.ai** | https://fal.ai/dashboard | NB2 tools (`nb2_*`) |
+| **OpenAI** | https://platform.openai.com/api-keys | gpt-image-2 tools (`gpt2_*`) — optional |
+
+### NB2 tools — what each provider does
 
 | Tool | Gemini path | fal.ai path |
 |---|---|---|
 | `nb2_generate` / `nb2_edit` / `nb2_upscale` | Calls `gemini-3.1-flash-image-preview` directly — this *is* Nano Banana 2 | Calls `fal-ai/nano-banana-2` — same underlying NB2 model, wrapped by fal.ai |
 | `nb2_smart_resize` | Calls NB2 N times (once per target size) and center-crops the results with `pngjs` locally. Real limitation: if NB2 returns an image smaller than your target, it errors out and asks you to use fal.ai for that size. | Calls `fal-ai/smart-resize` — a **purpose-built endpoint using Nano Banana Pro** (a different, larger model). One API call handles all target sizes. No size limitation. |
+
+### gpt-image-2 tools — when to prefer them
+
+| If the asset needs... | Reach for... |
+|---|---|
+| Accurate text rendering in the image (paytables, logos, banners with copy) | `gpt2_generate` / `gpt2_edit` |
+| Photorealistic 4K (marketing hero shots) | `gpt2_generate` (size `4K`, quality `high`) |
+| Compositional editing combining 2-16 reference images | `gpt2_edit` with `extra_references` |
+| Routine slot symbols at thumbnail size | `nb2_generate` (NB2 is purpose-tuned, gpt2 is overkill and pricier) |
+| Multi-aspect resize / smart-resize | `nb2_smart_resize` (gpt-image-2 has no purpose-built resize) |
+| Upscale an approved 2K asset to 4K | `nb2_upscale` (gpt-image-2 doesn't faithfully upscale — it generates fresh) |
+
+See `shared/gpt_image2_prompting.md` for the full gpt2 playbook (size mapping, quality settings, cost rule-of-thumb, per-skill recommendations).
 
 ### Routing when both keys are set
 
@@ -161,8 +185,8 @@ conversation transcripts. Use one of the safe entry channels below:
 
 | You installed via... | Where to enter keys (safe channels) |
 |---|---|
-| **Claude Cowork (Path A or B)** | Cowork's built-in plugin settings UI. Open the plugin, find the env-var fields `GEMINI_API_KEY` and `FAL_KEY`, paste your keys. Restart Claude Desktop. |
-| **Claude Code, marketplace install (Path A)** | Easiest: run `/slot-setup` inside Claude Code — it'll surface the exact path to the double-click launcher script that ships with the plugin (`setup-keys.bat` on Windows, `setup-keys.sh` on Mac/Linux). The script uses hidden-input prompts so keys never echo to the terminal log. Saves to `~/.h5g-slot-art-creator/.env`. Alternative: set shell env vars (`GEMINI_API_KEY`, `FAL_KEY`) before launching Claude Code. |
+| **Claude Cowork (Path A or B)** | Cowork's built-in plugin settings UI. Open the plugin, find the env-var fields `GEMINI_API_KEY`, `FAL_KEY`, and `OPENAI_API_KEY`, paste your keys. Restart Claude Desktop. |
+| **Claude Code, marketplace install (Path A)** | Easiest: run `/slot-setup` inside Claude Code — it'll surface the exact path to the double-click launcher script that ships with the plugin (`setup-keys.bat` on Windows, `setup-keys.sh` on Mac/Linux). The script uses hidden-input prompts so keys never echo to the terminal log. Walks you through up to three keys: Gemini, fal.ai, and OpenAI. Saves to `~/.h5g-slot-art-creator/.env`. Alternative: set shell env vars (`GEMINI_API_KEY`, `FAL_KEY`, `OPENAI_API_KEY`) before launching Claude Code. |
 | **Claude Code, local installer (Path B)** | The installer already ran `setup-keys.js` for you. Keys are saved at: Windows `%USERPROFILE%\.h5g-slot-art-creator\.env`; macOS / Linux `~/.h5g-slot-art-creator/.env`. This file survives plugin reinstalls. |
 
 To change keys later, double-click the launcher in your plugin install:
@@ -175,10 +199,14 @@ To change keys later, double-click the launcher in your plugin install:
 Or — equivalently — from a clone of the repo:
 
 ```bash
-node setup-keys.js          # interactive (both keys)
-node setup-keys.js --gemini # only set the Gemini key
-node setup-keys.js --fal    # only set the fal.ai key
-node setup-keys.js --check  # verify saved keys
+node setup-keys.js              # interactive (choose which to set)
+node setup-keys.js --gemini     # only set the Gemini key
+node setup-keys.js --fal        # only set the fal.ai key
+node setup-keys.js --openai     # only set the OpenAI key
+node setup-keys.js --check      # verify saved keys + show routing summary
+node setup-keys.js --clear-gemini   # remove the Gemini key
+node setup-keys.js --clear-fal      # remove the fal.ai key
+node setup-keys.js --clear-openai   # remove the OpenAI key
 ```
 
 ### External users / non-H5G installs

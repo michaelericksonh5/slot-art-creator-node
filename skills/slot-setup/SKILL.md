@@ -1,6 +1,6 @@
 ---
 name: slot-setup
-description: FIRST RUN — Configure the slot-art-creator-node plugin for use. Walks the user through getting Google Gemini and/or fal.ai API keys and saving them to the correct location WITHOUT ever putting the keys in chat. Use this whenever a user has just installed the plugin, is hitting "no API key" errors, wants to change which provider runs, or is generally setting up for the first time. Also use it when the user says "set up my keys", "configure the plugin", "I need to add my API key", or similar. Run this BEFORE any /slot-step-* skill if keys aren't configured.
+description: FIRST RUN — Configure the slot-art-creator-node plugin for use. Walks the user through getting Google Gemini, fal.ai, and/or OpenAI API keys and saving them to the correct location WITHOUT ever putting the keys in chat. The plugin supports two model families with independent keys — NB2 (Gemini/fal.ai, runs the 4 nb2_* tools) and gpt-image-2 (OpenAI, runs the 2 gpt2_* tools). Use this whenever a user has just installed the plugin, is hitting "no API key" errors, wants to add a new provider, change which provider runs, or is generally setting up for the first time. Also use it when the user says "set up my keys", "add my OpenAI key", "configure the plugin", "I need to add my API key", or similar. Run this BEFORE any /slot-step-* skill if keys aren't configured.
 ---
 
 # Setup — API Keys & First-Run Configuration
@@ -38,7 +38,8 @@ Determine what's already configured:
   - Mac/Linux: `$HOME/.h5g-slot-art-creator/.env`
 
 **b) Read the file if it exists.** Use the Read tool. Note which keys are
-present (non-empty values for `GEMINI_API_KEY` and/or `FAL_KEY`).
+present (non-empty values for `GEMINI_API_KEY`, `FAL_KEY`, and/or
+`OPENAI_API_KEY`).
 
 **c) Detect which surface the user is on** (Claude Code or Cowork). Cowork
 sessions can be inferred from environment cues or just asked. The
@@ -46,27 +47,55 @@ guidance differs between them.
 
 ### Step 2 — Branch on state
 
-**State A — both keys present and non-empty:**
-Confirm everything's ready. Skip to Step 4 (validation).
+Two key families with independent requirements:
 
-**State B — one key present:**
-Tell the user what works with their current setup, ask if they want to
-add the other key for the best routing. If they say no, skip to Step 4.
+- **NB2 family** (the 4 `nb2_*` tools): needs `GEMINI_API_KEY` and/or
+  `FAL_KEY`. Either alone is sufficient.
+- **GPT Image 2 family** (the 2 `gpt2_*` tools): needs `OPENAI_API_KEY`.
+  Optional — only required if the user wants to use gpt-image-2 for
+  text rendering / 4K / multi-image composition.
 
-**State C — no keys configured:**
-Walk through getting and entering keys. Continue to Step 3.
+**State A — fully configured for both families:**
+GEMINI and/or FAL set AND OPENAI set. Confirm everything's ready, skip
+to Step 4 (validation).
+
+**State B — NB2 ready, no OpenAI:**
+The plugin's main NB2 workflow works. Ask the user if they want to add
+OpenAI for the gpt-image-2 tools (worth it for paytables, logos,
+text-heavy assets). If no, skip to Step 4.
+
+**State C — OpenAI only, no NB2:**
+gpt2_* tools work but nothing else does. Tell the user the NB2 tools
+are disabled and ask if they want to add GEMINI_API_KEY or FAL_KEY.
+
+**State D — nothing configured:**
+Walk through all three. Continue to Step 3.
+
+**State E — partial NB2 (one of Gemini/fal but not both):**
+Tell the user what their current setup does, ask if they want to add
+the other NB2 key for optimal routing AND/or add OpenAI for the
+gpt2_* tools.
 
 ### Step 3 — Guide the user to set keys safely
 
 State each provider once, with the link to get a key. Then give the user
 the platform-specific safe entry instructions below.
 
-> **Get a key from one of these (either alone is sufficient for all 4 generation tools):**
+> **API keys — two independent families:**
+>
+> **NB2 family** (powers the 4 `nb2_*` tools — generate / edit / upscale /
+> smart_resize). Either alone is sufficient; both set gives optimal routing.
 > - Google Gemini: https://aistudio.google.com/apikey
 > - fal.ai: https://fal.ai/dashboard
 >
-> With both keys set, the plugin routes each tool to its strongest backend.
-> See `shared/nb2_prompting.md` for the routing table if you want details.
+> **GPT Image 2 family** (powers `gpt2_generate` / `gpt2_edit`). Optional —
+> set this if you want OpenAI's gpt-image-2 for paytables, logos, banners
+> with text, photorealistic 4K, or compositional multi-image edits. More
+> expensive per call than NB2 — use selectively.
+> - OpenAI: https://platform.openai.com/api-keys
+>
+> See `shared/nb2_prompting.md` for the NB2 routing table and
+> `shared/gpt_image2_prompting.md` for when to pick gpt-image-2 over NB2.
 
 #### Claude Cowork users
 
@@ -149,20 +178,37 @@ move on; real validation happens on first MCP call.
 
 ### Step 5 — Confirm and route
 
-Tell the user what they have and what's next:
+Tell the user what they have and what's next. Examples:
+
+**Full setup:**
 
 > ✓ Setup complete.
->   Gemini  : set
->   fal.ai  : set
+>   Gemini  : set       (NB2 tools: enabled)
+>   fal.ai  : set       (NB2 tools: enabled, smart_resize optimized)
+>   OpenAI  : set       (gpt2_* tools: enabled)
 >
-> With both keys, generate/edit/upscale will run on Gemini and
-> smart_resize will use fal.ai's purpose-built endpoint. Either-alone
-> would also work.
+> NB2 routes generate/edit/upscale to Gemini and smart_resize to fal.ai.
+> gpt-image-2 is available via gpt2_generate / gpt2_edit for paytables,
+> logos, text-heavy banners, and compositional edits.
 >
 > Next steps:
 >   - If you have a Game Design Document: run `/slot-step-00`
 >   - If you're pitching a fresh concept: run `/slot-step-01`
 >   - For an overview of the workflow: run `/slot-help`
+
+**NB2 only:**
+
+> ✓ NB2 setup complete (Gemini and/or fal.ai). All 4 NB2 tools work.
+>   gpt2_* tools are disabled — add OPENAI_API_KEY later if you want
+>   gpt-image-2 for paytables, logos, or text-heavy assets.
+>
+> Next steps: `/slot-step-00`, `/slot-step-01`, or `/slot-help`.
+
+**OpenAI only (rare):**
+
+> ✓ gpt-image-2 setup complete. gpt2_generate and gpt2_edit are
+>   available, but the NB2 tools (which power most of the slot-step-*
+>   workflow) need GEMINI_API_KEY or FAL_KEY too.
 
 ## Hard rules
 

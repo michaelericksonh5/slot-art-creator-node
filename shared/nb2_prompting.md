@@ -3,6 +3,16 @@
 NB2 = `gemini-3.1-flash-image-preview`. This is the production prompt
 playbook every design skill in `slot-art-creator` follows.
 
+> [!NOTE]
+> **There is a second model family available.** When `OPENAI_API_KEY` is
+> set, the plugin also exposes `gpt2_generate` and `gpt2_edit` for
+> OpenAI's gpt-image-2 model — which has different strengths (accurate
+> text rendering, native 4K, multi-image compositional editing). See
+> `shared/gpt_image2_prompting.md` for when to prefer gpt-image-2 over
+> NB2 (paytables, logos, banners with required copy, hero key art with
+> photorealism, multi-reference composition). This NB2 playbook covers
+> the four `nb2_*` tools only.
+
 ## Contents
 
 - **Model basics** — resolutions, aspect ratios, references, chat-mode

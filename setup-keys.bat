@@ -21,11 +21,12 @@ echo  Your keys will be saved to:
 echo    %USERPROFILE%\.h5g-slot-art-creator\.env
 echo.
 echo  Get keys here:
-echo    Google Gemini   https://aistudio.google.com/apikey
-echo    fal.ai          https://fal.ai/dashboard
+echo    Google Gemini   https://aistudio.google.com/apikey         (NB2 tools)
+echo    fal.ai          https://fal.ai/dashboard                    (NB2 tools)
+echo    OpenAI          https://platform.openai.com/api-keys        (gpt-image-2 tools, optional)
 echo.
-echo  Either key alone works for all 4 generation tools. Setting both gives
-echo  each tool its optimal backend.
+echo  Either GEMINI or FAL works for the 4 NB2 tools (both gives optimal routing).
+echo  OPENAI is optional and adds gpt2_generate / gpt2_edit (text rendering, 4K, composition).
 echo.
 echo  Your input is hidden - keys will not echo to this window.
 echo.

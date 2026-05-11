@@ -6,6 +6,34 @@ breaks player trust. This skill generates the layout with placeholder
 slots; `/slot-step-03` produces the actual symbol art that gets
 composited in.
 
+## Which model to use — gpt-image-2 is often the better choice here
+
+Paytables are **text-heavy with structural constraints** (rows, columns,
+labels, pay values). This is exactly where **gpt-image-2** (OpenAI's
+gpt2_generate tool) outperforms NB2:
+
+- **Text rendering:** NB2 frequently misspells or scrambles text in
+  the image. gpt-image-2 renders text reliably — column headers, pay
+  values, multiplier badges all come out legible.
+- **Structural reasoning:** "8-row paytable, symbol on left, value on
+  right, consistent column alignment" — gpt-image-2 plans this before
+  generating; NB2 is more of a stylized illustrator.
+- **Composition:** if you want to compose the actual approved symbols
+  INTO the paytable layout, `gpt2_edit` accepts up to ~16 reference
+  images and composites them with the prompt's structure.
+
+When you call this skill, if `OPENAI_API_KEY` is set:
+- For the layout-only paytable (placeholder slots): use **`gpt2_generate`**
+  with structural prompt.
+- For composing the real symbols into the paytable: use **`gpt2_edit`**
+  with the approved symbol PNGs as `extra_references`.
+
+If `OPENAI_API_KEY` is NOT set, fall back to `nb2_generate` and treat the
+text as approximate — it'll need to be re-composited at runtime by
+engineering.
+
+See `shared/gpt_image2_prompting.md` for full guidance on the gpt2 tools.
+
 ## Surface rules
 
 - **Symbol art:** placeholder squares only — DO NOT generate decorative
