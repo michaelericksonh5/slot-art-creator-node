@@ -74,8 +74,23 @@ if [ $NPM_RC -ne 0 ]; then
     exit 1
 fi
 
+# Bundle the MCP server into a single self-contained file at dist/index.mjs.
+# Marketplace cloners (Claude Code, Cowork) don't run npm install on the
+# cached plugin, so the cached install can't reach node_modules. plugin.json
+# points at the bundle, which has zero runtime deps.
+echo " Building MCP server bundle..."
+set +e
+npm run build --silent
+BUILD_RC=$?
+set -e
+if [ $BUILD_RC -ne 0 ]; then
+    echo ""
+    echo " ERROR: npm run build failed."
+    exit 1
+fi
+
 cd "$SCRIPT_DIR"
-echo " Dependencies installed."
+echo " Dependencies installed and bundle built."
 
 # -----------------------------------------------------------------------
 # API key setup
