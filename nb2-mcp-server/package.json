@@ -1,7 +1,7 @@
 {
   "name": "slot-art-creator-node-mcp",
-  "version": "1.5.0",
-  "description": "Node.js MCP server for slot-art-creator — exposes seven tools across two model families. NB2 family (Gemini/fal.ai): nb2_generate, nb2_edit, nb2_upscale, nb2_smart_resize. GPT Image 2 family (OpenAI): gpt2_generate, gpt2_edit. Plus the cross-family nb2_stage_image helper (copies external/chat-attached images into the safe inputs folder so they can be used by any tool). NB2 keys and OpenAI key are independent — set whichever you need.",
+  "version": "1.5.1",
+  "description": "Node.js MCP server for slot-art-creator — exposes eight tools across two model families. NB2 family (Gemini/fal.ai): nb2_generate, nb2_edit, nb2_upscale, nb2_smart_resize. GPT Image 2 family (OpenAI): gpt2_generate, gpt2_edit, gpt2_smart_resize (per-aspect recompose, preserves text). Plus the cross-family nb2_stage_image helper. gpt-image-2's stable native ceiling is 2K (4K targets are experimental per OpenAI); no faithful upscale mode — use nb2_upscale for that.",
   "type": "module",
   "main": "index.js",
   "scripts": {

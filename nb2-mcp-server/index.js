@@ -1,24 +1,32 @@
 /**
  * slot-art-creator-node — MCP server (Node.js)
  *
- * Exposes seven MCP tools across two model families:
+ * Exposes eight MCP tools across two model families:
  *
  *   Nano Banana 2 family (Gemini / fal.ai routing):
  *     nb2_generate       — text-to-image
  *     nb2_edit           — image-to-image edit / reskin
- *     nb2_upscale        — 4K upscale
+ *     nb2_upscale        — 4K upscale (the only TRUE upscale tool here)
  *     nb2_smart_resize   — pixel-perfect multi-size resize
  *
  *   GPT Image 2 family (OpenAI; OPENAI_API_KEY required):
- *     gpt2_generate      — text-to-image with gpt-image-2; strong text rendering,
- *                          4K resolution support, agentic prompt planning
+ *     gpt2_generate      — text-to-image with gpt-image-2. STABLE ceiling is 2K
+ *                          (2048×2048); 4K is experimental and may fail.
  *     gpt2_edit          — image-to-image edit with optional mask; accepts
- *                          MULTIPLE reference images for compositional editing
+ *                          MULTIPLE reference images for compositional editing.
+ *     gpt2_smart_resize  — multi-aspect recomposition (one edit call per target
+ *                          size). Prefer for text-heavy sources; nb2_smart_resize
+ *                          (fal.ai NB Pro) is cheaper for non-text sources.
  *
  *   Cross-family helper:
  *     nb2_stage_image    — copy an external/chat-pasted image into the safe inputs
  *                          folder so it can be used as a source for ANY of the above
- *                          (gpt2_edit, nb2_edit, nb2_upscale, nb2_smart_resize)
+ *                          (gpt2_edit / gpt2_smart_resize / nb2_edit / nb2_upscale
+ *                          / nb2_smart_resize)
+ *
+ *   IMPORTANT — gpt-image-2 has NO faithful upscale mode. It always regenerates
+ *   at the target size, not super-resolution from a source. For true upscaling
+ *   from an approved 2K asset to 4K, use nb2_upscale.
  *
  * EITHER KEY ALONE is fully sufficient for all four tools — both providers have
  * a complete implementation of every tool. With both keys set, the plugin routes
@@ -1355,15 +1363,33 @@ async function dispatchEdit(args) {
 // Map (image_size, aspect_ratio) → gpt-image-2 literal size string.
 // gpt-image-2 supports a fixed set; we pick the closest. Source:
 // https://developers.openai.com/api/docs/guides/image-generation
-//   1024x1024  square 1K
-//   1536x1024  landscape ~3:2 1K
-//   1024x1536  portrait ~2:3 1K
-//   2048x2048  square 2K
-//   2048x1152  landscape 16:9 2K
-//   3840x2160  landscape 4K (16:9)
-//   2160x3840  portrait 4K (9:16)
-//   "auto"     model picks
-// Constraints: max edge ≤3840, multiples of 16, ratio ≤3:1.
+//
+// IMPORTANT — Resolution ceilings (clarified post-v1.5.0):
+//   gpt-image-2's STABLE native ceiling is 2K (2048×2048).
+//   Sizes above ~2560×1440 (including the 4K sizes 3840×2160 / 2160×3840)
+//   are accepted by the API but flagged as EXPERIMENTAL by OpenAI —
+//   stability and consistency decrease. For production use, 2K is the
+//   reliable maximum.
+//
+//   For genuinely high-res output beyond 2K, either:
+//     (a) use NB2's smart_resize via fal.ai (NB Pro endpoint), or
+//     (b) generate at 2K with gpt-image-2 and run an external upscaler
+//         (Topaz, Real-ESRGAN, etc.) — OpenAI's own docs recommend this.
+//
+//   gpt-image-2 has NO faithful upscale mode. Passing a 1K source to the
+//   edit endpoint with a 4K size doesn't upscale — it regenerates at 4K.
+//
+//   Tier reference:
+//     1024x1024  square 1K
+//     1536x1024  landscape ~3:2 1K
+//     1024x1536  portrait ~2:3 1K
+//     2048x2048  square 2K (STABLE production ceiling)
+//     2048x1152  landscape 16:9 2K (STABLE production ceiling)
+//     3840x2160  landscape 4K (EXPERIMENTAL — may fail or vary)
+//     2160x3840  portrait 4K (EXPERIMENTAL — may fail or vary)
+//     "auto"     model picks
+//
+//   Constraints: max edge ≤3840, multiples of 16, ratio ≤3:1.
 const GPT2_SIZE_TABLE = {
   // [size][aspect_ratio] → literal string
   "1K":  { "1:1": "1024x1024", "3:2": "1536x1024", "2:3": "1024x1536",
@@ -1534,6 +1560,130 @@ async function gpt2Edit({ prompt, source, mask, outputDir, assetName, imageSize,
     model: "gpt-image-2",
     resolution: size,
     elapsed,
+    paths: saved,
+  };
+}
+
+// gpt2_smart_resize — produce multi-aspect variants of a source image using
+// gpt-image-2's edit endpoint. Same pattern as geminiSmartResize: for each
+// target WxH, call edit with the source + a recompose prompt, save the
+// result. Unlike fal-ai/smart-resize (purpose-built endpoint that does this
+// in one call), this issues N parallel edit calls. Cost scales linearly
+// with the number of targets.
+//
+// When to choose gpt2_smart_resize over nb2_smart_resize:
+//   - The source has text that must remain readable after recomposition.
+//     gpt-image-2 preserves text far better than NB2 across aspect changes.
+//   - The recomposition needs reasoning about composition (e.g. "keep the
+//     hero subject in the lower-right third when reframing to wide").
+//
+// When NOT to use it:
+//   - For routine multi-aspect deliverables, nb2_smart_resize (fal.ai's
+//     NB Pro endpoint) is cheaper, faster, and equally good for non-text
+//     subjects.
+//   - For "real" upscaling (preserving source pixels at higher res),
+//     neither tool is appropriate — use nb2_upscale.
+async function gpt2SmartResize({ source, outputDir, assetName, targetSizes, prompt, quality }) {
+  if (!openaiClient) {
+    throw new Error(
+      "OPENAI_API_KEY is not set. → Run /slot-setup in chat to configure it safely, " +
+      "or get a key at https://platform.openai.com/api-keys and add it via setup-keys."
+    );
+  }
+
+  const sizes = validateTargetSizes(targetSizes);
+  const q = quality || "high";
+  ensureDir(outputDir);
+
+  // Load source once — Web File objects can be passed to multiple edit calls
+  // by re-creating them per call (the SDK reads the buffer once per call).
+  const sourceBuffer = await (async () => {
+    if (source.startsWith("http://") || source.startsWith("https://")) {
+      const { buffer } = await fetchRemoteImageBuffer(source);
+      return buffer;
+    }
+    return fs.readFileSync(source);
+  })();
+  const sourceMime = imageMimeType(path.extname(source).toLowerCase());
+
+  const saved = [];
+  const overallT0 = Date.now();
+
+  for (const size of sizes) {
+    const match = /^(\d+)x(\d+)$/.exec(size);
+    const targetW = parseInt(match[1], 10);
+    const targetH = parseInt(match[2], 10);
+
+    // gpt-image-2's accepted sizes — snap to closest if the literal isn't
+    // in the official list. The literal WxH passes through if it satisfies
+    // the constraints (multiples of 16, max edge ≤3840, ratio ≤3:1).
+    const sizeStr = `${targetW}x${targetH}`;
+
+    const recomposePrompt =
+      (prompt ? prompt + " " : "") +
+      `Recompose this image at ${targetW}x${targetH} (aspect ratio ${targetW}:${targetH} simplified) ` +
+      `while preserving the subject, palette, style, and overall mood. Adjust framing as needed to ` +
+      `fit the target shape; do not crop awkwardly. Keep the hero subject as the focal point. ` +
+      `Preserve any visible text exactly. Match the rendering style of the source exactly.`;
+
+    const imageFile = await OpenAI.toFile(sourceBuffer, "source.png", { type: sourceMime });
+
+    const t0 = Date.now();
+    let result;
+    try {
+      result = await openaiClient.images.edit({
+        model: "gpt-image-2",
+        image: imageFile,
+        prompt: recomposePrompt,
+        size: sizeStr,
+        quality: q,
+        n: 1,
+        output_format: "png",
+      });
+    } catch (err) {
+      // If the literal size was rejected (e.g. not multiple of 16, or the
+      // 4K experimental size failed), surface a clear message that names
+      // the offending target.
+      throw new Error(
+        `gpt-image-2 rejected size ${sizeStr}: ${err.message}. ` +
+        `→ gpt-image-2 requires dimensions to be multiples of 16, max edge 3840, ` +
+        `aspect ratio ≤3:1. The 4K sizes (3840×2160 / 2160×3840) are experimental ` +
+        `and sometimes fail — fall back to fal.ai's nb2_smart_resize (NB Pro) for ` +
+        `production-stable multi-aspect output.`
+      );
+    }
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+
+    const data = result.data || [];
+    if (!data.length || !data[0].b64_json) {
+      throw new Error(`gpt-image-2 returned no image for target ${size}`);
+    }
+
+    const dest = uniqueName(outputDir, `${assetName}_${size}`, ".png");
+    const buf = Buffer.from(data[0].b64_json, "base64");
+    fs.writeFileSync(dest, buf);
+    saved.push(dest);
+    writeSidecar(dest, {
+      tool: "gpt2_smart_resize",
+      provider: "OpenAI",
+      model: "gpt-image-2",
+      prompt: recomposePrompt,
+      image_size: size,
+      target_size: size,
+      gpt2_literal_size: sizeStr,
+      quality: q,
+      reference_images: [],
+      source_image: source,
+      duration_seconds: Number(elapsed),
+    });
+  }
+
+  const overallElapsed = ((Date.now() - overallT0) / 1000).toFixed(1);
+  return {
+    provider: "OpenAI",
+    model: "gpt-image-2",
+    resolution: `${sizes.length} targets`,
+    elapsed: overallElapsed,
     paths: saved,
   };
 }
@@ -1730,8 +1880,8 @@ const TOOLS = [
       "Use this when the user explicitly asks for gpt-image-2, OR when the task " +
       "benefits from gpt-image-2's strengths over NB2: " +
       "(1) accurate text rendering in the image (paytable labels, multipliers, banner copy, logos with specific wordmarks — gpt-image-2 substantially outperforms NB2 here); " +
-      "(2) high-resolution photorealism at 4K (3840x2160 / 2160x3840 / 2048x2048); " +
-      "(3) compositional briefs with very specific multi-element layouts. " +
+      "(2) compositional briefs with very specific multi-element layouts and structural reasoning. " +
+      "Resolution: **gpt-image-2's STABLE production ceiling is 2K (2048×2048).** The 4K sizes (3840×2160 / 2160×3840) are accepted by the API but flagged EXPERIMENTAL by OpenAI — they may fail or produce inconsistent results. For genuine 4K hero output, use nb2_upscale instead. " +
       "Requires OPENAI_API_KEY. Per-image cost is meaningfully higher than NB2 — use for hero assets and text-heavy surfaces, not routine symbol generation. " +
       "Output: PNG saved to output_dir.",
     inputSchema: {
@@ -1815,6 +1965,44 @@ const TOOLS = [
         },
       },
       required: ["prompt", "source"],
+    },
+  },
+  {
+    name: "gpt2_smart_resize",
+    description:
+      "Multi-aspect-ratio recomposition of a source image using gpt-image-2's edit endpoint. " +
+      "Same pattern as the Gemini fallback in nb2_smart_resize: issues one edit call per target size. " +
+      "**Use when the source contains text that must remain readable after recomposition** — gpt-image-2 " +
+      "preserves text far better than NB2 across aspect changes (paytables, banners with copy, anything " +
+      "with a wordmark). Also use when the recompose needs reasoning about composition (e.g. specific " +
+      "subject placement in the new frame). " +
+      "For routine multi-aspect deliverables without text, nb2_smart_resize (fal.ai NB Pro) is cheaper, " +
+      "faster, and a single API call. " +
+      "gpt-image-2's STABLE production ceiling is 2K (2048×2048); the 4K targets (3840×2160 / 2160×3840) " +
+      "are experimental and may fail — fall back to nb2_smart_resize for those. " +
+      "Requires OPENAI_API_KEY. Cost scales with the number of target sizes.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        source: { type: "string", description: "Absolute path or URL of the source image. Must be inside an allowed root (run nb2_stage_image first if chat-attached)." },
+        target_sizes: {
+          type: "array",
+          items: { type: "string" },
+          description: "Target sizes as WxH strings. Each must satisfy gpt-image-2's constraints: multiples of 16, max edge ≤3840, aspect ratio ≤3:1. Example: [\"2048x2048\", \"2048x1152\", \"1152x2048\"]. Default: [\"2048x2048\", \"1920x1088\", \"1088x1920\"] (2K marketing trio).",
+        },
+        output_dir: { type: "string", description: "Output directory. Defaults to ~/Pictures/claude_nb2." },
+        asset_name: { type: "string", description: "Base filename prefix (no extension). Default: resize.", default: "resize" },
+        prompt: {
+          type: "string",
+          description: "Optional extra instruction forwarded with the auto-generated recompose prompt. Useful for stating subject placement or text preservation explicitly.",
+        },
+        quality: {
+          type: "string",
+          enum: ["low", "medium", "high", "auto"],
+          default: "high",
+        },
+      },
+      required: ["source"],
     },
   },
 ];
@@ -1971,6 +2159,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         n: args.n || 1,
       });
       return { content: formatResult(result, "gpt2_edit OK (OpenAI / gpt-image-2)") };
+    }
+
+    if (name === "gpt2_smart_resize") {
+      const assetName = sanitizeAssetName(args.asset_name, "resize");
+      const source = await validateImageInput(args.source, "source");
+      const result = await gpt2SmartResize({
+        source,
+        outputDir: resolveOutputDir(args.output_dir),
+        assetName,
+        targetSizes: args.target_sizes,
+        prompt: args.prompt || null,
+        quality: args.quality || "high",
+      });
+      return { content: formatResult(result, "gpt2_smart_resize OK (OpenAI / gpt-image-2, per-aspect recompose)") };
     }
 
     throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);

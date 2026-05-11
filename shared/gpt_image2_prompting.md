@@ -29,12 +29,14 @@ generating. Source: [OpenAI GPT Image 2 docs](https://developers.openai.com/api/
 | If the asset needs... | Use | Why |
 |---|---|---|
 | **Accurate text in the image** (paytable labels, multipliers, banner copy, logo wordmarks with specific spellings, button labels) | `gpt2_generate` / `gpt2_edit` | gpt-image-2 substantially outperforms NB2 at rendering text correctly. NB2 frequently hallucinates letters even when prompted explicitly. |
-| **Photorealistic 4K** (marketing key art, hero shots that need to look like a render rather than a stylized illustration) | `gpt2_generate` (size `4K`, quality `high`) | gpt-image-2's 4K output is genuinely 4K (3840×2160 / 2160×3840), and photorealistic. NB2's "4K" is the same NB2 model at a higher tier; it tends to stay stylized. |
+| **Photorealistic stable 2K** (marketing key art, hero shots that need to look like a render rather than a stylized illustration) | `gpt2_generate` (size `2K`, quality `high`) | gpt-image-2's photorealistic output at 2K is its sweet spot. 2K (2048×2048 or 2048×1152 etc.) is the STABLE native ceiling. |
 | **Compositional editing with 2-16 reference images** ("take this character, this prop, and this background and combine them with these specific spatial relationships") | `gpt2_edit` with `extra_references` | gpt-image-2's edit endpoint accepts an array of source images and composes them. NB2 doesn't have this capability natively. |
 | **Reasoning about a complex brief** ("a paytable with 8 rows where each row shows symbol_X paying out at value_Y, formatted as a numbered grid with consistent column alignment") | `gpt2_generate` (quality `high`) | gpt-image-2 plans before generating. Briefs that explicitly describe structure / counts / alignment are where it pulls ahead. |
+| **Multi-aspect recompose where the source has TEXT** (resize a paytable / logo / banner-with-copy to 1:1 + 16:9 + 9:16) | `gpt2_smart_resize` | Same recompose-per-aspect pattern as the Gemini fallback in `nb2_smart_resize`, but preserves text far better. Cost scales linearly with target count — issues one edit call per size. |
+| **Multi-aspect recompose for non-text sources** (resize a character symbol or background scene to multiple aspects) | `nb2_smart_resize` (fal.ai NB Pro) | fal.ai's smart-resize is purpose-built and single-call; gpt-image-2's recompose is N-call. For routine non-text resize, fal.ai wins on cost and speed. |
 | **Routine slot symbols at thumbnail size** | `nb2_generate` | gpt-image-2 is overkill (and 5-10× more expensive). NB2 is purpose-tuned for stylized slot art. |
-| **Multi-aspect resize / smart-resize** | `nb2_smart_resize` (fal.ai backend) | fal.ai's smart-resize endpoint is purpose-built for this; gpt-image-2 has no equivalent. |
-| **Upscaling an approved 2K asset to 4K** | `nb2_upscale` with N=4 picking | gpt-image-2 doesn't have a true upscale mode — calling `gpt2_generate` at 4K size produces a new image, not a faithful upscale. |
+| **TRUE upscaling — preserving an approved 2K source's pixels at 4K** | `nb2_upscale` with N=4 picking | **gpt-image-2 has no faithful upscale mode.** It always regenerates at the target size, not super-resolution. The same prompt + source passed to `gpt2_generate` at 4K just makes a new image, not an upscaled version of the source. |
+| **Genuine 4K photorealistic output** | Generate at 2K with `gpt2_generate`, then run an external upscaler (Topaz, Real-ESRGAN) | OpenAI's own docs recommend this. gpt-image-2's 4K targets are experimental and unreliable for production. |
 
 ---
 
@@ -44,8 +46,12 @@ generating. Source: [OpenAI GPT Image 2 docs](https://developers.openai.com/api/
    mentions specific words that need to appear in the image, gpt-image-2 is
    the safer bet — by a wide margin.
 
-2. **4K native output.** Sizes `3840x2160` (landscape) and `2160x3840`
-   (portrait) are first-class options, not artifacts of an upscale loop.
+2. **Native 2K output.** gpt-image-2's STABLE production ceiling is 2K
+   (2048×2048 or its aspect variants). 4K targets (3840×2160 / 2160×3840)
+   are accepted by the API but flagged EXPERIMENTAL by OpenAI — they may
+   fail or produce inconsistent results. For genuinely high-res output,
+   either generate at 2K and pass through an external upscaler (Topaz,
+   Real-ESRGAN), or use NB2's `nb2_upscale` on an approved 2K source.
 
 3. **Multi-image composition.** Pass up to ~16 reference images to
    `gpt2_edit` and gpt-image-2 will compose them as instructed by the prompt.
@@ -69,13 +75,19 @@ generating. Source: [OpenAI GPT Image 2 docs](https://developers.openai.com/api/
    default behavior that lands closer to mobile-slot-art aesthetics out of
    the box. gpt-image-2 needs more explicit style direction in the prompt.
 
-3. **No native upscale mode.** `gpt2_generate` at 4K creates a new image at
-   4K; it doesn't faithfully reproduce a source at higher resolution. For
-   true upscale-of-an-approved-asset, use `nb2_upscale`.
+3. **No native upscale mode.** gpt-image-2 never preserves source pixels at
+   a higher resolution — it always regenerates at the target size. Passing
+   a 1K source to gpt2_edit with size=4K just generates a new 4K image
+   based on the source, not an upscale. For true upscale-of-an-approved-
+   asset, use `nb2_upscale`.
 
-4. **No purpose-built smart-resize.** No equivalent to fal.ai's smart-resize
-   endpoint. To get multiple aspect variants, you'd generate each one
-   independently — losing the consistency that smart-resize gives you.
+4. **Smart-resize is N parallel calls.** We expose `gpt2_smart_resize` for
+   multi-aspect recomposition, but it issues one edit call per target size
+   (same pattern as the Gemini fallback in `nb2_smart_resize`). Cost scales
+   linearly with target count. fal.ai's purpose-built smart-resize endpoint
+   handles all targets in a single API call — for non-text sources, that's
+   the better choice. Reach for `gpt2_smart_resize` when source text must
+   stay legible across the resize.
 
 5. **Output is base64 in the API response.** Not visible while generating
    (no progress URL like NB2). Slightly slower wall-time for the user.
@@ -103,18 +115,29 @@ for the rest (all reel symbols, backgrounds, bezel, HUD chrome).
 The plugin uses an abstract `image_size` (`1K` / `2K` / `4K`) + `aspect_ratio`
 combo across all tools. For gpt-image-2 those translate to literal pixel sizes:
 
-| `image_size` | `aspect_ratio` | gpt-image-2 literal size |
-|---|---|---|
-| `1K` | `1:1` | `1024x1024` |
-| `1K` | `16:9` or `3:2` | `1536x1024` |
-| `1K` | `9:16` or `2:3` | `1024x1536` |
-| `2K` (default) | `1:1` (default) | `2048x2048` |
-| `2K` | `16:9` or `3:2` | `2048x1152` |
-| `2K` | `9:16` or `2:3` | `1152x2048` |
-| `4K` | `1:1` | `2048x2048` (gpt-image-2's max square) |
-| `4K` | `16:9` or `3:2` | `3840x2160` |
-| `4K` | `9:16` or `2:3` | `2160x3840` |
-| any | `auto` | model picks |
+| `image_size` | `aspect_ratio` | gpt-image-2 literal size | Stability |
+|---|---|---|---|
+| `1K` | `1:1` | `1024x1024` | ✓ Stable |
+| `1K` | `16:9` or `3:2` | `1536x1024` | ✓ Stable |
+| `1K` | `9:16` or `2:3` | `1024x1536` | ✓ Stable |
+| `2K` (default) | `1:1` (default) | `2048x2048` | ✓ **Stable native ceiling** |
+| `2K` | `16:9` or `3:2` | `2048x1152` | ✓ Stable |
+| `2K` | `9:16` or `2:3` | `1152x2048` | ✓ Stable |
+| `4K` | `1:1` | `2048x2048` (capped at 2K square; 4K square isn't a thing) | ✓ Stable |
+| `4K` | `16:9` or `3:2` | `3840x2160` | ⚠️ **EXPERIMENTAL** — may fail |
+| `4K` | `9:16` or `2:3` | `2160x3840` | ⚠️ **EXPERIMENTAL** — may fail |
+| any | `auto` | model picks | ✓ |
+
+**Stability ceiling.** gpt-image-2's reliable production output is 2K
+(2048×2048 or aspect variants). The 4K-tier sizes are accepted by the
+API but OpenAI flags anything beyond ~2560×1440 as experimental —
+stability and consistency decrease. For production deliverables that
+need genuine 4K, either:
+
+- Generate at 2K with `gpt2_generate`, then run an external upscaler
+  (Topaz, Real-ESRGAN) — OpenAI's own docs recommend this path
+- Use `nb2_upscale` on an approved 2K source (faithful pixel-preserving
+  upscale via NB2's preservation prompt + Path-A vision-loop review)
 
 gpt-image-2 constraints (enforced by the API):
 - Max edge ≤ 3840 px
@@ -214,18 +237,18 @@ chat-pasted images can be staged then passed as either `source` or
 
 | Skill | NB2 vs gpt-image-2 |
 |---|---|
-| `/slot-step-02` (key art) | NB2 is default. Consider `gpt2_generate` at 4K when the brief needs accurate text in the key art or photorealism. |
+| `/slot-step-02` (key art) | NB2 is default. Consider `gpt2_generate` at **2K** (the stable ceiling) when the brief needs accurate text in the key art or photorealism. For 4K marketing output, generate at 2K with gpt2 then run `nb2_upscale`. |
 | `/slot-step-03` (symbols) | NB2 is default. gpt-image-2 only for hero symbols where text matters (rare). |
 | `/slot-step-04` (contact sheet, IDEATION mode) | NB2 for early ideation. `gpt2_generate` if the sheet needs labeled symbols. |
 | `/slot-step-05` (backgrounds) | NB2. gpt-image-2 doesn't materially win here. |
-| `/slot-step-06/PAYTABLE_TEMPLATE.md` | **gpt2_generate is the right call.** Paytables are text-heavy with structural constraints — exactly gpt-image-2's strength. |
+| `/slot-step-06/PAYTABLE_TEMPLATE.md` | **gpt2_generate is the right call.** Paytables are text-heavy with structural constraints — exactly gpt-image-2's strength. Use `2K`, not 4K (the 4K targets are experimental). |
 | `/slot-step-06/BANNERS_TEMPLATE.md` | NB2 for the banner art; `gpt2_edit` if you need the tier label rendered as part of the image (rare — usually composited at runtime). |
-| `/slot-step-06/LOGO_TEMPLATE.md` | **gpt2_generate is the right call** if the logo has a specific wordmark spelling. NB2 frequently misspells. |
+| `/slot-step-06/LOGO_TEMPLATE.md` | **gpt2_generate is the right call** if the logo has a specific wordmark spelling. NB2 frequently misspells. Generate at 2K. |
 | `/slot-step-06/HUD_TEMPLATE.md` | NB2 for chrome; `gpt2_generate` for any HUD element with required copy. |
 | `/slot-step-07` (UI reskin) | `gpt2_edit` is preferable if the source UI has lots of text. Otherwise NB2. |
 | `/slot-step-08` (audit) | N/A — no generation in this step. |
-| `/slot-step-09` (upscale) | NB2 always (gpt-image-2 doesn't have a true upscale mode). |
-| `/slot-step-10` (multi-aspect) | NB2 always (gpt-image-2 has no purpose-built smart-resize). |
+| `/slot-step-09` (upscale) | **NB2 always.** gpt-image-2 has no faithful upscale mode (always regenerates rather than preserving source pixels). |
+| `/slot-step-10` (multi-aspect) | NB2 by default — fal.ai's purpose-built smart-resize is the cheapest, fastest, single-call path. **Switch to `gpt2_smart_resize` when the source has text** that must remain readable across the resize (paytables, logos, banners with copy). |
 
 Cross-reference: `shared/nb2_prompting.md` for the NB2 playbook,
 `shared/chat_image_staging.md` for handling chat-pasted images

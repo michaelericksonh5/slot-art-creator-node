@@ -72246,6 +72246,81 @@ async function gpt2Edit({ prompt, source, mask, outputDir, assetName, imageSize,
     paths: saved
   };
 }
+async function gpt2SmartResize({ source, outputDir, assetName, targetSizes, prompt, quality }) {
+  if (!openaiClient) {
+    throw new Error(
+      "OPENAI_API_KEY is not set. \u2192 Run /slot-setup in chat to configure it safely, or get a key at https://platform.openai.com/api-keys and add it via setup-keys."
+    );
+  }
+  const sizes = validateTargetSizes(targetSizes);
+  const q = quality || "high";
+  ensureDir(outputDir);
+  const sourceBuffer = await (async () => {
+    if (source.startsWith("http://") || source.startsWith("https://")) {
+      const { buffer } = await fetchRemoteImageBuffer(source);
+      return buffer;
+    }
+    return fs3.readFileSync(source);
+  })();
+  const sourceMime = imageMimeType(path3.extname(source).toLowerCase());
+  const saved = [];
+  const overallT0 = Date.now();
+  for (const size of sizes) {
+    const match = /^(\d+)x(\d+)$/.exec(size);
+    const targetW = parseInt(match[1], 10);
+    const targetH = parseInt(match[2], 10);
+    const sizeStr = `${targetW}x${targetH}`;
+    const recomposePrompt = (prompt ? prompt + " " : "") + `Recompose this image at ${targetW}x${targetH} (aspect ratio ${targetW}:${targetH} simplified) while preserving the subject, palette, style, and overall mood. Adjust framing as needed to fit the target shape; do not crop awkwardly. Keep the hero subject as the focal point. Preserve any visible text exactly. Match the rendering style of the source exactly.`;
+    const imageFile = await OpenAI.toFile(sourceBuffer, "source.png", { type: sourceMime });
+    const t0 = Date.now();
+    let result;
+    try {
+      result = await openaiClient.images.edit({
+        model: "gpt-image-2",
+        image: imageFile,
+        prompt: recomposePrompt,
+        size: sizeStr,
+        quality: q,
+        n: 1,
+        output_format: "png"
+      });
+    } catch (err) {
+      throw new Error(
+        `gpt-image-2 rejected size ${sizeStr}: ${err.message}. \u2192 gpt-image-2 requires dimensions to be multiples of 16, max edge 3840, aspect ratio \u22643:1. The 4K sizes (3840\xD72160 / 2160\xD73840) are experimental and sometimes fail \u2014 fall back to fal.ai's nb2_smart_resize (NB Pro) for production-stable multi-aspect output.`
+      );
+    }
+    const elapsed = ((Date.now() - t0) / 1e3).toFixed(1);
+    const data = result.data || [];
+    if (!data.length || !data[0].b64_json) {
+      throw new Error(`gpt-image-2 returned no image for target ${size}`);
+    }
+    const dest = uniqueName(outputDir, `${assetName}_${size}`, ".png");
+    const buf = Buffer.from(data[0].b64_json, "base64");
+    fs3.writeFileSync(dest, buf);
+    saved.push(dest);
+    writeSidecar(dest, {
+      tool: "gpt2_smart_resize",
+      provider: "OpenAI",
+      model: "gpt-image-2",
+      prompt: recomposePrompt,
+      image_size: size,
+      target_size: size,
+      gpt2_literal_size: sizeStr,
+      quality: q,
+      reference_images: [],
+      source_image: source,
+      duration_seconds: Number(elapsed)
+    });
+  }
+  const overallElapsed = ((Date.now() - overallT0) / 1e3).toFixed(1);
+  return {
+    provider: "OpenAI",
+    model: "gpt-image-2",
+    resolution: `${sizes.length} targets`,
+    elapsed: overallElapsed,
+    paths: saved
+  };
+}
 function formatResult(result, header) {
   const folder = result.paths.length > 0 ? path3.dirname(result.paths[0]) : "(no output saved)";
   const fileUri = folder !== "(no output saved)" ? "file:///" + folder.replace(/\\/g, "/") : null;
@@ -72389,7 +72464,7 @@ var TOOLS = [
   },
   {
     name: "gpt2_generate",
-    description: "Generate an image with OpenAI's **gpt-image-2** model (separate from NB2). Use this when the user explicitly asks for gpt-image-2, OR when the task benefits from gpt-image-2's strengths over NB2: (1) accurate text rendering in the image (paytable labels, multipliers, banner copy, logos with specific wordmarks \u2014 gpt-image-2 substantially outperforms NB2 here); (2) high-resolution photorealism at 4K (3840x2160 / 2160x3840 / 2048x2048); (3) compositional briefs with very specific multi-element layouts. Requires OPENAI_API_KEY. Per-image cost is meaningfully higher than NB2 \u2014 use for hero assets and text-heavy surfaces, not routine symbol generation. Output: PNG saved to output_dir.",
+    description: "Generate an image with OpenAI's **gpt-image-2** model (separate from NB2). Use this when the user explicitly asks for gpt-image-2, OR when the task benefits from gpt-image-2's strengths over NB2: (1) accurate text rendering in the image (paytable labels, multipliers, banner copy, logos with specific wordmarks \u2014 gpt-image-2 substantially outperforms NB2 here); (2) compositional briefs with very specific multi-element layouts and structural reasoning. Resolution: **gpt-image-2's STABLE production ceiling is 2K (2048\xD72048).** The 4K sizes (3840\xD72160 / 2160\xD73840) are accepted by the API but flagged EXPERIMENTAL by OpenAI \u2014 they may fail or produce inconsistent results. For genuine 4K hero output, use nb2_upscale instead. Requires OPENAI_API_KEY. Per-image cost is meaningfully higher than NB2 \u2014 use for hero assets and text-heavy surfaces, not routine symbol generation. Output: PNG saved to output_dir.",
     inputSchema: {
       type: "object",
       properties: {
@@ -72462,6 +72537,33 @@ var TOOLS = [
         }
       },
       required: ["prompt", "source"]
+    }
+  },
+  {
+    name: "gpt2_smart_resize",
+    description: "Multi-aspect-ratio recomposition of a source image using gpt-image-2's edit endpoint. Same pattern as the Gemini fallback in nb2_smart_resize: issues one edit call per target size. **Use when the source contains text that must remain readable after recomposition** \u2014 gpt-image-2 preserves text far better than NB2 across aspect changes (paytables, banners with copy, anything with a wordmark). Also use when the recompose needs reasoning about composition (e.g. specific subject placement in the new frame). For routine multi-aspect deliverables without text, nb2_smart_resize (fal.ai NB Pro) is cheaper, faster, and a single API call. gpt-image-2's STABLE production ceiling is 2K (2048\xD72048); the 4K targets (3840\xD72160 / 2160\xD73840) are experimental and may fail \u2014 fall back to nb2_smart_resize for those. Requires OPENAI_API_KEY. Cost scales with the number of target sizes.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        source: { type: "string", description: "Absolute path or URL of the source image. Must be inside an allowed root (run nb2_stage_image first if chat-attached)." },
+        target_sizes: {
+          type: "array",
+          items: { type: "string" },
+          description: `Target sizes as WxH strings. Each must satisfy gpt-image-2's constraints: multiples of 16, max edge \u22643840, aspect ratio \u22643:1. Example: ["2048x2048", "2048x1152", "1152x2048"]. Default: ["2048x2048", "1920x1088", "1088x1920"] (2K marketing trio).`
+        },
+        output_dir: { type: "string", description: "Output directory. Defaults to ~/Pictures/claude_nb2." },
+        asset_name: { type: "string", description: "Base filename prefix (no extension). Default: resize.", default: "resize" },
+        prompt: {
+          type: "string",
+          description: "Optional extra instruction forwarded with the auto-generated recompose prompt. Useful for stating subject placement or text preservation explicitly."
+        },
+        quality: {
+          type: "string",
+          enum: ["low", "medium", "high", "auto"],
+          default: "high"
+        }
+      },
+      required: ["source"]
     }
   }
 ];
@@ -72591,6 +72693,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         n: args.n || 1
       });
       return { content: formatResult(result, "gpt2_edit OK (OpenAI / gpt-image-2)") };
+    }
+    if (name === "gpt2_smart_resize") {
+      const assetName = sanitizeAssetName(args.asset_name, "resize");
+      const source = await validateImageInput(args.source, "source");
+      const result = await gpt2SmartResize({
+        source,
+        outputDir: resolveOutputDir(args.output_dir),
+        assetName,
+        targetSizes: args.target_sizes,
+        prompt: args.prompt || null,
+        quality: args.quality || "high"
+      });
+      return { content: formatResult(result, "gpt2_smart_resize OK (OpenAI / gpt-image-2, per-aspect recompose)") };
     }
     throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
   } catch (err) {
