@@ -7,108 +7,138 @@ Powered by [Nano Banana 2](https://fal.ai/models/fal-ai/nano-banana-2). Generati
 
 ---
 
-## Recommended install: through the h5g-plugins marketplace
+## Install
 
-This plugin is published in the **[h5g-plugins marketplace](https://github.com/michaelericksonh5/claude-plugins)** —
-a separate, version-controlled catalog that lists this plugin and any
-future High 5 Games plugins. The marketplace approach is the canonical
-Anthropic-recommended way to distribute Claude plugins (modeled on
-[`anthropics/knowledge-work-plugins`](https://github.com/anthropics/knowledge-work-plugins)
-and [`anthropics/financial-services-plugins`](https://github.com/anthropics/financial-services-plugins)).
+Two paths. Pick the one that matches what you're doing:
 
-### Claude Code
+| Path | Best for | Summary |
+|---|---|---|
+| **A. Marketplace install** | Most users — you just want to use the plugin | Add one URL in Claude Code or Cowork. Done. |
+| **B. Local installer (`install.bat` / `install.sh`)** | Developers editing the plugin, offline machines, or anyone who wants API keys saved on disk instead of pasted into Cowork's UI | Clone repo, run installer, **then** add the marketplace to Cowork |
+
+Both paths end the same way for Cowork: you add the GitHub marketplace URL inside Claude Desktop. **Cowork is a separate plugin system from Claude Code** — running `install.bat` doesn't install anything into Cowork on its own. The installer can build a legacy upload ZIP, but the marketplace flow below is simpler and stays in sync with future updates.
+
+---
+
+### Path A — Marketplace install (recommended)
+
+You don't need to clone this repo or run anything locally. The marketplace ships a pre-built, self-contained MCP server bundle.
+
+#### A1. Claude Code
+
+Inside Claude Code, run:
 
 ```
 /plugin marketplace add michaelericksonh5/claude-plugins
 /plugin install slot-art-creator-node@h5g-plugins
 ```
 
-Then run `node setup-keys.js` (from any clone of this repo) to set your
-Gemini and/or fal.ai API keys — see [API keys](#api-keys) below.
+Then set your API keys — see [API keys](#api-keys) below.
 
-### Claude Cowork
+#### A2. Claude Cowork
 
 1. Open **Claude Desktop**
 2. Switch to the **Cowork** tab
-3. Click **Customize** > **Browse plugins**
-4. Under **Personal**, click **+** > **Create plugin** > **Add marketplace**
-5. Paste `https://github.com/michaelericksonh5/claude-plugins`
-6. Click **Install** on `slot-art-creator-node` in the marketplace listing
+3. Click **Customize** in the left sidebar
+4. Click **Browse plugins**
+5. In the **Personal** section, click **+** > **Create plugin** > **Add marketplace**
+6. Paste this URL and click **Add**:
+   ```
+   https://github.com/michaelericksonh5/claude-plugins
+   ```
+7. After Cowork syncs (~5 seconds), `slot-art-creator-node` appears in the marketplace listing — click **Install**.
+8. Open the plugin's settings inside Cowork. You'll see env-var fields for `GEMINI_API_KEY` and `FAL_KEY` — paste your keys there. (See [API keys](#api-keys) for where to get them.)
+9. **Restart Claude Desktop once** so the MCP server picks up the keys.
+10. Type `/` in any chat — you should see `/slot-art-creator-node:slot-step-00` through `slot-step-10`.
 
 > [!NOTE]
 > Cowork's **Personal** marketplace tier has a documented persistence bug
-> ([claude-code #40600](https://github.com/anthropics/claude-code/issues/40600))
-> where the marketplace persists across restarts but installed plugins must be
-> re-installed every time Claude Desktop reopens. For a stable install,
-> prefer Claude Code, or wait for the upstream fix.
+> ([claude-code #40600](https://github.com/anthropics/claude-code/issues/40600)) —
+> the marketplace itself persists across Claude Desktop restarts, but the
+> installed plugin needs to be re-installed each time Claude Desktop reopens.
+> The marketplace stays, so re-installing is one click from the listing.
+> Anthropic is working on an upstream fix.
 
 ---
 
-## Alternate install: bundled installer (Claude Code only)
+### Path B — Local installer (`install.bat` / `install.sh`)
 
-The installer in this repo prepares a local Claude Code marketplace
-without going through GitHub. Useful for air-gapped machines or when
-you've already cloned the repo:
+Use this if you want any of: a local clone of the source for editing, the plugin to work without GitHub access at runtime, or API keys saved to a local file (`~/.h5g-slot-art-creator/.env`) instead of typed into Cowork's UI.
 
-### Windows
+#### B1. Clone the repo
+
+```bash
+git clone https://github.com/michaelericksonh5/slot-art-creator-node.git
+cd slot-art-creator-node
 ```
-double-click install.bat
-```
-At the "Where do you want to install this plugin?" prompt, **press Enter** (default is `[1] BOTH`).
 
-### Mac / Linux
+#### B2. Run the installer
+
+**Windows:** double-click `install.bat`. At the *"Where do you want to install this plugin?"* prompt, **press Enter** (default is `[1] BOTH`).
+
+**Mac / Linux:**
 ```bash
 chmod +x install.sh && ./install.sh
 ```
-Same — press Enter at the install-target prompt to get **both**.
+Same — press Enter at the install-target prompt.
 
-### What the installer does end-to-end
-1. Check for Node.js 18+
-2. `npm ci` to install the MCP server's dependencies (reproducible install via `package-lock.json`)
-3. Walk you through API key setup (`setup-keys.js`) — Gemini and/or fal.ai
-4. **For Claude Code:** prepare a local marketplace source + register it in `settings.json` + enable the plugin
-5. **For Claude Cowork:** build the upload ZIP at `dist/slot-art-creator-node-cowork-upload.zip`
+The installer does this end-to-end:
+1. Checks for Node.js 18+
+2. Runs `npm ci` and `npm run build` inside `nb2-mcp-server/` to install dependencies and produce the self-contained MCP bundle at `dist/index.mjs`
+3. Walks you through API key setup via `setup-keys.js` — keys saved to `~/.h5g-slot-art-creator/.env` (Windows: `%USERPROFILE%\.h5g-slot-art-creator\.env`). This file survives plugin reinstalls.
+4. **For Claude Code:** registers a local marketplace at `~/Documents/Claude_Plugins/` pointing at your clone, and enables the plugin. After this, `/slot-step-*` commands work in Claude Code.
+5. **For Claude Cowork (optional legacy path):** builds a manual-upload ZIP at `dist/slot-art-creator-node-cowork-upload.zip`. You don't need this if you follow B3 below.
 
-### Claude Code
+#### B3. Add the marketplace to Cowork
 
-Use the helper and choose **Claude Code local marketplace**. If the plugin is already present in the local marketplace source folder, you can re-register it with:
+Cowork doesn't see anything the installer did — it's a separate plugin system. To use the plugin in Cowork, follow the same steps as **A2** above (`https://github.com/michaelericksonh5/claude-plugins`).
+
+You can ignore the upload ZIP unless your Cowork org policy blocks GitHub-synced marketplaces (rare). The marketplace flow auto-updates when we push new versions; the ZIP doesn't.
+
+#### B4. (Re-)register Claude Code's local marketplace later
+
+If you skipped step B2's Claude Code registration, or moved the cloned folder, run:
 
 ```bash
 node tools/register-marketplace.js --enable
 ```
 
-Then open Claude Desktop > Code and use the documented `+ > Plugins` flow to verify `slot-art-creator-node` is installed and enabled. Claude Code documents plugin skill names as `slot-art-creator-node:slot-step-00` style namespaced skills; use `/` or `+` in the Code tab to verify the exact commands shown by your installed version.
+---
 
-### Claude Cowork
+### Verifying it worked
 
-Build the upload ZIP:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File tools/package-cowork-zip.ps1
+**Claude Code:**
 ```
+claude plugin list
+```
+Should show `slot-art-creator-node@h5g-plugins ... Status: √ enabled`.
 
-Upload `dist/slot-art-creator-node-cowork-upload.zip` in Claude Desktop > Cowork > Customize > Browse plugins. For organization distribution, upload the same ZIP in Organization settings > Plugins or configure GitHub sync. Cowork documentation says plugin skills are available through `/` or `+`, but does not specify the displayed namespace; verify the exact command names in the Cowork app after upload.
+**Both:** Type `/slot-` in chat. You should see 11 numbered commands (`slot-step-00` through `slot-step-10`). If they're missing, see [Troubleshooting](#troubleshooting) below.
 
 ---
 
 ## API keys
 
-For best results, set BOTH keys (each tool picks the optimal backend).
-Either key alone is now sufficient — every tool has a working fallback.
+You need at least one of these. For full functionality (each tool at its best), set both.
 
-| Tool | When both keys are set | When only one key |
+| Provider | What it powers | Get a key |
 |---|---|---|
-| `nb2_generate` | Google Gemini (NB2) | whichever you have |
-| `nb2_edit` | Google Gemini (NB2) | whichever you have |
-| `nb2_upscale` | Google Gemini (NB2) | whichever you have |
-| `nb2_smart_resize` | **fal.ai** (NB Pro, purpose-built endpoint) | Gemini fallback uses NB2 + local pngjs center-crop |
+| **Google Gemini** | `nb2_generate`, `nb2_edit`, `nb2_upscale` (preferred); fallback for `nb2_smart_resize` via NB2 + local crop | https://aistudio.google.com/apikey |
+| **fal.ai** | `nb2_smart_resize` (preferred — purpose-built `nano-banana-pro` endpoint); fallback for the other three | https://fal.ai/dashboard |
 
-Get keys here:
+**Routing when both keys are set:** Gemini runs the three generation tools; `nb2_smart_resize` uses fal.ai.
 
-| Provider | Get a key |
+### Where to put your keys
+
+Depends on how you installed:
+
+| You installed via... | Where to enter keys |
 |---|---|
-| **Google Gemini** (preferred for generate / edit / upscale; works for smart-resize via NB2 + local crop) | https://aistudio.google.com/apikey |
-| **fal.ai** (preferred for smart-resize via the purpose-built nano-banana-pro endpoint; fallback for the other tools) | https://fal.ai/dashboard |
+| **Claude Cowork (Path A or B)** | Inside Cowork's plugin settings UI. Open the plugin, find the env-var fields `GEMINI_API_KEY` and `FAL_KEY`, paste your keys. Restart Claude Desktop. |
+| **Claude Code, marketplace install (Path A)** | Either (a) set as shell env vars (`GEMINI_API_KEY`, `FAL_KEY`) before launching Claude Code, or (b) clone this repo once and run `node setup-keys.js` to save to `~/.h5g-slot-art-creator/.env`. The MCP server reads this `.env` file on startup. |
+| **Claude Code, local installer (Path B)** | The installer already ran `setup-keys.js` for you. Keys are saved at: Windows `%USERPROFILE%\.h5g-slot-art-creator\.env`; macOS / Linux `~/.h5g-slot-art-creator/.env`. This file survives plugin reinstalls. |
+
+To change keys later in any setup that uses the `.env` file:
 
 ```bash
 node setup-keys.js          # interactive (both keys)
@@ -117,24 +147,21 @@ node setup-keys.js --fal    # only set the fal.ai key
 node setup-keys.js --check  # verify saved keys
 ```
 
-Keys are stored in a stable per-user location:
+### A note on naming
 
-| Platform | Path |
-|---|---|
-| Windows | `%USERPROFILE%\.h5g-slot-art-creator\.env` |
-| macOS / Linux | `~/.h5g-slot-art-creator/.env` |
+The Gemini SDK accepts both `GEMINI_API_KEY` and `GOOGLE_API_KEY` as aliases for the same key. Per [Google's official docs](https://ai.google.dev/gemini-api/docs/api-key) you should **set only one** — if both are set, `GOOGLE_API_KEY` takes precedence and the SDK prints a warning. Our plugin manifest only declares `GEMINI_API_KEY`, so Cowork's UI prompts you once (not twice for the same value).
 
-This survives plugin reinstalls and updates. The MCP server loads from
-this file automatically on startup. **If both keys are present, Gemini
-runs the three generation tools; `nb2_smart_resize` always uses fal.ai.**
+---
 
-The MCP server also respects shell environment variables (`GEMINI_API_KEY`
-and `FAL_KEY`) — useful when running under config managers / MDM in Claude
-Cowork. For Gemini, the SDK also accepts the legacy `GOOGLE_API_KEY` name
-as a fallback; per [Google's official docs](https://ai.google.dev/gemini-api/docs/api-key)
-the two names are aliases for the same key and **you should set only one**.
-The plugin manifest declares `GEMINI_API_KEY` (the canonical name) so
-Cowork's plugin UI only prompts you once.
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Slash commands missing in Cowork after install | Persistence bug ([#40600](https://github.com/anthropics/claude-code/issues/40600)) | Re-install the plugin from the marketplace listing. The marketplace itself stays added. |
+| MCP tools missing (`nb2_*`) but skills appear | API keys not set, or Claude Desktop wasn't restarted after entering them | Open plugin settings, verify keys are entered, restart Claude Desktop |
+| "Plugin failed to load: Duplicate hooks file" | Stale cache of an old version | `claude plugin uninstall slot-art-creator-node@h5g-plugins` then re-install |
+| `claude plugin marketplace add` errors with SSH host key | git client tried SSH but you have no SSH key configured | Our marketplace uses HTTPS sources, so this shouldn't happen — if it does, add `github.com` to `~/.ssh/known_hosts` or run `ssh -T git@github.com` once to accept the host |
+| Skills sorted alphabetically (not numerically) in autocomplete | Old version cached | Update the marketplace: `/plugin marketplace update h5g-plugins`, then reinstall |
 
 ---
 
