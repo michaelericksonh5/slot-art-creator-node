@@ -1,0 +1,138 @@
+---
+name: slot-step-02
+description: STEP 2 — Generate the master key art for the game. The approved key art becomes the visual style anchor — every downstream skill reads it as a reference image to keep symbols, backgrounds, and UI consistent. Run after /slot-step-01. Iterates freely until the user approves one as the locked anchor.
+---
+
+# Step 2 — Key Art
+
+The key art is the most important single asset in the project. Once locked,
+it becomes the visual ground truth that every other skill (symbols,
+backgrounds, UI) reads as a reference. Lock it carefully.
+
+## Startup protocol
+
+1. Resolve active project from `~/.h5g-slot-active-project.json` or arg
+2. Load `project.json` and `game_brief.json` from project root
+3. If brief isn't locked yet, stop and tell user to run `/slot-step-01` first
+
+## Workflow
+
+### Step 1 — Build the prompt
+
+Use the templates in `KEY_ART_TEMPLATE.md`. Pull values from the brief:
+`game_name`, `theme_summary`, `style_lock`, `palette_leads.primary`,
+`palette_leads.accents`. Build a `<hero_subject_phrase>` from the brief's
+HP1 manifest entry (the hero is usually the top HP).
+
+If the user provided a reference image (concept art, an inspiration photo,
+a previous game's key art), pass it to NB2 as a reference — see Step 3.
+
+### Step 2 — Pre-generation validation (Gate 1)
+
+Run from `shared/qa_preflight.md`:
+
+- [ ] `style_lock` phrase is in the prompt verbatim
+- [ ] No hex codes, no codenames, no resolution strings, no aspect ratio strings
+- [ ] No UI / reels / paylines / spin buttons / HUD mentioned
+- [ ] One hero subject only (not an ensemble unless theme demands it)
+- [ ] Three-layer composition stated
+- [ ] Spotlight composition / vignette stated
+- [ ] No `negative_prompt` field
+
+### Step 3 — Generate
+
+Call `mcp__nb2node__nb2_generate`:
+
+| API arg | Value |
+|---|---|
+| `prompt` | the composed prompt (no resolution / aspect ratio strings) |
+| `aspect_ratio` | `"1:1"` for the master; `"16:9"` for wide crop; `"9:16"` for tall crop |
+| `image_size` | `"4K"` for the master (key art is the most important asset) |
+| `output_dir` | `{project_root}` (the active project folder, e.g. `H:\...\4470_merickson`) |
+| `asset_name` | filename prefix without extension — pass `nextFilename("Key", "png")` minus extension, so `"Key_001"`, `"Key_002"`, ... The MCP server appends `.png` and dedupes if the file exists. |
+| `references` | user-provided reference paths, if any |
+
+Compute `nextFilename` per `shared/asset_naming.md` — glob the project
+folder for `Key_*.png`, find max number, increment.
+
+### Step 4 — Inline QA check (Gate 2)
+
+Read the generated image immediately. Check:
+
+**BLOCK** (auto-iterate, max 2 retries):
+- Style clearly doesn't match `style_lock`
+- UI elements present (reels, buttons, HUD)
+- Multiple competing heroes when one was specified
+- No clear focal subject
+
+**FLAG** (surface and ask):
+- Hero feels off-brand or generic
+- Palette drifted from `palette_leads`
+- Vignette weak
+
+**PASS:** Show the result and ask: "Approve this as the locked key art, or
+iterate?"
+
+### Step 5 — User approves OR iterates
+
+**On approve:**
+- Append the filename to `project.json.assets.key.iterations`
+- Set `project.json.assets.key.approved` = the approved filename
+- Set `project.json.style_anchor.key_art_path` = the approved filename
+- Set `project.json.style_anchor.locked_at` = now
+- Set `current_step: "key_art_locked"`, `next_step: "/slot-step-03"`
+- Atomic-write `project.json`
+
+**On iterate:**
+- User describes the change ("warmer", "different hero pose", etc.)
+- Build a new prompt or call `mcp__nb2node__nb2_edit` referencing the
+  previous Key_NNN.png if the change is small
+- Generate again at the next filename — never overwrite
+
+### Step 6 — Generate wide and tall crops (optional)
+
+Once the master is locked, the user may want a wide marketing crop and a
+tall mobile crop. Use the templates in `KEY_ART_TEMPLATE.md` and call
+`nb2_generate` again with the appropriate `aspect_ratio` API arg.
+
+| Crop | `aspect_ratio` | Output filename |
+|---|---|---|
+| Wide marketing | `"16:9"` | `Key_wide_001.png` |
+| Tall mobile | `"9:16"` | `Key_tall_001.png` |
+
+Do NOT specify aspect ratio in the prompt body — it's an API arg only.
+
+### Step 7 — Next step nudge
+
+```
+✓ Step 2 — Key art locked.
+  Approved : Key_003.png
+  Locked at: 2026-05-06T16:00:00Z
+  This image is now the style anchor for every later asset.
+  Folder: <project_root>
+  Open:   file:///<project_root with / separators>
+
+Next: run `/slot-step-03` to start generating reel symbols.
+Each symbol will use this key art as a visual reference automatically.
+
+Type `/slot-` to see the full numbered workflow.
+```
+
+## Hard rules
+
+- **One visual idea.** Single hero focal point.
+- **No UI inside key art.** No reels, paylines, spin buttons, HUD.
+- **Master at 4K.** Key art is the highest-priority asset.
+- **Lock once.** Once `style_anchor.key_art_path` is set, every later skill
+  reads that image as a style reference automatically.
+- **Iterate freely until locked.** Generate as many `Key_NNN.png` as needed.
+  Never overwrite. The "approved" pointer in `project.json` is what matters.
+
+## References
+
+- `shared/project_memory.md` (project state, style_anchor field)
+- `shared/asset_naming.md` (Key_NNN convention)
+- `shared/qa_preflight.md` (validation gates)
+- `shared/nb2_prompting.md` §9.2 (master formula)
+- `shared/art_principles.md` §1, §2 (composition principles)
+- `KEY_ART_TEMPLATE.md` (master / wide / tall prompt templates)

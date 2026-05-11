@@ -1,0 +1,189 @@
+---
+name: slot-step-04
+description: STEP 4 — Generate a full symbol contact sheet. Two modes — IDEATION (key art + GDD/manifest → propose what each symbol could look like, before locking individuals) and ASSEMBLE (lay out approved individual symbols). Often used right after /slot-step-02 to brainstorm the set visually before refining symbols in /slot-step-03.
+---
+
+# Step 4 — Symbol Contact Sheet
+
+The contact sheet has two distinct uses:
+
+1. **Ideation** — right after key art is locked, generate a proposed sheet
+   from the manifest + GDD info. The user sees what each symbol could look
+   like in one shot. They iterate on the sheet to lock the visual direction
+   for the full set, *before* committing to individual symbols.
+2. **Assemble** — once individual symbols are approved, compose them onto
+   a single canvas as a deliverable.
+
+Most projects start with ideation, jump to `/slot-step-03` to
+refine the strongest symbols at high fidelity, then come back to assemble
+mode for the final sheet.
+
+## Startup protocol
+
+1. Resolve active project
+2. Load `project.json`, `game_brief.json`
+3. Read `project.json.style_anchor.key_art_path` (the locked key art) —
+   required for both modes
+4. Detect mode by counting approved symbols:
+   - Iterate `project.json.assets.symbols.*.approved`
+   - If <50% of manifest symbols have a non-null `approved` field → **ideation mode** (default)
+   - If ≥50% have `approved` set → **assemble mode** (default)
+   - User can override either way explicitly
+
+## Workflow
+
+### Mode A — Ideation (no approved individuals yet)
+
+The user has key art locked and a brief with a symbol manifest. They want
+to see the full set in one shot to decide which symbols are strong.
+
+**Inputs:**
+- Key art (the visual style anchor)
+- `brief.symbol_manifest` — the full list of symbol IDs and subjects
+- `brief.theme_summary`, `brief.style_lock`, `brief.palette_leads`
+- Any GDD reference images (read via `read_file_content` if `gdd_source.file_id` is set)
+- User's verbal direction ("emphasize jungle creatures", "make the wild a totem")
+
+**Build the prompt:** see `SHEET_TEMPLATE.md`. Key elements:
+
+- "Same style and palette as the key art reference image"
+- Grid layout from `brief.grid` (e.g. "5×4 reel grid → 13 symbol cells")
+- Per-cell tier discipline restated:
+  - HP cells: warm, dominant, rim glow, flat black background
+  - MP cells: moderate warmth, subtle highlight, flat black background
+  - LP cells: cool muted palette, no gold/amber/warm trim, flat white background
+  - Wild cell: breaks category and palette (states what it is)
+  - Scatter cell: circular badge
+- Each cell labeled with its manifest subject in the prompt
+- "Each cell is a square 1:1 with consistent padding"
+
+**Reference images to pass:**
+- `style_anchor.key_art_path` (always)
+- Any GDD reference images (mood boards, concept art)
+
+**Iterate freely.** Each generation produces `Sheet_001.png`,
+`Sheet_002.png`, etc. The user picks one direction and moves to slot-03 to
+refine individual symbols against it.
+
+### Mode B — Assemble (individual symbols approved)
+
+The user has approved individual symbols and wants a final layout-only
+contact sheet for review/handoff.
+
+**Inputs:**
+- Approved symbol PNG paths from `project.json.assets.symbols.<id>.approved`
+  (read each from the project root)
+- Key art for style continuity reference (`style_anchor.key_art_path`)
+
+**Approach:** call `mcp__nb2node__nb2_edit` with all approved symbols as
+references and a layout-focused prompt that says "compose these symbols on
+one canvas in a grid, preserve each one's exact appearance, add only
+spacing and a unified backdrop."
+
+This is closer to a layout op than a generation. The individual symbols
+are already locked; the sheet just stages them.
+
+### Choose mode (or override)
+
+Default is auto-detected. The user can override:
+
+```
+"Run a fresh ideation sheet — I want to explore a different direction"
+"Assemble the approved symbols into a final sheet"
+```
+
+The skill switches modes accordingly.
+
+### Step 3 — Pre-generation validation (Gate 1)
+
+- [ ] `style_lock` in prompt verbatim
+- [ ] No hex / resolution / aspect ratio in prompt body
+- [ ] Each cell's tier phrase is correct
+- [ ] LP cells stated as "no gold or warm trim"
+- [ ] Wild cell breaks category and palette
+- [ ] Cell count matches the manifest
+
+### Step 4 — Generate
+
+Call `mcp__nb2node__nb2_generate`:
+
+| API arg | Value |
+|---|---|
+| `prompt` | composed sheet prompt |
+| `aspect_ratio` | match the grid — typically `"5:4"` for a 5x4 grid display, or `"1:1"` if symbols are arranged in a tight square |
+| `image_size` | `"4K"` (sheets render many cells; need the resolution) |
+| `output_dir` | `{project_root}` |
+| `asset_name` | `"Sheet"` (the MCP server appends `_NNN.png` and auto-increments) |
+| `references` | absolute paths — resolve each filename in `project.json` against `project_root` first. Pass `[key_art_path, HP1_approved, LP1_approved, WD1_approved]` as absolute paths to anchor the style and palette range. |
+
+### Step 5 — Inline QA check (Gate 2)
+
+Read the output. Check:
+
+**BLOCK** (auto-iterate):
+- Tier gradient unreadable (HP/MP/LP indistinguishable at a glance)
+- Wild fails to break the set
+- Any LP shows gold/amber
+- Style mismatch from key art
+
+**FLAG**:
+- Cell padding inconsistent
+- Light direction varies across cells
+- One cell looks like it belongs to a different game
+
+**PASS:** confirm and continue.
+
+### Step 6 — Update state
+
+- Append output filename to `project.json.assets.sheet.iterations`
+- If user approves, set `project.json.assets.sheet.approved` to that filename
+- Set `current_step: "sheet_locked"`, `next_step: "/slot-step-05"`
+- Atomic-write `project.json`
+
+Schema for the sheet slot follows the canonical asset record shape:
+`{iterations, approved, upscaled}`.
+
+### Step 7 — Next step nudge
+
+In ideation mode:
+```
+✓ Step 4 — Ideation sheet generated.
+  File: Sheet_001.png
+  All 13 symbols proposed at a glance ✓
+  Folder: <project_root>
+  Open:   file:///<project_root with / separators>
+
+Next options:
+  - Iterate on this sheet for a different direction (run /slot-04 again)
+  - Refine the strongest symbols at high fidelity in `/slot-step-03`
+    (each symbol will use Sheet_001.png as a reference)
+  - Generate the background in `/slot-step-05`
+
+Type `/slot-` to see the full numbered workflow.
+```
+
+In assemble mode:
+```
+✓ Step 4 — Symbol sheet locked.
+  File: Sheet_007.png
+  All 13 approved symbols composed on one canvas ✓
+  Folder: <project_root>
+  Open:   file:///<project_root with / separators>
+
+Next: run `/slot-step-05` to generate the game background.
+
+Type `/slot-` to see the full numbered workflow.
+```
+
+## Hard rules
+
+- **Sheet must match the locked key art's style.** Always pass key art as a reference.
+- **Cell aspect ratios are 1:1.** A symbol that's not square looks broken in a slot grid.
+- **Per-tier discipline holds at sheet scale.** LP cells still get cool palette, white BG.
+
+## References
+
+- `shared/project_memory.md`, `shared/asset_naming.md`, `shared/qa_preflight.md`
+- `shared/nb2_prompting.md` §9.2 (master formula)
+- `shared/art_principles.md` §3 (symbols)
+- `SHEET_TEMPLATE.md` (full prompt template)

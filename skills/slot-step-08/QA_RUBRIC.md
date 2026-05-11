@@ -1,0 +1,146 @@
+# Slot Art QA — Production Rubric
+
+## Severity
+
+| Level | Meaning |
+|---|---|
+| **RED** | Blocks production — contradicts rubric or brief |
+| **YELLOW** | Needs review — often a human visual call |
+| **GREEN** | Passes based on available evidence |
+
+**PASS** = no RED items.  
+**CONDITIONAL PASS** = RED items present but each fixable with a single edit call.  
+**FAIL** = structural problems requiring full regeneration.
+
+---
+
+## Per-symbol rubric
+
+| Check | RED | YELLOW | GREEN |
+|---|---|---|---|
+| Silhouette at 64 px | Cannot identify subject | Ambiguous | Clearly recognizable |
+| Light direction | Wrong direction or absent | Approximately right but inconsistent across set | Clearly upper-left ~10 o'clock |
+| Tier fill % | LP fills cell; HP feels small | Close but off | Matches tier band (see table) |
+| Tier palette warmth | LP shows warm gold; HP feels cool | Close but slightly off | Matches tier |
+| LP discipline | Visible gold/amber/warm trim | Marginal warm tint | No warm anywhere |
+| Outline policy | Differs from siblings in set | Subtle drift | Matches set (all hard OR all soft) |
+| Value zones | Mud / no structure | Flat or noisy | 3–5 readable zones at 25% zoom |
+| Shadow quality | Pure-black visible | Shadow flat/inconsistent | Color-matched to environment temp |
+| Material spec | White spec on gold; noisy gems (>5 facets) | Slightly off | Tinted spec on metal; 2–3 facets on gems |
+| Codename leak | Codename in caption or artifact | Codename in prompt | Theme-language only |
+
+## Fill % by tier (reference)
+
+| Tier | Approx fill | Pass criteria |
+|---|---|---|
+| Jackpot | ~95% | Fills cell edge to edge |
+| Wild | ~90% | Large and dominant, small border |
+| Scatter | ~88% | Prominent, fills cell |
+| HP1 / HP2 | 82–85% | Large and prominent |
+| MP1 / MP2 | 72–75% | Generous size with visible padding |
+| LP1–LP6 | 58–65% | Small and understated, generous empty space |
+
+---
+
+## Per-set rubric
+
+| Check | RED | YELLOW | GREEN |
+|---|---|---|---|
+| One style | Two styles visible | Subtle drift | One coherent style phrase across all |
+| One LP family | Mixed (cards + gems + objects) | One family, inconsistent treatment | One family, one treatment |
+| Saturation step between tiers | LP and HP indistinguishable | < 15 percentage points | ≥ 15–20 percentage points |
+| Lightness gap between tiers | < 10% | 10–20% | ≥ 20% |
+| Asymmetry budget | All center-symmetric | Mostly symmetric | 40–50% asymmetric silhouettes |
+| Wild breaks theme | Wild matches HP category and palette | Wild breaks color OR category | Wild breaks both category and palette |
+| Scatter shape | Rectangular | Slightly rounded | Clearly circular badge |
+| Light direction consistency | Multiple directions | Most consistent, 1–2 outliers | All from upper-left ~10 o'clock |
+
+---
+
+## Per-background rubric
+
+| Check | RED | YELLOW | GREEN |
+|---|---|---|---|
+| Bottom 30% dark for UI | Bottom is bright | Slightly bright | Clearly darkest zone |
+| Reel zone dimmed | Center is brighter than surroundings | Minimal dimming | Center 10–20% darker |
+| Vignette | No darkening at corners | Weak vignette | Corners 20–40% darker than center |
+| Three-layer composition | Flat, single plane | Two planes | Foreground / midground / distant |
+| No competing focal point | Center scene fights the reel | Mild distraction | Clearly a stage for the reels |
+
+---
+
+## Per-UI rubric
+
+| Check | RED | YELLOW | GREEN |
+|---|---|---|---|
+| Touch target size | Spin button < 44pt | Spin 44–80pt | Spin 80–120pt; all others ≥ 44pt |
+| Paytable symbol match | Alternate art (different from reel art) | Stylistically different | Identical to reel symbols |
+| Contrast (WCAG) | < 3:1 for any UI text | 3–4.4:1 | ≥ 4.5:1 for body; ≥ 3:1 for large/chrome |
+| Win banner tiers | All tiers identical | Only 1 dimension differs | ≥ 2 dimensions differ per tier |
+
+---
+
+## Automatic RED escalations (no human review needed)
+
+Flag RED immediately if:
+
+1. File does not exist or will not open.
+2. Resolution below 256 px on either side.
+3. Aspect ratio off by more than 5% from expected.
+4. Silhouette test returns "no recognizable shape" at 64 px.
+5. An LP symbol shows gold, amber, or visible warm trim.
+6. The wild symbol matches the theme's category or palette (must break both).
+7. Tier palette is inverted (LP looks warmer/richer than HP).
+
+---
+
+## Expected aspect ratios
+
+| Surface | Expected |
+|---|---|
+| Symbol | 1:1 (± 5%) |
+| Sheet 2×3 | 4:3 (± 5%) |
+| Sheet 3×3 | 1:1 (± 5%) |
+| Background portrait | 9:16 (± 5%) |
+| Background landscape | 16:9 (± 5%) |
+| UI portrait | 9:16 (± 5%) |
+| UI landscape | 16:9 (± 5%) |
+| Logo | 1:1 (± 10%) |
+| Lobby tile square | 1:1 (± 5%) |
+
+## Minimum resolution by surface
+
+| Surface | Minimum |
+|---|---|
+| Symbol (production) | 2048 px |
+| Symbol (draft) | 512 px |
+| Contact sheet | 2048 px |
+| Background | 2048 px |
+| Hero key art | 4096 px |
+| UI portrait | 1024 px |
+| Logo | 1024 px |
+| Lobby tile | 512 px |
+
+---
+
+## Output format
+
+```
+QA REVIEW — <asset_name>
+Brief: <theme> | Style: <style_lock> | Tier: <tier or "set">
+
+RED (production blockers):
+  - <item>   [or "NONE"]
+
+YELLOW (flag for review):
+  - <item>   [or "NONE"]
+
+GREEN (confirmed):
+  - <item>
+
+Required user visual checks (only a human can confirm):
+  - <item>   [or "NONE"]
+
+Recommended next action:
+  <one sentence>
+```
