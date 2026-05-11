@@ -7,23 +7,48 @@ Powered by [Nano Banana 2](https://fal.ai/models/fal-ai/nano-banana-2). Generati
 
 ---
 
-## Important: Claude Code and Claude Cowork are separate plugin systems
+## Recommended install: through the h5g-plugins marketplace
 
-Even though Claude Code (the CLI / desktop standalone) and Claude Cowork (the
-collaborative mode inside the Claude desktop app) both live in the same Anthropic
-product family, **they have separate plugin installers** and a plugin installed
-in one is NOT visible in the other.
+This plugin is published in the **[h5g-plugins marketplace](https://github.com/michaelericksonh5/claude-plugins)** —
+a separate, version-controlled catalog that lists this plugin and any
+future High 5 Games plugins. The marketplace approach is the canonical
+Anthropic-recommended way to distribute Claude plugins (modeled on
+[`anthropics/knowledge-work-plugins`](https://github.com/anthropics/knowledge-work-plugins)
+and [`anthropics/financial-services-plugins`](https://github.com/anthropics/financial-services-plugins)).
 
-The installer in this repo prepares **both** in a single run:
+### Claude Code
 
-| Ecosystem | What the installer does | Manual step needed? |
-|---|---|---|
-| **Claude Code** | Copies the plugin into `~/Documents/Claude_Plugins/`, registers the marketplace in `~/.claude/settings.json`, enables the plugin | None — just reload Claude Code |
-| **Claude Cowork** | Builds `dist/slot-art-creator-node-cowork-upload.zip` | **Yes — one manual click.** Open Claude Desktop > Cowork > Customize > Browse plugins > upload custom plugin file, select the ZIP |
+```
+/plugin marketplace add michaelericksonh5/claude-plugins
+/plugin install slot-art-creator-node@h5g-plugins
+```
 
-The Cowork upload **cannot be automated** — Claude Desktop's plugin manager is a GUI, not a CLI, and Anthropic doesn't expose a programmatic install path for it. This is true for every Cowork plugin everywhere, not just this one.
+Then run `node setup-keys.js` (from any clone of this repo) to set your
+Gemini and/or fal.ai API keys — see [API keys](#api-keys) below.
 
-## Quick install (recommended)
+### Claude Cowork
+
+1. Open **Claude Desktop**
+2. Switch to the **Cowork** tab
+3. Click **Customize** > **Browse plugins**
+4. Under **Personal**, click **+** > **Create plugin** > **Add marketplace**
+5. Paste `https://github.com/michaelericksonh5/claude-plugins`
+6. Click **Install** on `slot-art-creator-node` in the marketplace listing
+
+> [!NOTE]
+> Cowork's **Personal** marketplace tier has a documented persistence bug
+> ([claude-code #40600](https://github.com/anthropics/claude-code/issues/40600))
+> where the marketplace persists across restarts but installed plugins must be
+> re-installed every time Claude Desktop reopens. For a stable install,
+> prefer Claude Code, or wait for the upstream fix.
+
+---
+
+## Alternate install: bundled installer (Claude Code only)
+
+The installer in this repo prepares a local Claude Code marketplace
+without going through GitHub. Useful for air-gapped machines or when
+you've already cloned the repo:
 
 ### Windows
 ```
