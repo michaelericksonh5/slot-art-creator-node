@@ -3,7 +3,7 @@
 High 5 Games slot machine art generation plugin for Claude Code and Claude Cowork.
 **Node.js edition — no Python required.**
 
-Powered by [Nano Banana 2](https://fal.ai/models/fal-ai/nano-banana-2). Generation tools (`nb2_generate`, `nb2_edit`, `nb2_upscale`) prefer Google Gemini; `nb2_smart_resize` uses fal.ai.
+Powered by [Nano Banana 2](https://fal.ai/models/fal-ai/nano-banana-2). Either Google Gemini OR fal.ai works fully for all 4 generation tools. With both keys set, the plugin routes `nb2_generate` / `nb2_edit` / `nb2_upscale` to Gemini (direct API, one fewer hop, same NB2 model) and `nb2_smart_resize` to fal.ai (purpose-built Nano Banana Pro endpoint).
 
 ---
 
@@ -26,14 +26,20 @@ You don't need to clone this repo or run anything locally. The marketplace ships
 
 #### A1. Claude Code
 
-Inside Claude Code, run:
+Inside Claude Code, run these three commands in order:
 
 ```
 /plugin marketplace add michaelericksonh5/claude-plugins
 /plugin install slot-art-creator-node@h5g-plugins
+/slot-setup
 ```
 
-Then set your API keys — see [API keys](#api-keys) below.
+The first two install the plugin. `/slot-setup` is a guided first-run skill — it
+walks you through getting and saving API keys safely (it will never accept a key
+typed in chat; it points you at a double-click launcher script that uses
+hidden-input terminal prompts instead). Once keys are set, type `/slot-help` for
+the workflow overview, or jump straight to `/slot-step-00` if you have a GDD or
+`/slot-step-01` to pitch fresh.
 
 #### A2. Claude Cowork
 
@@ -47,9 +53,9 @@ Then set your API keys — see [API keys](#api-keys) below.
    https://github.com/michaelericksonh5/claude-plugins
    ```
 7. After Cowork syncs (~5 seconds), `slot-art-creator-node` appears in the marketplace listing — click **Install**.
-8. Open the plugin's settings inside Cowork. You'll see env-var fields for `GEMINI_API_KEY` and `FAL_KEY` — paste your keys there. (See [API keys](#api-keys) for where to get them.)
+8. Open the plugin's settings inside Cowork. You'll see env-var fields for `GEMINI_API_KEY` and `FAL_KEY` — paste your keys there (**not into chat** — credentials in chat get persisted in conversation history). See [API keys](#api-keys) for where to get them.
 9. **Restart Claude Desktop once** so the MCP server picks up the keys.
-10. Type `/` in any chat — you should see `/slot-art-creator-node:slot-step-00` through `slot-step-10`.
+10. In any Cowork chat, type `/slot-help` for the workflow overview, or `/slot-setup` if you want a guided check that your keys are configured correctly. Then `/slot-step-00` (if you have a GDD) or `/slot-step-01` (fresh concept).
 
 > [!NOTE]
 > Cowork's **Personal** marketplace tier has a documented persistence bug
@@ -113,7 +119,7 @@ claude plugin list
 ```
 Should show `slot-art-creator-node@h5g-plugins ... Status: √ enabled`.
 
-**Both:** Type `/slot-` in chat. You should see 11 numbered commands (`slot-step-00` through `slot-step-10`). If they're missing, see [Troubleshooting](#troubleshooting) below.
+**Both:** Type `/slot-` in chat. You should see 13 commands: `/slot-help` (workflow tour), `/slot-setup` (API-key configuration), and the 11 numbered steps `slot-step-00` through `slot-step-10`. If they're missing, see [Troubleshooting](#troubleshooting) below.
 
 ---
 
@@ -150,15 +156,23 @@ Should show `slot-art-creator-node@h5g-plugins ... Status: √ enabled`.
 
 ### Where to put your keys
 
-Depends on how you installed:
+**Never paste API keys into chat** — chat messages are persisted in
+conversation transcripts. Use one of the safe entry channels below:
 
-| You installed via... | Where to enter keys |
+| You installed via... | Where to enter keys (safe channels) |
 |---|---|
-| **Claude Cowork (Path A or B)** | Inside Cowork's plugin settings UI. Open the plugin, find the env-var fields `GEMINI_API_KEY` and `FAL_KEY`, paste your keys. Restart Claude Desktop. |
-| **Claude Code, marketplace install (Path A)** | Either (a) set as shell env vars (`GEMINI_API_KEY`, `FAL_KEY`) before launching Claude Code, or (b) clone this repo once and run `node setup-keys.js` to save to `~/.h5g-slot-art-creator/.env`. The MCP server reads this `.env` file on startup. |
+| **Claude Cowork (Path A or B)** | Cowork's built-in plugin settings UI. Open the plugin, find the env-var fields `GEMINI_API_KEY` and `FAL_KEY`, paste your keys. Restart Claude Desktop. |
+| **Claude Code, marketplace install (Path A)** | Easiest: run `/slot-setup` inside Claude Code — it'll surface the exact path to the double-click launcher script that ships with the plugin (`setup-keys.bat` on Windows, `setup-keys.sh` on Mac/Linux). The script uses hidden-input prompts so keys never echo to the terminal log. Saves to `~/.h5g-slot-art-creator/.env`. Alternative: set shell env vars (`GEMINI_API_KEY`, `FAL_KEY`) before launching Claude Code. |
 | **Claude Code, local installer (Path B)** | The installer already ran `setup-keys.js` for you. Keys are saved at: Windows `%USERPROFILE%\.h5g-slot-art-creator\.env`; macOS / Linux `~/.h5g-slot-art-creator/.env`. This file survives plugin reinstalls. |
 
-To change keys later in any setup that uses the `.env` file:
+To change keys later, double-click the launcher in your plugin install:
+
+| Platform | Launcher path (replace `<version>` with what's in your install) |
+|---|---|
+| **Windows** | `%USERPROFILE%\.claude\plugins\cache\h5g-plugins\slot-art-creator-node\<version>\setup-keys.bat` |
+| **Mac / Linux** | `$HOME/.claude/plugins/cache/h5g-plugins/slot-art-creator-node/<version>/setup-keys.sh` |
+
+Or — equivalently — from a clone of the repo:
 
 ```bash
 node setup-keys.js          # interactive (both keys)
@@ -166,6 +180,27 @@ node setup-keys.js --gemini # only set the Gemini key
 node setup-keys.js --fal    # only set the fal.ai key
 node setup-keys.js --check  # verify saved keys
 ```
+
+### External users / non-H5G installs
+
+The plugin's project folder defaults to H5G's Drive Stream path
+(`H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\`)
+when that mount exists. If you don't have that drive (most non-H5G installs),
+the plugin falls back to `~/slot-art-projects/` per user.
+
+To put project folders elsewhere (e.g. a Dropbox folder), set the env var
+before launching Claude Code:
+
+```
+# Windows (PowerShell, persisted)
+[Environment]::SetEnvironmentVariable("SLOT_ART_PROJECT_BASE", "C:\Users\you\Dropbox\slot-art-projects", "User")
+
+# Mac / Linux (add to ~/.zshrc or ~/.bashrc)
+export SLOT_ART_PROJECT_BASE="$HOME/Dropbox/slot-art-projects"
+```
+
+Resolution order at runtime: `SLOT_ART_PROJECT_BASE` env var →
+H5G Drive Stream → `~/slot-art-projects/`. First hit wins.
 
 ### A note on naming
 
@@ -193,6 +228,8 @@ sessions and conversation compaction (see [Project memory](#project-memory)).
 
 | # | Command | When | What it does |
 |---|---|---|---|
+| — | `/slot-help` | Any time | Workflow overview + routes you to the right next step |
+| — | `/slot-setup` | First run or when changing keys | Guided API-key configuration (never accepts keys via chat — points you at the safe launcher script) |
 | 00 | `/slot-step-00` | Optional, before brief | Pulls GDD from Drive, seeds project |
 | 01 | `/slot-step-01` | Foundation | Locks theme, palette, style, manifest into `project.json` |
 | 02 | `/slot-step-02` | After brief | Master key art — becomes the visual style anchor |
