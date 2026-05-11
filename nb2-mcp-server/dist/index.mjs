@@ -3653,49 +3653,49 @@ var require_fast_uri = __commonJS({
       schemelessOptions.skipEscape = true;
       return serialize(resolved, schemelessOptions);
     }
-    function resolveComponent(base, relative, options, skipNormalization) {
+    function resolveComponent(base, relative2, options, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
         base = parse3(serialize(base, options), options);
-        relative = parse3(serialize(relative, options), options);
+        relative2 = parse3(serialize(relative2, options), options);
       }
       options = options || {};
-      if (!options.tolerant && relative.scheme) {
-        target.scheme = relative.scheme;
-        target.userinfo = relative.userinfo;
-        target.host = relative.host;
-        target.port = relative.port;
-        target.path = removeDotSegments(relative.path || "");
-        target.query = relative.query;
+      if (!options.tolerant && relative2.scheme) {
+        target.scheme = relative2.scheme;
+        target.userinfo = relative2.userinfo;
+        target.host = relative2.host;
+        target.port = relative2.port;
+        target.path = removeDotSegments(relative2.path || "");
+        target.query = relative2.query;
       } else {
-        if (relative.userinfo !== void 0 || relative.host !== void 0 || relative.port !== void 0) {
-          target.userinfo = relative.userinfo;
-          target.host = relative.host;
-          target.port = relative.port;
-          target.path = removeDotSegments(relative.path || "");
-          target.query = relative.query;
+        if (relative2.userinfo !== void 0 || relative2.host !== void 0 || relative2.port !== void 0) {
+          target.userinfo = relative2.userinfo;
+          target.host = relative2.host;
+          target.port = relative2.port;
+          target.path = removeDotSegments(relative2.path || "");
+          target.query = relative2.query;
         } else {
-          if (!relative.path) {
+          if (!relative2.path) {
             target.path = base.path;
-            if (relative.query !== void 0) {
-              target.query = relative.query;
+            if (relative2.query !== void 0) {
+              target.query = relative2.query;
             } else {
               target.query = base.query;
             }
           } else {
-            if (relative.path[0] === "/") {
-              target.path = removeDotSegments(relative.path);
+            if (relative2.path[0] === "/") {
+              target.path = removeDotSegments(relative2.path);
             } else {
               if ((base.userinfo !== void 0 || base.host !== void 0 || base.port !== void 0) && !base.path) {
-                target.path = "/" + relative.path;
+                target.path = "/" + relative2.path;
               } else if (!base.path) {
-                target.path = relative.path;
+                target.path = relative2.path;
               } else {
-                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative.path;
+                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative2.path;
               }
               target.path = removeDotSegments(target.path);
             }
-            target.query = relative.query;
+            target.query = relative2.query;
           }
           target.userinfo = base.userinfo;
           target.host = base.host;
@@ -3703,7 +3703,7 @@ var require_fast_uri = __commonJS({
         }
         target.scheme = base.scheme;
       }
-      target.fragment = relative.fragment;
+      target.fragment = relative2.fragment;
       return target;
     }
     function equal(uriA, uriB, options) {
@@ -35390,8 +35390,8 @@ var require_main = __commonJS({
         const shortPaths = [];
         for (const filePath of optionPaths) {
           try {
-            const relative = path3.relative(process.cwd(), filePath);
-            shortPaths.push(relative);
+            const relative2 = path3.relative(process.cwd(), filePath);
+            shortPaths.push(relative2);
           } catch (e2) {
             if (debug) {
               _debug(`Failed to load ${filePath} ${e2.message}`);
@@ -62100,7 +62100,36 @@ import * as https2 from "https";
 import { lookup } from "dns/promises";
 import { fileURLToPath } from "url";
 var __dirname = path2.dirname(fileURLToPath(import.meta.url));
-var PLUGIN_ROOT = path2.resolve(__dirname, "..");
+function findPluginRoot(startDir) {
+  let dir = startDir;
+  for (let i2 = 0; i2 < 4; i2++) {
+    if (fs3.existsSync(path2.join(dir, ".claude-plugin", "plugin.json"))) return dir;
+    const parent = path2.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return path2.resolve(startDir, "..");
+}
+var PLUGIN_ROOT = findPluginRoot(__dirname);
+function readServerVersion() {
+  const candidates = [
+    path2.join(__dirname, "package.json"),
+    // unbundled (nb2-mcp-server/index.js)
+    path2.join(__dirname, "..", "package.json"),
+    // bundled (nb2-mcp-server/dist/index.mjs)
+    path2.join(PLUGIN_ROOT, "nb2-mcp-server", "package.json")
+    // any layout via plugin root
+  ];
+  for (const p of candidates) {
+    try {
+      const v = JSON.parse(fs3.readFileSync(p, "utf8")).version;
+      if (v) return v;
+    } catch {
+    }
+  }
+  return "0.0.0";
+}
+var SERVER_VERSION = readServerVersion();
 try {
   const { default: dotenv } = await Promise.resolve().then(() => __toESM(require_main(), 1));
   const userEnv = path2.join(os.homedir(), ".h5g-slot-art-creator", ".env");
@@ -62123,11 +62152,20 @@ function ensureDir(dir) {
   fs3.mkdirSync(dir, { recursive: true });
 }
 function uniqueName(outDir, baseName, ext = ".png") {
+  ensureDir(outDir);
   let candidate = path2.join(outDir, `${baseName}${ext}`);
-  if (!fs3.existsSync(candidate)) return candidate;
-  let i2 = 2;
-  while (fs3.existsSync(path2.join(outDir, `${baseName}_${i2}${ext}`))) i2++;
-  return path2.join(outDir, `${baseName}_${i2}${ext}`);
+  let i2 = 1;
+  while (true) {
+    try {
+      const fd = fs3.openSync(candidate, "wx");
+      fs3.closeSync(fd);
+      return candidate;
+    } catch (err) {
+      if (err.code !== "EEXIST") throw err;
+      i2 += 1;
+      candidate = path2.join(outDir, `${baseName}_${i2}${ext}`);
+    }
+  }
 }
 var ALLOWED_IMAGE_EXTENSIONS = /* @__PURE__ */ new Set([".png", ".jpg", ".jpeg", ".webp"]);
 var MAX_REMOTE_IMAGE_BYTES = 50 * 1024 * 1024;
@@ -62266,7 +62304,7 @@ async function fetchValidatedRemoteImage(rawUrl, init = {}, redirects = 0) {
         resolveSafeRemoteAddress(hostname).then((addressInfo) => callback(null, addressInfo.address, addressInfo.family)).catch((error2) => callback(error2));
       },
       headers: {
-        "User-Agent": "slot-art-creator-node/1.1",
+        "User-Agent": `slot-art-creator-node/${SERVER_VERSION}`,
         Accept: "image/*,*/*;q=0.1"
       }
     }, (res) => {
@@ -62333,6 +62371,47 @@ async function validateRemoteImageUrl(rawUrl) {
   }
   return rawUrl;
 }
+function buildAllowedImageRoots() {
+  const roots = /* @__PURE__ */ new Set();
+  const add = (p) => {
+    if (!p) return;
+    try {
+      const real = fs3.realpathSync(p);
+      roots.add(real);
+    } catch {
+      roots.add(path2.resolve(p));
+    }
+  };
+  add(path2.join(os.homedir(), "Pictures", "claude_nb2"));
+  add(path2.join(os.homedir(), ".h5g-slot-art-creator", "inputs"));
+  add(PLUGIN_ROOT);
+  try {
+    const pointerPath = path2.join(os.homedir(), ".h5g-slot-active-project.json");
+    if (fs3.existsSync(pointerPath)) {
+      const pointer = JSON.parse(fs3.readFileSync(pointerPath, "utf8"));
+      if (pointer.project_root) add(pointer.project_root);
+    }
+  } catch {
+  }
+  const extra = process.env.SLOT_ART_EXTRA_ROOTS;
+  if (extra) {
+    for (const r2 of extra.split(/[;:]/).map((s2) => s2.trim()).filter(Boolean)) {
+      add(r2);
+    }
+  }
+  return Array.from(roots);
+}
+function isWithinAllowedRoot(resolvedPath, roots) {
+  const target = path2.resolve(resolvedPath);
+  for (const root of roots) {
+    const rootAbs = path2.resolve(root);
+    const rel = path2.relative(rootAbs, target);
+    if (rel === "" || !rel.startsWith("..") && !path2.isAbsolute(rel)) {
+      return true;
+    }
+  }
+  return false;
+}
 function validateLocalImagePath(rawPath) {
   const expanded = rawPath.startsWith("~") ? path2.join(os.homedir(), rawPath.slice(1)) : rawPath;
   const resolved = fs3.realpathSync(path2.resolve(expanded));
@@ -62346,6 +62425,12 @@ function validateLocalImagePath(rawPath) {
   }
   if (path2.basename(resolved).toLowerCase().startsWith(".env")) {
     throw new Error(`Image input cannot be an env file: ${rawPath}`);
+  }
+  const roots = buildAllowedImageRoots();
+  if (!isWithinAllowedRoot(resolved, roots)) {
+    throw new Error(
+      `Image input is outside the allowed roots. Image must live under the active project folder, ~/Pictures/claude_nb2, ~/.h5g-slot-art-creator/inputs, the plugin folder, or a directory listed in SLOT_ART_EXTRA_ROOTS. Got: ${rawPath} (resolves to ${resolved}).`
+    );
   }
   return resolved;
 }
@@ -62381,6 +62466,9 @@ function writeSidecar(pngPath, meta2) {
 }
 var FAL_KEY = process.env.FAL_KEY || "";
 var GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+if (FAL_KEY) {
+  import_client.fal.config({ credentials: FAL_KEY });
+}
 function getProviderForGeneration() {
   if (GEMINI_KEY) return "gemini";
   if (FAL_KEY) return "fal";
@@ -62428,7 +62516,6 @@ async function downloadImage(url, destPath) {
   fs3.writeFileSync(destPath, buf);
 }
 async function falGenerate({ prompt, outputDir, assetName, imageSize, aspectRatio, references }) {
-  import_client.fal.config({ credentials: FAL_KEY });
   const falRes = FAL_RESOLUTION_MAP[imageSize] || "2K";
   const input = {
     prompt,
@@ -62444,11 +62531,7 @@ async function falGenerate({ prompt, outputDir, assetName, imageSize, aspectRati
     );
     input.reference_image_urls = uploaded;
   }
-  const endpoint = references && references.length > 0 ? "fal-ai/nano-banana-2/edit" : "fal-ai/nano-banana-2";
-  if (endpoint === "fal-ai/nano-banana-2/edit") {
-    input.image_urls = input.reference_image_urls;
-    delete input.reference_image_urls;
-  }
+  const endpoint = "fal-ai/nano-banana-2";
   const t0 = Date.now();
   const result = await import_client.fal.subscribe(endpoint, { input, logs: false });
   const elapsed = ((Date.now() - t0) / 1e3).toFixed(1);
@@ -62476,7 +62559,6 @@ async function falGenerate({ prompt, outputDir, assetName, imageSize, aspectRati
   return { provider: "fal.ai", model: "fal-ai/nano-banana-2", resolution: falRes, elapsed, paths: saved };
 }
 async function falEdit({ prompt, source, outputDir, assetName, imageSize, aspectRatio, extraReferences }) {
-  import_client.fal.config({ credentials: FAL_KEY });
   const falRes = FAL_RESOLUTION_MAP[imageSize] || "2K";
   const allRefs = [source, ...extraReferences || []];
   const uploaded = await Promise.all(
@@ -62518,7 +62600,6 @@ async function falEdit({ prompt, source, outputDir, assetName, imageSize, aspect
   return { provider: "fal.ai", model: "fal-ai/nano-banana-2/edit", resolution: falRes, elapsed, paths: saved };
 }
 async function falSmartResize({ source, outputDir, assetName, targetSizes, prompt }) {
-  import_client.fal.config({ credentials: FAL_KEY });
   let imageUrl = source;
   if (!source.startsWith("http://") && !source.startsWith("https://")) {
     imageUrl = await uploadLocalFile(source);
@@ -62729,17 +62810,24 @@ async function geminiSmartResize({ source, outputDir, assetName, targetSizes, pr
     });
     const elapsed = ((Date.now() - t0) / 1e3).toFixed(1);
     let imageBuf = null;
+    let imageMime = null;
     const candidates = response.candidates || [];
     outer: for (const cand of candidates) {
       for (const part of cand.content?.parts || []) {
         if (part.inlineData?.data) {
           imageBuf = Buffer.from(part.inlineData.data, "base64");
+          imageMime = (part.inlineData.mimeType || "image/png").toLowerCase();
           break outer;
         }
       }
     }
     if (!imageBuf) {
       throw new Error(`Gemini returned no image for target ${size}`);
+    }
+    if (!imageMime.startsWith("image/png")) {
+      throw new Error(
+        `Gemini returned ${imageMime} for target ${size}; smart_resize Gemini path requires PNG. Re-run, or switch to fal.ai (FAL_KEY) which uses the purpose-built smart-resize endpoint and is not subject to this failure mode.`
+      );
     }
     const croppedBuf = centerCropPng(imageBuf, targetW, targetH);
     const dest = uniqueName(outputDir, `${assetName}_${size}`);
@@ -62918,7 +63006,7 @@ var TOOLS = [
   }
 ];
 var server = new Server(
-  { name: "slot-art-creator-node-nb2", version: "1.0.0" },
+  { name: "slot-art-creator-node-nb2", version: SERVER_VERSION },
   { capabilities: { tools: {} } }
 );
 server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: TOOLS }));
@@ -62996,13 +63084,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [{
           type: "text",
           text: "ERROR: nb2_smart_resize needs at least one API key. Either works \u2014 both providers fully implement this tool.\n  FAL_KEY:        node setup-keys.js --fal  (purpose-built NB Pro endpoint, single API call)\n  GEMINI_API_KEY: node setup-keys.js --gemini  (NB2 + pngjs center-crop, one call per target)"
-        }]
+        }],
+        isError: true
       };
     }
     throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
   } catch (err) {
     if (err instanceof McpError) throw err;
-    return { content: formatError2(name, err) };
+    return { content: formatError2(name, err), isError: true };
   }
 });
 var transport = new StdioServerTransport();

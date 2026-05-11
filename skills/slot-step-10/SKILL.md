@@ -1,6 +1,6 @@
 ---
 name: slot-step-10
-description: STEP 10 (final) — Produce pixel-perfect multi-aspect variants of an approved asset (e.g., generate 1:1, 16:9, and 9:16 versions of a hero asset). Two backends — fal.ai (preferred, purpose-built endpoint via nano-banana-pro) and Gemini fallback (NB2 + center-crop). Works with whichever API key the user has. For single-aspect upscale use /slot-step-09.
+description: STEP 10 (final) — Produce pixel-perfect multi-aspect variants of an approved asset (e.g., generate 1:1, 16:9, and 9:16 versions of a hero asset). Either Gemini or fal.ai works fully for this; when both keys are set the plugin routes to fal.ai's purpose-built nano-banana-pro endpoint (single API call) over Gemini's NB2 + center-crop path. For single-aspect upscale use /slot-step-09.
 ---
 
 # Step 10 — Smart Resize (final delivery)

@@ -1,6 +1,6 @@
 ---
 name: slot-step-05
-description: STEP 5 — Generate the environment background(s) for the slot machine — base, free-spins, bonus, pick-me, wheel. Reads the locked key art and approved symbol sheet as references so the background sits in the same world without competing for attention. The background must support the reels, not steal from them.
+description: STEP 5 — Generate the environment background(s) for the slot machine — base, free-spins, bonus, pick-me, wheel. Reads the locked key art and approved symbol sheet as references so the background sits in the same world without competing for attention. The background must support the reels, not steal from them. Run after /slot-step-04 (or directly after /slot-step-03 if a contact sheet isn't needed). Always run before /slot-step-06.
 ---
 
 # Step 5 — Background Designer

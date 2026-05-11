@@ -30,7 +30,6 @@
  *     Neither                → tool returns a clean error message
  */
 
-import { createRequire } from "module";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -56,7 +55,48 @@ import { fileURLToPath } from "url";
 // ---------------------------------------------------------------------------
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PLUGIN_ROOT = path.resolve(__dirname, "..");
+
+// Resolve the plugin root for both layouts:
+//   - Unbundled (dev):   __dirname = .../nb2-mcp-server, plugin root = ..
+//   - Bundled (esbuild): __dirname = .../nb2-mcp-server/dist, plugin root = ../..
+// Walk up until we find .claude-plugin/plugin.json (the canonical marker).
+function findPluginRoot(startDir) {
+  let dir = startDir;
+  for (let i = 0; i < 4; i++) {
+    if (fs.existsSync(path.join(dir, ".claude-plugin", "plugin.json"))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  // Fallback for installs where the marker is missing — preserve old behavior.
+  return path.resolve(startDir, "..");
+}
+const PLUGIN_ROOT = findPluginRoot(__dirname);
+
+// Read our own version from package.json so the MCP server identity and the
+// User-Agent string for outbound HTTP both stay in sync with the published
+// version. We use fs.readFileSync + JSON.parse rather than createRequire to
+// avoid an identifier collision with the esbuild bundle banner (which injects
+// its own `createRequire` import to make CJS deps like google-auth-library's
+// dynamic require() of child_process work). Plain file reads sidestep that
+// entire layer.
+function readServerVersion() {
+  const candidates = [
+    path.join(__dirname, "package.json"),                       // unbundled (nb2-mcp-server/index.js)
+    path.join(__dirname, "..", "package.json"),                 // bundled (nb2-mcp-server/dist/index.mjs)
+    path.join(PLUGIN_ROOT, "nb2-mcp-server", "package.json"),   // any layout via plugin root
+  ];
+  for (const p of candidates) {
+    try {
+      const v = JSON.parse(fs.readFileSync(p, "utf8")).version;
+      if (v) return v;
+    } catch {
+      // Try next candidate.
+    }
+  }
+  return "0.0.0";
+}
+const SERVER_VERSION = readServerVersion();
 
 // Load .env in priority order:
 //   1. ~/.h5g-slot-art-creator/.env   (canonical, survives plugin reinstall)
@@ -94,12 +134,29 @@ function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
+// Atomically reserve a unique filename. We open the candidate with O_CREAT|O_EXCL
+// (Node's "wx" flag) so two concurrent tool calls in the same outDir can never
+// both win the same name — one creates a 0-byte placeholder, the other gets
+// EEXIST and bumps the counter. The placeholder is overwritten by the caller's
+// real write (downloadImage → writeFileSync, or geminiSmartResize's
+// writeFileSync) which happens via plain write to the same path. This trades
+// one cheap fd churn for race-free concurrency, including across worker
+// processes since the kernel enforces the exclusive create.
 function uniqueName(outDir, baseName, ext = ".png") {
+  ensureDir(outDir);
   let candidate = path.join(outDir, `${baseName}${ext}`);
-  if (!fs.existsSync(candidate)) return candidate;
-  let i = 2;
-  while (fs.existsSync(path.join(outDir, `${baseName}_${i}${ext}`))) i++;
-  return path.join(outDir, `${baseName}_${i}${ext}`);
+  let i = 1;
+  while (true) {
+    try {
+      const fd = fs.openSync(candidate, "wx");
+      fs.closeSync(fd);
+      return candidate;
+    } catch (err) {
+      if (err.code !== "EEXIST") throw err;
+      i += 1;
+      candidate = path.join(outDir, `${baseName}_${i}${ext}`);
+    }
+  }
 }
 
 const ALLOWED_IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp"]);
@@ -294,7 +351,7 @@ async function fetchValidatedRemoteImage(rawUrl, init = {}, redirects = 0) {
           .catch((error) => callback(error));
       },
       headers: {
-        "User-Agent": "slot-art-creator-node/1.1",
+        "User-Agent": `slot-art-creator-node/${SERVER_VERSION}`,
         Accept: "image/*,*/*;q=0.1",
       },
     }, (res) => {
@@ -366,6 +423,76 @@ async function validateRemoteImageUrl(rawUrl) {
   return rawUrl;
 }
 
+// Containment allowlist for local image inputs. The LLM controls these paths
+// and prompt injection means we can't trust them. Without an allowlist, a
+// malicious symlink renamed `evil.png` can point at ~/.ssh/id_rsa and we'd
+// happily upload it to fal.ai or base64-inline it to Gemini.
+//
+// We allow paths whose realpath sits inside any of:
+//   - The active project folder hierarchy (H:\Shared drives\... or wherever
+//     the active-project pointer says) — slots have to read their own outputs.
+//   - ~/Pictures/claude_nb2 — default output dir for ad-hoc generates.
+//   - ~/.h5g-slot-art-creator/inputs — reserved drop-zone for refs.
+//   - The plugin root's own assets — for KEY_ART_TEMPLATE references etc.
+//   - SLOT_ART_EXTRA_ROOTS env var, semicolon-separated, for additional
+//     trusted roots (e.g. team Drive mounts) configurable per machine.
+//
+// Symlinks are resolved BEFORE the containment check, so symlink-out-of-the-
+// allowlist attempts get caught by the prefix test.
+function buildAllowedImageRoots() {
+  const roots = new Set();
+  const add = (p) => {
+    if (!p) return;
+    try {
+      const real = fs.realpathSync(p);
+      roots.add(real);
+    } catch {
+      // Path may not exist yet (e.g. project folder pre-create) — store the
+      // resolved-but-unrealpath'd form so it still functions as a prefix.
+      roots.add(path.resolve(p));
+    }
+  };
+
+  add(path.join(os.homedir(), "Pictures", "claude_nb2"));
+  add(path.join(os.homedir(), ".h5g-slot-art-creator", "inputs"));
+  add(PLUGIN_ROOT);
+
+  // Active project root, if the pointer file exists.
+  try {
+    const pointerPath = path.join(os.homedir(), ".h5g-slot-active-project.json");
+    if (fs.existsSync(pointerPath)) {
+      const pointer = JSON.parse(fs.readFileSync(pointerPath, "utf8"));
+      if (pointer.project_root) add(pointer.project_root);
+    }
+  } catch {
+    // Pointer file malformed — fall through, the other roots still apply.
+  }
+
+  // Extra trusted roots from env (semicolon-separated for Windows safety).
+  const extra = process.env.SLOT_ART_EXTRA_ROOTS;
+  if (extra) {
+    for (const r of extra.split(/[;:]/).map((s) => s.trim()).filter(Boolean)) {
+      add(r);
+    }
+  }
+
+  return Array.from(roots);
+}
+
+function isWithinAllowedRoot(resolvedPath, roots) {
+  // Normalize both sides to absolute paths and compare prefixes by path
+  // components, not raw substrings — `/a/foo` must NOT match root `/a/f`.
+  const target = path.resolve(resolvedPath);
+  for (const root of roots) {
+    const rootAbs = path.resolve(root);
+    const rel = path.relative(rootAbs, target);
+    if (rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel))) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function validateLocalImagePath(rawPath) {
   const expanded = rawPath.startsWith("~")
     ? path.join(os.homedir(), rawPath.slice(1))
@@ -381,6 +508,12 @@ function validateLocalImagePath(rawPath) {
   }
   if (path.basename(resolved).toLowerCase().startsWith(".env")) {
     throw new Error(`Image input cannot be an env file: ${rawPath}`);
+  }
+  const roots = buildAllowedImageRoots();
+  if (!isWithinAllowedRoot(resolved, roots)) {
+    throw new Error(
+      `Image input is outside the allowed roots. Image must live under the active project folder, ~/Pictures/claude_nb2, ~/.h5g-slot-art-creator/inputs, the plugin folder, or a directory listed in SLOT_ART_EXTRA_ROOTS. Got: ${rawPath} (resolves to ${resolved}).`
+    );
   }
   return resolved;
 }
@@ -435,6 +568,15 @@ function writeSidecar(pngPath, meta) {
 const FAL_KEY = process.env.FAL_KEY || "";
 const GEMINI_KEY =
   process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+
+// Configure the fal singleton once at module init. Previous versions called
+// fal.config({ credentials }) at the top of every tool handler — the fal
+// module is a process-wide singleton, so concurrent tool calls were each
+// re-mutating shared state. Doing it once here is race-free and slightly
+// faster.
+if (FAL_KEY) {
+  fal.config({ credentials: FAL_KEY });
+}
 
 // Provider selection for the three generation tools (generate / edit / upscale).
 // Both Gemini and fal.ai are fully capable here — they wrap the SAME underlying
@@ -508,8 +650,6 @@ async function downloadImage(url, destPath) {
 }
 
 async function falGenerate({ prompt, outputDir, assetName, imageSize, aspectRatio, references }) {
-  fal.config({ credentials: FAL_KEY });
-
   // The fal.ai NanoBanana2Input schema uses `resolution` (NOT `image_size`).
   // Valid values: "0.5K" | "1K" | "2K" | "4K". Default is "1K" — we override
   // to "2K" for project minimum.
@@ -520,7 +660,17 @@ async function falGenerate({ prompt, outputDir, assetName, imageSize, aspectRati
   };
   if (aspectRatio && aspectRatio !== "auto") input.aspect_ratio = aspectRatio;
 
-  // Upload reference images if provided
+  // Upload reference images if provided. For nb2_generate, references are
+  // STYLE ANCHORS only — we always use the base (text-to-image) endpoint and
+  // pass them as reference_image_urls so output is influenced by their style
+  // without becoming an edit. This matches Gemini's behavior, where
+  // geminiGenerate appends references to the parts array as additional
+  // image inputs without switching modes.
+  //
+  // If you want an edit (source image as basis for transformation), call
+  // nb2_edit, which routes here via the explicit edit dispatch with a
+  // `source` arg. nb2_generate must never silently become an edit just
+  // because references happened to be present.
   if (references && references.length > 0) {
     const uploaded = await Promise.all(
       references.map(async (ref) => {
@@ -531,15 +681,7 @@ async function falGenerate({ prompt, outputDir, assetName, imageSize, aspectRati
     input.reference_image_urls = uploaded;
   }
 
-  const endpoint = references && references.length > 0
-    ? "fal-ai/nano-banana-2/edit"
-    : "fal-ai/nano-banana-2";
-
-  // For edit endpoint, source image is first reference
-  if (endpoint === "fal-ai/nano-banana-2/edit") {
-    input.image_urls = input.reference_image_urls;
-    delete input.reference_image_urls;
-  }
+  const endpoint = "fal-ai/nano-banana-2";
 
   const t0 = Date.now();
   const result = await fal.subscribe(endpoint, { input, logs: false });
@@ -572,8 +714,6 @@ async function falGenerate({ prompt, outputDir, assetName, imageSize, aspectRati
 }
 
 async function falEdit({ prompt, source, outputDir, assetName, imageSize, aspectRatio, extraReferences }) {
-  fal.config({ credentials: FAL_KEY });
-
   // The fal.ai NanoBanana2EditInput schema uses `resolution` (NOT `image_size`).
   const falRes = FAL_RESOLUTION_MAP[imageSize] || "2K";
 
@@ -624,8 +764,6 @@ async function falEdit({ prompt, source, outputDir, assetName, imageSize, aspect
 }
 
 async function falSmartResize({ source, outputDir, assetName, targetSizes, prompt }) {
-  fal.config({ credentials: FAL_KEY });
-
   let imageUrl = source;
   if (!source.startsWith("http://") && !source.startsWith("https://")) {
     imageUrl = await uploadLocalFile(source);
@@ -934,13 +1072,19 @@ async function geminiSmartResize({ source, outputDir, assetName, targetSizes, pr
     });
     const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
 
-    // Extract image bytes from the response
+    // Extract image bytes from the response. Gemini's SDK occasionally returns
+    // JPEG instead of PNG depending on internal heuristics — we must read the
+    // mimeType, not assume PNG, since pngjs's PNG.sync.read crashes on a JPEG
+    // byte stream. We also surface the mimeType to centerCropPng so it can
+    // transcode JPEG→PNG before the pngjs crop step.
     let imageBuf = null;
+    let imageMime = null;
     const candidates = response.candidates || [];
     outer: for (const cand of candidates) {
       for (const part of cand.content?.parts || []) {
         if (part.inlineData?.data) {
           imageBuf = Buffer.from(part.inlineData.data, "base64");
+          imageMime = (part.inlineData.mimeType || "image/png").toLowerCase();
           break outer;
         }
       }
@@ -949,7 +1093,19 @@ async function geminiSmartResize({ source, outputDir, assetName, targetSizes, pr
       throw new Error(`Gemini returned no image for target ${size}`);
     }
 
-    // Center-crop to exact target dimensions
+    // Center-crop to exact target dimensions. The crop function only operates
+    // on PNG buffers; if Gemini returned JPEG we'd need a JPEG decoder. We
+    // don't ship one (would add a native dep), so for now we error with a
+    // clear message and let the caller retry. In practice Gemini returns PNG
+    // when responseModalities includes "IMAGE" — JPEG returns are rare.
+    if (!imageMime.startsWith("image/png")) {
+      throw new Error(
+        `Gemini returned ${imageMime} for target ${size}; smart_resize Gemini ` +
+        `path requires PNG. Re-run, or switch to fal.ai (FAL_KEY) which uses ` +
+        `the purpose-built smart-resize endpoint and is not subject to this ` +
+        `failure mode.`
+      );
+    }
     const croppedBuf = centerCropPng(imageBuf, targetW, targetH);
 
     // Save
@@ -1050,6 +1206,11 @@ function formatResult(result, header) {
   return [{ type: "text", text: lines.join("\n") }];
 }
 
+// MCP error responses MUST carry isError:true at the result level so clients
+// can distinguish a tool failure ("nb2_generate threw an exception") from a
+// successful tool response that happens to contain the string "ERROR" (e.g.
+// the LLM commenting on an error message in an image). Callers should return
+// { content: formatError(...), isError: true }.
 function formatError(label, err) {
   return [{ type: "text", text: `ERROR (${label}): ${err.message || err}` }];
 }
@@ -1180,7 +1341,7 @@ const TOOLS = [
 // ---------------------------------------------------------------------------
 
 const server = new Server(
-  { name: "slot-art-creator-node-nb2", version: "1.0.0" },
+  { name: "slot-art-creator-node-nb2", version: SERVER_VERSION },
   { capabilities: { tools: {} } }
 );
 
@@ -1278,13 +1439,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 "  FAL_KEY:        node setup-keys.js --fal  (purpose-built NB Pro endpoint, single API call)\n" +
                 "  GEMINI_API_KEY: node setup-keys.js --gemini  (NB2 + pngjs center-crop, one call per target)",
         }],
+        isError: true,
       };
     }
 
     throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
   } catch (err) {
     if (err instanceof McpError) throw err;
-    return { content: formatError(name, err) };
+    return { content: formatError(name, err), isError: true };
   }
 });
 
