@@ -7,32 +7,42 @@ Powered by [Nano Banana 2](https://fal.ai/models/fal-ai/nano-banana-2). Generati
 
 ---
 
-## Install paths
+## Important: Claude Code and Claude Cowork are separate plugin systems
 
-Claude Code and Claude Cowork use different documented install flows:
+Even though Claude Code (the CLI / desktop standalone) and Claude Cowork (the
+collaborative mode inside the Claude desktop app) both live in the same Anthropic
+product family, **they have separate plugin installers** and a plugin installed
+in one is NOT visible in the other.
 
-- **Claude Code:** install from a configured plugin marketplace.
-- **Claude Cowork user install:** Claude Desktop > Cowork > Customize > Browse plugins, then install or upload a custom plugin file.
-- **Claude Cowork organization install:** Organization settings > Plugins, then upload a ZIP under 50 MB or sync from GitHub.
+The installer in this repo prepares **both** in a single run:
 
-This repository does not treat `%USERPROFILE%\Documents\Claude_Plugins` as a standard Cowork user install path. The installer uses that folder only as a local Claude Code marketplace source.
+| Ecosystem | What the installer does | Manual step needed? |
+|---|---|---|
+| **Claude Code** | Copies the plugin into `~/Documents/Claude_Plugins/`, registers the marketplace in `~/.claude/settings.json`, enables the plugin | None — just reload Claude Code |
+| **Claude Cowork** | Builds `dist/slot-art-creator-node-cowork-upload.zip` | **Yes — one manual click.** Open Claude Desktop > Cowork > Customize > Browse plugins > upload custom plugin file, select the ZIP |
 
-### Windows helper
+The Cowork upload **cannot be automated** — Claude Desktop's plugin manager is a GUI, not a CLI, and Anthropic doesn't expose a programmatic install path for it. This is true for every Cowork plugin everywhere, not just this one.
+
+## Quick install (recommended)
+
+### Windows
 ```
 double-click install.bat
 ```
+At the "Where do you want to install this plugin?" prompt, **press Enter** (default is `[1] BOTH`).
 
-### Mac / Linux helper
+### Mac / Linux
 ```bash
 chmod +x install.sh && ./install.sh
 ```
+Same — press Enter at the install-target prompt to get **both**.
 
-The installer can:
+### What the installer does end-to-end
 1. Check for Node.js 18+
-2. Install npm dependencies
-3. Walk you through API key setup
-4. Prepare a local Claude Code marketplace source and register it
-5. Build a Cowork upload ZIP at `dist/slot-art-creator-node-cowork-upload.zip`
+2. `npm ci` to install the MCP server's dependencies (reproducible install via `package-lock.json`)
+3. Walk you through API key setup (`setup-keys.js`) — Gemini and/or fal.ai
+4. **For Claude Code:** prepare a local marketplace source + register it in `settings.json` + enable the plugin
+5. **For Claude Cowork:** build the upload ZIP at `dist/slot-art-creator-node-cowork-upload.zip`
 
 ### Claude Code
 

@@ -103,10 +103,16 @@ echo  Skipped. Run later:  node setup-keys.js
 
 echo.
 echo  Where do you want to install this plugin?
-echo    [1] Claude Code local marketplace (this machine)
-echo    [2] Build Claude Cowork upload ZIP
-echo    [3] Both
+echo    [1] BOTH — Claude Code (automatic) + Claude Cowork ZIP (manual upload step)   [RECOMMENDED]
+echo    [2] Claude Code only (this machine)
+echo    [3] Cowork upload ZIP only
 echo    [4] Skip (I will install manually)
+echo.
+echo  Note: Claude Code and Claude Cowork are SEPARATE plugin systems even though
+echo        they both live inside the Claude desktop app. Choosing [1] prepares
+echo        BOTH so the plugin works no matter which one you use. The Cowork
+echo        upload requires one manual click at the end (this script can't do
+echo        GUI uploads for you — instructions printed below).
 echo.
 set /p INSTALL_TARGET="  Choice [1]: "
 if "!INSTALL_TARGET!"=="" set INSTALL_TARGET=1
@@ -116,9 +122,9 @@ if "!INSTALL_TARGET!"=="" set INSTALL_TARGET=1
 set "SOURCE_DIR=%~dp0"
 if "!SOURCE_DIR:~-1!"=="\" set "SOURCE_DIR=!SOURCE_DIR:~0,-1!"
 
-if "!INSTALL_TARGET!"=="1" goto install_code
-if "!INSTALL_TARGET!"=="2" goto package_cowork
-if "!INSTALL_TARGET!"=="3" goto install_both
+if "!INSTALL_TARGET!"=="1" goto install_both
+if "!INSTALL_TARGET!"=="2" goto install_code
+if "!INSTALL_TARGET!"=="3" goto package_cowork
 goto done_install
 
 :install_code
@@ -214,8 +220,10 @@ exit /b 0
 :: and writes a local marketplace manifest so the plugin shows up in the
 :: documented Claude Code plugin marketplace flow.
 
+:: Registration runs for [1] BOTH and [2] Claude Code only — both prepare the
+:: Code marketplace. Option [3] is Cowork-ZIP-only so it skips registration.
 if "!INSTALL_TARGET!"=="1" goto register_code
-if "!INSTALL_TARGET!"=="3" goto register_code
+if "!INSTALL_TARGET!"=="2" goto register_code
 goto skip_register
 
 :register_code
@@ -265,9 +273,40 @@ echo.
 if !VERIFY_RC! NEQ 0 (
     echo  Verification reported a failure above. Address the items marked [FAIL]
     echo  before reloading Claude Code, otherwise the slot- commands will not appear.
-) else (
-    echo  Press any key to exit. After this window closes, reload Claude Code
-    echo  (Ctrl+Shift+P ^> Developer: Reload Window^) to activate the plugin.
+    pause
+    exit /b !VERIFY_RC!
 )
+
+:: If a Cowork ZIP was built, surface the manual upload step prominently —
+:: this is the one part of the install we cannot automate (it requires
+:: a GUI click in Claude Desktop).
+set "COWORK_ZIP=%~dp0dist\slot-art-creator-node-cowork-upload.zip"
+if exist "!COWORK_ZIP!" (
+    echo.
+    echo  ========================================================================
+    echo   CLAUDE COWORK ^(MANUAL STEP^) — required for Cowork sessions to see the plugin
+    echo  ========================================================================
+    echo.
+    echo   The Cowork upload ZIP is built and ready at:
+    echo     !COWORK_ZIP!
+    echo.
+    echo   To install in Cowork:
+    echo     1. Open Claude Desktop
+    echo     2. Go to Cowork ^> Customize ^> Browse plugins ^> upload custom plugin file
+    echo     3. Select the ZIP path above
+    echo     4. Start a new Cowork session ^(existing sessions don't pick it up^)
+    echo.
+    echo   If your org admin has plugin uploads locked down, share this ZIP with
+    echo   them so they can upload it under Organization Settings ^> Plugins.
+    echo.
+)
+
+echo  ----------------------------------------------------------
+echo   CLAUDE CODE — already installed and registered automatically
+echo  ----------------------------------------------------------
+echo   Reload Claude Code (Ctrl+Shift+P ^> Developer: Reload Window) to activate.
+echo   Then type /slot-step- to see the 11 numbered workflow commands.
+echo.
+echo  Press any key to exit.
 pause
-exit /b !VERIFY_RC!
+exit /b 0

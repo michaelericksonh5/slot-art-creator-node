@@ -167,6 +167,20 @@ if (!fs.existsSync(ENV_PATH)) {
   }
 }
 
+// ---------- Check 7: Cowork upload ZIP status (informational) ----------
+// Claude Cowork is a SEPARATE plugin system from Claude Code. The plugin
+// works in Cowork only if the user uploads the packaged .zip via Claude
+// Desktop's UI. We can't detect whether they've uploaded it (no API), but
+// we CAN detect whether the ZIP is built and ready for them to upload.
+const COWORK_ZIP = path.join(PLUGIN_ROOT, "dist", "slot-art-creator-node-cowork-upload.zip");
+if (fs.existsSync(COWORK_ZIP)) {
+  const stat = fs.statSync(COWORK_ZIP);
+  const sizeMb = (stat.size / (1024 * 1024)).toFixed(2);
+  pass("Cowork upload ZIP ready", `${COWORK_ZIP} (${sizeMb} MB) — upload in Claude Desktop > Cowork > Customize > Browse plugins`);
+} else {
+  warn("Cowork upload ZIP", "not built — re-run installer and choose option [1] BOTH, or [3] Cowork only. Cowork sessions can't see the plugin without this manual upload.");
+}
+
 // ---------- Print report ----------
 console.log("");
 console.log(" --- Verification report ---");
