@@ -72,7 +72,37 @@ detail. Just increase resolution while preserving every visible element.
 
 ### Step 4 — Generate
 
-Call `mcp__nb2node__nb2_upscale`:
+NB2 is stochastic — the same source + prompt yields a slightly different
+output each call. For routine upscales, one call is fine. For **hero
+assets** (key art, logo, the game's signature symbol, anything going on
+marketing surfaces), generate N variants in parallel and pick the best.
+
+**Choosing N:**
+- Routine symbol upscale (LP/MP, repeated set): `N=1`. Single call, retry
+  on failure.
+- Standard HP / banner upscale: `N=2`. Cheap insurance against a bad draw.
+- Key art / logo / marquee asset: `N=3 or 4`. The cost of picking the
+  best is small relative to the value of getting the hero right.
+
+**How to run N>1:**
+
+Issue N parallel `nb2_upscale` calls with the same `prompt` and `source`
+but different `asset_name` suffixes:
+
+```
+nb2_upscale(asset_name="HP1_002_4K_v1", ...)
+nb2_upscale(asset_name="HP1_002_4K_v2", ...)
+nb2_upscale(asset_name="HP1_002_4K_v3", ...)
+nb2_upscale(asset_name="HP1_002_4K_v4", ...)
+```
+
+Send them in a single tool batch (parallel MCP calls in one turn). Then
+in Step 5, review all N outputs together against the 8-axis rubric and
+pick the winner. Save the winner as the canonical `<source_basename>_4K`,
+optionally archive the runner-ups (don't delete — they're decent fallbacks
+if the winner has a subtle issue you catch later).
+
+For a single-call run:
 
 | API arg | Value |
 |---|---|
@@ -85,7 +115,15 @@ Call `mcp__nb2node__nb2_upscale`:
 
 ### Step 5 — Inline review (Gate 2) — 8-axis rubric
 
-Read both source and output. Compare:
+For **N=1**: read source and output, compare against the rubric below.
+
+For **N>1**: read source and ALL N outputs, score each output against
+the rubric, then declare the highest-scoring output the winner. Rename
+the winner to drop the `_v<N>` suffix; keep the runners-up with their
+versioned names. If two outputs tie, prefer the one closer to the
+source's edge structure (most preservation, least redesign).
+
+Compare each output to the source:
 
 | Axis | PASS | FAIL action |
 |---|---|---|

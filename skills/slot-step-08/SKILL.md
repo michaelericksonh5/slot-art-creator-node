@@ -63,6 +63,8 @@ for an asset you're grading, fall through to `QA_RUBRIC.md`.
 | **Symbol set — readability** | Clear silhouette at thumbnail size on every symbol. |
 | **Backgrounds** | Bottom 30% dark on all variants. Reel zone dimmed. Three-layer depth. Free-spins more saturated/warm than base. Bonus has more drama. BG palette recedes behind symbol palette. |
 | **UI** | Chrome ranks below symbols in brightness and visual weight. Bezel has transparent/open center. Banner tiers distinguishable across ≥2 axes (see BANNERS_TEMPLATE.md). Touch targets visually generous. Logo readable at thumbnail. |
+| **Lobby tile — competitor-grid check** | Has the lobby tile been reviewed inside a 3×4 or 4×5 mockup of competitor tiles at thumbnail size (~200 px)? If not, this is an automatic YELLOW. See `slot-step-06/LOBBY_TILE_TEMPLATE.md` "Competitor-grid mockup discipline" for the procedure. The tile must draw the eye within 500 ms, look categorically different from neighbors, and have a readable title wordmark at thumbnail size. |
+| **Production handoff readiness** | If the audit is for the final production sign-off (not a mid-project check), the production-handoff checklist in `shared/production_handoff.md` should be reviewable — atlas-friendly padding, pngquant/oxipng optimization, sRGB color space confirmed, banding check on gradients. These are technical-delivery prerequisites, not creative ones. |
 | **Cross-asset** | Everything feels like one cohesive world. No surface competes at wrong hierarchy level. Palette family consistent. |
 | **Symbol/environment exclusivity** | No symbol-set subject is repeated across BG/frame/UI as a recurring decorative motif. See `shared/qa_preflight.md` "Symbol/environment exclusivity" for the rule and why it matters. |
 

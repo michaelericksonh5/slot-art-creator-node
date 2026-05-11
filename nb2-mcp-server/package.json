@@ -1,6 +1,6 @@
 {
   "name": "slot-art-creator-node-mcp",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "Node.js MCP server for slot-art-creator — exposes five tools: nb2_generate, nb2_edit, nb2_upscale, nb2_smart_resize, and nb2_stage_image (copies external/chat-attached images into the safe inputs folder so they can be used by the others). Either Gemini or fal.ai works fully for the four generation/resize tools; with both keys set, the plugin routes generate/edit/upscale to Gemini (one fewer API hop, same NB2 model) and smart_resize to fal.ai (purpose-built NB Pro endpoint).",
   "type": "module",
   "main": "index.js",

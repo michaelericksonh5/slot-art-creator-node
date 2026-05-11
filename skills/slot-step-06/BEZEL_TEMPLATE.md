@@ -52,6 +52,72 @@ subtle relief carving, not painted, not brightly colored,
 recessive against the stone surface.
 ```
 
+## Material library — named directions
+
+Bezels are an art problem where naming a specific material direction up
+front beats trying to describe the look from scratch. Pick one (or
+combine 2–3) per game and lock it into the prompt as a constraint. This
+library is condensed from `research/reel_bezel_svg_design_brief.md` —
+every entry has shipped in production.
+
+### Stone families
+
+| Direction | Use when the brief calls for... |
+|---|---|
+| **Obsidian** | Volcanic / dark / premium themes. Dark volcanic stone, near-black with subtle warm highlights. Pair with gold inlay. |
+| **Basalt** | Earthy / temple / ancient themes. Charcoal stone with neutral cool tones. Pair with copper or bronze inlay. |
+| **Stepped Temple Stone** | Egyptian / Mesoamerican / temple themes. Geometric stepped relief along the outer edge — feels carved, not poured. |
+| **Marble (warm)** | Roman / luxury / Olympic themes. Warm-toned marble with subtle veining. Pair with antique gold trim. |
+| **Marble (cool)** | Norse / icy / mystical themes. Cool-toned marble. Pair with silver or pale gold. |
+| **Sandstone** | Desert / pyramid / oasis themes. Warm tan tone with visible weathering. Pair with bronze or hammered copper. |
+
+### Metalwork families
+
+| Direction | Use when the brief calls for... |
+|---|---|
+| **Aged Gold Filigree** | Treasure / fairytale / regal themes. Soft warm-gold rim with curling scrollwork. Inlay should be thinner than the reel dividers. |
+| **Hammered Copper** | Steampunk / industrial / rustic themes. Visible hammer marks, warm metallic surface, patina in recessed areas. |
+| **Brushed Brass** | Art-deco / 1920s / luxury-mechanical themes. Anisotropic streaks along the bezel direction. |
+| **Bone-Tooth Inner Rim** | Tribal / shamanic / primal themes. Pale bone inlay along the inner rim only — outer can be wood or stone. |
+| **Iron / Wrought Frame** | Gothic / castle / horror themes. Black iron, visible rivets at corners. Cool tone, low saturation. |
+
+### Cultural-motif families
+
+| Direction | Use when the brief calls for... |
+|---|---|
+| **Obsidian Papel Picado Rail** | Día de los Muertos / Latin themes. Obsidian base with papel picado (cut-paper) silhouette rail along the top edge — magenta or warm-gold paper, intricate but at a single visual scale. |
+| **Basalt Calavera Corners** | Skull / Día de los Muertos themes. Charcoal basalt frame with stylized calavera (sugar-skull) blocks at each corner. |
+| **Lotus Scroll Rail** | Asian / Buddhist / floral-Asian themes. Carved lotus motifs along the bezel center blocks, paired with jade-green or red enamel accents. |
+| **Celtic Knotwork Inlay** | Norse / Celtic / mythic themes. Continuous interwoven knot pattern along the bezel, in pale gold or silver. |
+| **Egyptian Hieroglyph Frieze** | Egyptian-specific themes. Bottom-center block carries hieroglyph-style symbols at small scale — recessive, not the focal point. |
+
+### Hybrid / modern families
+
+| Direction | Use when the brief calls for... |
+|---|---|
+| **Neon-Edged Black** | Cyberpunk / Vegas-modern themes. Black frame with a thin neon emission strip along the inner rim — magenta, cyan, or acid green. |
+| **Chrome with Glitch Noise** | Sci-fi / digital themes. Polished chrome surface with subtle digital noise / scanline artifacts. |
+| **Floating Holographic Trim** | Future / sci-fi themes. Transparent prismatic edge effect at the outer border. Pairs with chrome or matte black. |
+| **Bamboo Wrap** | Asian / nature themes. Natural bamboo segments wrapping the frame. Warm honey tone with subtle banding from the bamboo nodes. |
+
+### Composition rules across all directions
+
+These apply regardless of which material you pick:
+
+- **Limit motif detail to 3 visual scales.** A bezel that has very fine
+  filigree, medium-sized symbols, and large corner blocks reads as
+  cluttered. Pick three sizes; don't fan out into four or five.
+- **4–6 colors maximum** in the bezel. The reel symbols already carry
+  the palette story — the bezel is meant to recede.
+- **Inlay is always thinner than the reel dividers.** This is the
+  single rule most often violated. If the brief gives you an "ornate"
+  bezel, the inlay's outer edge should still be visibly thinner than
+  the grid lines, so it visually nests inside the structural frame
+  rather than competing with it.
+- **Match the symbol set's light direction.** Upper-left key light at
+  10 o'clock by default. Bezel highlights should be on the upper-left
+  corner blocks and the upper edge.
+
 ## Pre-gen quick checks
 
 - [ ] Grid dimensions stated as `<cols>×<rows>`

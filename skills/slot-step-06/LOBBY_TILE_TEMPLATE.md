@@ -44,3 +44,51 @@ Some lobbies need both `1:1` (grid tile) and `4:3` (featured tile) versions.
 Generate the `1:1` first, then use it as a reference image when generating
 the `4:3` variant — pass it via the API's `references` arg, not in
 the prompt body. Save as `Tile_NNN.png` and `Tile_4x3_NNN.png`.
+
+## Competitor-grid mockup discipline — required before sign-off
+
+A lobby tile is never reviewed in isolation. The player sees it in a grid
+of 12–20 competing games on the same screen. A tile that looks gorgeous
+alone may disappear or look generic when surrounded by competitor art. The
+rule: **never approve a lobby tile without comparing it inside a
+competitor-grid mockup.**
+
+### How to do the mockup
+
+1. **Collect 11–19 competitor tiles** from existing games in the same
+   genre (the slot lobby it'll ship to). H5G has internal references;
+   external users can pull from public slot-aggregator screenshots.
+2. **Composite into a 3×4 or 4×5 grid** with the new tile in any
+   position (avoid putting it dead-center — that's not where a player's
+   eyes land first).
+3. **Review at lobby thumbnail size** (~200×200 px per tile). Squint
+   at the grid. Three questions:
+   - Does the new tile **draw the eye** within 500 ms? (F-pattern or
+     Z-pattern scan should hit it.)
+   - Does it look **categorically different** from neighbors, or does
+     it blend? Blending kills tap-through rate.
+   - Is the title wordmark **readable** at thumbnail size, or has it
+     turned to mud?
+
+### Target metric
+
+A successful tile lifts **tap-through rate by 5–10%** vs the previous
+tile or vs an A/B control. That's the production benchmark. Aesthetic
+preference is secondary; if your favorite tile loses an A/B against
+something uglier, the data wins.
+
+### Common failure modes (red flags caught at this stage)
+
+- **Dark tile on dark lobby BG** — the tile silhouette disappears.
+  Fix by adding a thin contrasting edge or shifting BG palette warmer.
+- **Mismatched tile art vs in-game** — the player taps expecting one
+  thing, gets another, and the game's perceived quality drops.
+  Erodes lifetime value. Solution: the tile's hero element must be
+  the same character/object that's in the actual gameplay (usually
+  HP1 or the wild).
+- **Title wordmark turns to noise at 200 px** — re-author the wordmark
+  with bolder strokes or higher contrast.
+
+This check is a **slot-step-08 Gate 2** item — the cross-asset audit
+should never sign off GREEN on a lobby tile that hasn't been seen in a
+competitor-grid mockup.

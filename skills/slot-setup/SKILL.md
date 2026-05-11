@@ -1,0 +1,199 @@
+---
+name: slot-setup
+description: FIRST RUN — Configure the slot-art-creator-node plugin for use. Walks the user through getting Google Gemini and/or fal.ai API keys and saving them to the correct location WITHOUT ever putting the keys in chat. Use this whenever a user has just installed the plugin, is hitting "no API key" errors, wants to change which provider runs, or is generally setting up for the first time. Also use it when the user says "set up my keys", "configure the plugin", "I need to add my API key", or similar. Run this BEFORE any /slot-step-* skill if keys aren't configured.
+---
+
+# Setup — API Keys & First-Run Configuration
+
+This skill handles the one-time setup users need before any other skill in
+the plugin works. It does **orientation and validation only** — it never
+accepts API keys via chat. Keys go through safe channels (terminal scripts
+with hidden input, or Cowork's built-in plugin settings UI).
+
+## Why never accept keys in chat
+
+API keys are credentials. Chat messages are persisted in conversation
+transcripts, may be stored locally on disk, and may be visible to other
+tools, processes, or backups. Treating an API key the same way you'd treat
+a credit card means: never paste it in chat.
+
+**If the user pastes a key in chat at any point during this skill, stop
+and tell them:**
+
+> "Please don't paste API keys in chat — they get saved in conversation
+> history. Delete that message if you can, then use one of the safe entry
+> methods below. Your keys are not yet saved to the plugin."
+
+Then redirect them to the appropriate safe method.
+
+## Workflow
+
+### Step 1 — Detect current state
+
+Determine what's already configured:
+
+**a) Where keys would live for this user:**
+- Canonical `.env` file: `~/.h5g-slot-art-creator/.env`
+  - Windows: `%USERPROFILE%\.h5g-slot-art-creator\.env`
+  - Mac/Linux: `$HOME/.h5g-slot-art-creator/.env`
+
+**b) Read the file if it exists.** Use the Read tool. Note which keys are
+present (non-empty values for `GEMINI_API_KEY` and/or `FAL_KEY`).
+
+**c) Detect which surface the user is on** (Claude Code or Cowork). Cowork
+sessions can be inferred from environment cues or just asked. The
+guidance differs between them.
+
+### Step 2 — Branch on state
+
+**State A — both keys present and non-empty:**
+Confirm everything's ready. Skip to Step 4 (validation).
+
+**State B — one key present:**
+Tell the user what works with their current setup, ask if they want to
+add the other key for the best routing. If they say no, skip to Step 4.
+
+**State C — no keys configured:**
+Walk through getting and entering keys. Continue to Step 3.
+
+### Step 3 — Guide the user to set keys safely
+
+State each provider once, with the link to get a key. Then give the user
+the platform-specific safe entry instructions below.
+
+> **Get a key from one of these (either alone is sufficient for all 4 generation tools):**
+> - Google Gemini: https://aistudio.google.com/apikey
+> - fal.ai: https://fal.ai/dashboard
+>
+> With both keys set, the plugin routes each tool to its strongest backend.
+> See `shared/nb2_prompting.md` for the routing table if you want details.
+
+#### Claude Cowork users
+
+Cowork has a built-in safe key entry UI. Walk them through it:
+
+1. Open the **Claude Desktop** app
+2. Switch to the **Cowork** tab
+3. Click **Customize** in the sidebar > **Browse plugins**
+4. Find **slot-art-creator-node** in the listing and click into it
+5. In the plugin's settings, you'll see fields for `GEMINI_API_KEY` and
+   `FAL_KEY`. **Paste your key(s) there — not in this chat.**
+6. **Restart Claude Desktop once** so the MCP server picks up the new keys.
+7. Come back to chat and say "done" (or "keys are set", or similar) — I'll
+   verify everything works.
+
+#### Claude Code users — double-click launcher (recommended)
+
+Resolve the absolute path to the launcher script. The plugin lives in the
+Claude Code plugin cache:
+
+- Windows: `%USERPROFILE%\.claude\plugins\cache\h5g-plugins\slot-art-creator-node\<version>\setup-keys.bat`
+- Mac/Linux: `$HOME/.claude/plugins/cache/h5g-plugins/slot-art-creator-node/<version>/setup-keys.sh`
+
+Read the plugin manifest (`<install path>/.claude-plugin/plugin.json`) to
+get the exact `<version>`. List the directory under
+`~/.claude/plugins/cache/h5g-plugins/slot-art-creator-node/` if multiple
+versions exist — pick the newest.
+
+Print the exact path to the user with clear platform instructions:
+
+**Windows:**
+> 1. Open File Explorer
+> 2. Paste this path into the address bar and press Enter:
+>    `<absolute path to setup-keys.bat>`
+> 3. A terminal window opens. Paste your key(s) when prompted — your input
+>    is hidden, keys do not echo to the screen.
+> 4. When it says "Setup complete," close that window and come back here.
+
+**Mac / Linux:**
+> 1. Open a Terminal
+> 2. Paste this command and press Enter:
+>    `bash '<absolute path to setup-keys.sh>'`
+> 3. The script prompts you for each key — your input is hidden.
+> 4. When done, come back here.
+
+Once the user reports they've finished, continue to Step 4.
+
+#### Claude Code users — manual fallback
+
+If the launcher script doesn't run for any reason (Node missing,
+permissions, etc.), the user can edit the `.env` file directly:
+
+> 1. Create or open this file in any text editor:
+>    `~/.h5g-slot-art-creator/.env`
+>    (You may need to create the folder first.)
+> 2. Add one or both lines (no quotes, no spaces around the `=`):
+>    ```
+>    GEMINI_API_KEY=AIza...your-key-here
+>    FAL_KEY=...your-key-here
+>    ```
+> 3. Save the file, then come back here.
+
+### Step 4 — Validate
+
+Once the user reports keys are set, verify the file looks right:
+
+1. **Read** `~/.h5g-slot-art-creator/.env` (Windows: `%USERPROFILE%\.h5g-slot-art-creator\.env`).
+2. Confirm at least one of `GEMINI_API_KEY=` or `FAL_KEY=` is present and
+   has a non-empty value after the `=` sign.
+3. Do **NOT** print the key values back to the user (they'd end up in chat).
+   Just confirm presence: "I see GEMINI_API_KEY is set" / "FAL_KEY is set"
+   or "still empty."
+
+If both are still empty after the user said "done," ask them where they
+saved the keys — they may have edited the wrong file or used the wrong UI.
+
+For Cowork users where keys live in the plugin's env-var UI (not in `.env`),
+the file check won't apply. In that case, trust the user's confirmation and
+move on; real validation happens on first MCP call.
+
+### Step 5 — Confirm and route
+
+Tell the user what they have and what's next:
+
+> ✓ Setup complete.
+>   Gemini  : set
+>   fal.ai  : set
+>
+> With both keys, generate/edit/upscale will run on Gemini and
+> smart_resize will use fal.ai's purpose-built endpoint. Either-alone
+> would also work.
+>
+> Next steps:
+>   - If you have a Game Design Document: run `/slot-step-00`
+>   - If you're pitching a fresh concept: run `/slot-step-01`
+>   - For an overview of the workflow: run `/slot-help`
+
+## Hard rules
+
+- **Never accept an API key value in chat.** If the user pastes one,
+  refuse to use it and instruct them to delete the message and use a
+  safe channel.
+- **Never echo a key value back to the user.** Even partial values. Confirm
+  presence only ("set" / "empty").
+- **Never write a key value to any file the user can see in the chat
+  output.** Only the canonical `.env` file, which the user manages.
+- **Always tell the user where keys are saved** so they know how to update
+  them later.
+
+## What this skill does NOT do
+
+- It does not store keys in the project's `project.json` (those are
+  per-game; keys are per-user).
+- It does not validate keys via real API calls — that would burn the
+  user's quota for a setup check. Real validation happens implicitly on
+  first generation. If the user wants a verification call, they can run
+  `node setup-keys.js --check` from a terminal — that uses Gemini's
+  cheapest endpoint.
+- It does not handle multi-account scenarios (e.g. one Gemini key for
+  prod, one for testing). Users with that requirement should set keys
+  via shell env vars instead of `.env` so they can swap on the fly.
+
+## References
+
+- `setup-keys.js` — the implementation that actually prompts for keys
+  with hidden input
+- `setup-keys.bat` / `setup-keys.sh` — double-clickable launchers around
+  setup-keys.js
+- `shared/nb2_prompting.md` — provider routing table for context
+- `README.md` — installation flow including this step

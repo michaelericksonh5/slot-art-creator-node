@@ -62417,19 +62417,23 @@ function validateLocalImagePath(rawPath) {
   const resolved = fs3.realpathSync(path2.resolve(expanded));
   const stat3 = fs3.statSync(resolved);
   if (!stat3.isFile()) {
-    throw new Error(`Image input must be a file: ${rawPath}`);
+    throw new Error(
+      `Image input must be a file (not a directory): ${rawPath}. \u2192 If you meant to point at an image inside this directory, include the filename in the path.`
+    );
   }
   const ext = path2.extname(resolved).toLowerCase();
   if (!ALLOWED_IMAGE_EXTENSIONS.has(ext)) {
-    throw new Error(`Image input must be .png, .jpg, .jpeg, or .webp: ${rawPath}`);
+    throw new Error(
+      `Image input must be .png, .jpg, .jpeg, or .webp (got "${ext || "no extension"}"): ${rawPath}. \u2192 If this is a chat-attached image with a temp extension, call nb2_stage_image first \u2014 it handles the mime-type\u2192extension mapping and stages the file safely.`
+    );
   }
   if (path2.basename(resolved).toLowerCase().startsWith(".env")) {
-    throw new Error(`Image input cannot be an env file: ${rawPath}`);
+    throw new Error(`Image input cannot be an env file: ${rawPath}. \u2192 Use an actual image file.`);
   }
   const roots = buildAllowedImageRoots();
   if (!isWithinAllowedRoot(resolved, roots)) {
     throw new Error(
-      `Image input is outside the allowed roots. Image must live under the active project folder, ~/Pictures/claude_nb2, ~/.h5g-slot-art-creator/inputs, the plugin folder, or a directory listed in SLOT_ART_EXTRA_ROOTS. Got: ${rawPath} (resolves to ${resolved}).`
+      `Image input is outside the allowed roots: ${rawPath} (resolves to ${resolved}). \u2192 If this is a chat-attached image or a path outside the project folder, call nb2_stage_image with this path first \u2014 it copies the image into the safe inputs folder and returns a path you can use here. See shared/chat_image_staging.md. Allowed roots: the active project folder, ~/Pictures/claude_nb2, ~/.h5g-slot-art-creator/inputs, the plugin folder, or anything in SLOT_ART_EXTRA_ROOTS.`
     );
   }
   return resolved;
@@ -62610,7 +62614,9 @@ async function falGenerate({ prompt, outputDir, assetName, imageSize, aspectRati
   const result = await import_client.fal.subscribe(endpoint, { input, logs: false });
   const elapsed = ((Date.now() - t0) / 1e3).toFixed(1);
   const images = result.data?.images || [];
-  if (!images.length) throw new Error("fal.ai returned no images");
+  if (!images.length) throw new Error(
+    "fal.ai returned no images. \u2192 Often transient; retry once. If it persists, the prompt may be triggering fal.ai's safety filter \u2014 soften any aggressive imagery and try again. If you have GEMINI_API_KEY set, removing FAL_KEY temporarily would route this call through Gemini's direct API."
+  );
   ensureDir(outputDir);
   const saved = [];
   for (let i2 = 0; i2 < images.length; i2++) {
@@ -62651,7 +62657,9 @@ async function falEdit({ prompt, source, outputDir, assetName, imageSize, aspect
   const result = await import_client.fal.subscribe("fal-ai/nano-banana-2/edit", { input, logs: false });
   const elapsed = ((Date.now() - t0) / 1e3).toFixed(1);
   const images = result.data?.images || [];
-  if (!images.length) throw new Error("fal.ai returned no images");
+  if (!images.length) throw new Error(
+    "fal.ai returned no images. \u2192 Often transient; retry once. If it persists, the prompt may be triggering fal.ai's safety filter \u2014 soften any aggressive imagery and try again. If you have GEMINI_API_KEY set, removing FAL_KEY temporarily would route this call through Gemini's direct API."
+  );
   ensureDir(outputDir);
   const saved = [];
   for (let i2 = 0; i2 < images.length; i2++) {
@@ -62693,7 +62701,9 @@ async function falSmartResize({ source, outputDir, assetName, targetSizes, promp
   const elapsed = ((Date.now() - t0) / 1e3).toFixed(1);
   const images = result.data?.images || [];
   const perTargetResults = result.data?.results || [];
-  if (!images.length) throw new Error("fal-ai/smart-resize returned no images");
+  if (!images.length) throw new Error(
+    "fal-ai/smart-resize returned no images. \u2192 Often transient; retry once. If you set GEMINI_API_KEY, you can also unset FAL_KEY to fall back to the Gemini smart-resize path (uses NB2 + pngjs center-crop; slower but works for the same target sizes)."
+  );
   ensureDir(outputDir);
   const saved = [];
   for (let i2 = 0; i2 < images.length; i2++) {
@@ -62793,7 +62803,9 @@ async function geminiGenerate({ prompt, outputDir, assetName, imageSize, aspectR
       }
     }
   }
-  if (!saved.length) throw new Error("Gemini returned no image data");
+  if (!saved.length) throw new Error(
+    "Gemini returned no image data. \u2192 Often transient; retry once. If it persists, the prompt may have hit Gemini's safety filter \u2014 soften aggressive imagery, remove anything resembling real people / public figures, and try again. If you have FAL_KEY set, unsetting GEMINI_API_KEY would route this call through fal.ai's wrapper of the same NB2 model."
+  );
   return {
     provider: "Gemini",
     model: "gemini-3.1-flash-image-preview",
@@ -62896,7 +62908,9 @@ async function geminiSmartResize({ source, outputDir, assetName, targetSizes, pr
       }
     }
     if (!imageBuf) {
-      throw new Error(`Gemini returned no image for target ${size}`);
+      throw new Error(
+        `Gemini returned no image for target ${size}. \u2192 Often transient; retry once. If it persists, this specific aspect ratio may be triggering the safety filter or the input is too small for Gemini to recompose. With FAL_KEY set, the fal-ai/smart-resize endpoint (Nano Banana Pro) handles this in a single call and is much more reliable for unusual aspects.`
+      );
     }
     if (!imageMime.startsWith("image/png")) {
       throw new Error(
@@ -62938,7 +62952,7 @@ async function geminiSmartResize({ source, outputDir, assetName, targetSizes, pr
 async function dispatchGenerate(args) {
   const provider = getProviderForGeneration();
   if (!provider) throw new Error(
-    "No API key found. Set GEMINI_API_KEY (https://aistudio.google.com/apikey) or FAL_KEY (https://fal.ai/dashboard) then re-run setup-keys.js"
+    "No API key found. \u2192 Run /slot-setup in chat to configure keys safely (it'll point you at the setup-keys.bat or setup-keys.sh launcher in your plugin install \u2014 your input stays in a hidden-input terminal prompt, never in chat). Get a key from https://aistudio.google.com/apikey (Gemini) or https://fal.ai/dashboard (fal.ai). Either alone is sufficient for all 4 generation tools."
   );
   if (provider === "gemini") return geminiGenerate(args);
   return falGenerate(args);
@@ -62946,7 +62960,7 @@ async function dispatchGenerate(args) {
 async function dispatchEdit(args) {
   const provider = getProviderForGeneration();
   if (!provider) throw new Error(
-    "No API key found. Set GEMINI_API_KEY or FAL_KEY then re-run setup-keys.js"
+    "No API key found. \u2192 Run /slot-setup in chat to configure keys safely. Get a key from https://aistudio.google.com/apikey (Gemini) or https://fal.ai/dashboard (fal.ai)."
   );
   if (provider === "gemini") {
     return geminiGenerate({

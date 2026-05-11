@@ -30,8 +30,8 @@ This document describes the canonical state model. Every skill follows it.
 ## File layout
 
 ```
-H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\
-└── {GameID}_{username}\                          ← one project folder per game
+<PROJECT_BASE>/
+└── {GameID}_{username}/                          ← one project folder per game
     ├── project.json                              ← THE source of truth
     ├── game_brief.json                           ← human-readable brief mirror
     ├── Key_001.png, Key_002.png, ...             ← key art iterations
@@ -45,6 +45,45 @@ H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\
     ├── Logo_hero_001.png, Logo_compact_001.png   ← logo lockups
     ├── QA_001.md                                 ← QA audit reports
     └── (no subfolders — flat structure for fast scanning)
+```
+
+### Resolving `<PROJECT_BASE>` at runtime
+
+Every skill resolves `<PROJECT_BASE>` in this order. First hit wins:
+
+1. **`SLOT_ART_PROJECT_BASE` env var** — set per-machine when the user has
+   a custom location, e.g. an external drive or shared mount that isn't
+   on H:. Most flexible option.
+2. **H5G shared Drive Stream** — `H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\`
+   (Windows) or the equivalent Mac path (`/Volumes/GoogleDrive/Shared drives/...`).
+   Used by H5G colleagues by default. Detected by checking `fs.existsSync`
+   on the path; if missing, fall through.
+3. **`~/slot-art-projects/`** — per-user local fallback. Created on first
+   write if it doesn't exist. This is the path external (non-H5G) users
+   land on without configuration.
+
+Persist the resolved `<PROJECT_BASE>` into `project.json.project_root` as
+an absolute path on creation, so subsequent skills don't have to re-resolve.
+
+### H5G colleagues
+
+The default path resolves to `H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\`
+automatically because Drive Stream maps the same way for everyone with the
+shared drive mounted. No configuration needed.
+
+### External / non-H5G users
+
+The default path doesn't exist, so resolution falls through to step 3 and
+creates `~/slot-art-projects/<GameID>_<username>/` on first generation. To
+relocate (e.g. to a Dropbox folder), set the env var before launching
+Claude Code:
+
+```
+# Windows (PowerShell)
+$env:SLOT_ART_PROJECT_BASE = "C:\Users\you\Dropbox\slot-art-projects"
+
+# Mac/Linux
+export SLOT_ART_PROJECT_BASE="$HOME/Dropbox/slot-art-projects"
 ```
 
 Active project pointer (per-user, persists across sessions):
@@ -205,9 +244,21 @@ Every skill follows this exact sequence on invocation:
    → Yes: use that GameID to construct project_root, update active-project pointer
    → No: read ~/.h5g-slot-active-project.json
         → File exists: use it
-        → File missing: list folders in the asset suite and ask user to pick
+        → File missing: list folders in the active PROJECT_BASE and ask user to pick
                         OR offer to start a new project via /slot-step-01
 ```
+
+When constructing a NEW `project_root` from a GameID + username, resolve
+the `<PROJECT_BASE>` in the order documented above (env var → H5G Drive
+Stream → `~/slot-art-projects/`). The resulting `project_root` looks like:
+
+```
+<PROJECT_BASE>/<GameID>_<username>/
+```
+
+`username` comes from `os.userInfo().username` (or `$USER` / `%USERNAME%`
+as a fallback). Persist the resolved absolute `project_root` into
+`project.json` so later skills don't re-resolve.
 
 ### Step 2: Load project.json
 
