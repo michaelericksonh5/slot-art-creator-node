@@ -119,14 +119,34 @@ Should show `slot-art-creator-node@h5g-plugins ... Status: √ enabled`.
 
 ## API keys
 
-You need at least one of these. For full functionality (each tool at its best), set both.
+**Either key alone is fully sufficient for all 4 tools.** Both providers can do everything. The two keys aren't a "primary + fallback" pair — they're two complete paths to the same capability. Setting both is only useful because the plugin routes each tool to the backend best suited for it.
 
-| Provider | What it powers | Get a key |
+| Provider | Get a key |
+|---|---|
+| **Google Gemini** | https://aistudio.google.com/apikey |
+| **fal.ai** | https://fal.ai/dashboard |
+
+### What each provider does
+
+| Tool | Gemini path | fal.ai path |
 |---|---|---|
-| **Google Gemini** | `nb2_generate`, `nb2_edit`, `nb2_upscale` (preferred); fallback for `nb2_smart_resize` via NB2 + local crop | https://aistudio.google.com/apikey |
-| **fal.ai** | `nb2_smart_resize` (preferred — purpose-built `nano-banana-pro` endpoint); fallback for the other three | https://fal.ai/dashboard |
+| `nb2_generate` / `nb2_edit` / `nb2_upscale` | Calls `gemini-3.1-flash-image-preview` directly — this *is* Nano Banana 2 | Calls `fal-ai/nano-banana-2` — same underlying NB2 model, wrapped by fal.ai |
+| `nb2_smart_resize` | Calls NB2 N times (once per target size) and center-crops the results with `pngjs` locally. Real limitation: if NB2 returns an image smaller than your target, it errors out and asks you to use fal.ai for that size. | Calls `fal-ai/smart-resize` — a **purpose-built endpoint using Nano Banana Pro** (a different, larger model). One API call handles all target sizes. No size limitation. |
 
-**Routing when both keys are set:** Gemini runs the three generation tools; `nb2_smart_resize` uses fal.ai.
+### Routing when both keys are set
+
+| Tool | Runs on | Why |
+|---|---|---|
+| `nb2_generate`, `nb2_edit`, `nb2_upscale` | Gemini | Same NB2 model underneath, but the direct Google API call is one hop fewer than going through fal.ai's wrapper |
+| `nb2_smart_resize` | fal.ai | fal's purpose-built endpoint uses Nano Banana Pro (better model for this task), single API call, no size-limitation error |
+
+### What each setup gives you
+
+| Keys set | Result |
+|---|---|
+| **Gemini only** | All 4 tools work. `nb2_smart_resize` uses the NB2 + pngjs path; may fail on certain target sizes (see limitation above) |
+| **fal.ai only** | All 4 tools work. Generate / edit / upscale go through fal's wrapper of NB2; smart_resize uses NB Pro |
+| **Both (recommended)** | All 4 tools work, each routed to its strongest backend (table above) |
 
 ### Where to put your keys
 
@@ -265,7 +285,7 @@ The bundled `nb2node` MCP server exposes 4 tools Claude calls directly:
 | `nb2_generate` | Text-to-image |
 | `nb2_edit` | Image-to-image edit / reskin |
 | `nb2_upscale` | Path-A 4K upscale |
-| `nb2_smart_resize` | Multi-size pixel-perfect resize (fal.ai preferred via NB Pro endpoint; Gemini fallback via NB2 + local crop) |
+| `nb2_smart_resize` | Multi-size pixel-perfect resize. Either provider works — see [API keys](#api-keys) for routing details |
 
 ---
 

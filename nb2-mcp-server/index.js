@@ -2,23 +2,32 @@
  * slot-art-creator-node — MCP server (Node.js)
  *
  * Exposes four MCP tools:
- *   nb2_generate       — text-to-image (Gemini preferred, fal.ai fallback)
- *   nb2_edit           — image-to-image edit / reskin (Gemini preferred, fal.ai fallback)
- *   nb2_upscale        — 4K upscale (Gemini preferred, fal.ai fallback)
- *   nb2_smart_resize   — pixel-perfect multi-size resize (fal.ai PREFERRED — purpose-built
- *                        endpoint via nano-banana-pro; Gemini fallback uses NB2 + pngjs crop)
+ *   nb2_generate       — text-to-image
+ *   nb2_edit           — image-to-image edit / reskin
+ *   nb2_upscale        — 4K upscale
+ *   nb2_smart_resize   — pixel-perfect multi-size resize
  *
- * Provider priority for generate / edit / upscale (gets Gemini when both keys present):
- *   1. GEMINI_API_KEY / GOOGLE_API_KEY present → Google Gemini (gemini-3.1-flash-image-preview)
- *   2. FAL_KEY present                          → fal.ai (fal-ai/nano-banana-2)
- *   3. Neither                                   → startup error with setup instructions
+ * EITHER KEY ALONE is fully sufficient for all four tools — both providers have
+ * a complete implementation of every tool. With both keys set, the plugin routes
+ * each tool to its strongest backend (see below).
  *
- * Provider for nb2_smart_resize (different routing — fal preferred because the endpoint
- * is purpose-built for this task and faster than our Gemini-side recipe):
- *   1. FAL_KEY present                          → fal.ai (fal-ai/smart-resize, NB Pro under the hood)
- *   2. GEMINI_API_KEY / GOOGLE_API_KEY present  → our Gemini recipe — generate per-target with
- *                                                  NB2 + center-crop via pngjs to exact dimensions
- *   3. Neither                                   → tool returns a clean error message
+ * Routing for generate / edit / upscale:
+ *   Both providers wrap the SAME underlying model (Nano Banana 2 =
+ *   gemini-3.1-flash-image-preview = fal-ai/nano-banana-2). Output quality is
+ *   ~identical. Gemini wins when both keys are set because the direct Google
+ *   API call is one hop fewer than going through fal.ai's wrapper.
+ *     GEMINI_API_KEY present → Google Gemini (gemini-3.1-flash-image-preview)
+ *     FAL_KEY present        → fal.ai (fal-ai/nano-banana-2)
+ *     Neither                → startup error with setup instructions
+ *
+ * Routing for nb2_smart_resize:
+ *   The two paths are materially different. fal.ai has a purpose-built endpoint
+ *   (Nano Banana Pro under the hood, single API call). Gemini uses NB2 + N calls
+ *   + pngjs center-crop, and can fail with "image smaller than target" on some
+ *   sizes. fal.ai wins when both keys are present.
+ *     FAL_KEY present        → fal.ai (fal-ai/smart-resize, NB Pro)
+ *     GEMINI_API_KEY present → Gemini path (NB2 + center-crop)
+ *     Neither                → tool returns a clean error message
  */
 
 import { createRequire } from "module";
@@ -428,11 +437,19 @@ const GEMINI_KEY =
   process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
 
 // Provider selection for the three generation tools (generate / edit / upscale).
-// Gemini wins when both keys are present — it's the preferred general-purpose
-// generator. fal.ai is the fallback for users who only have a fal key.
+// Both Gemini and fal.ai are fully capable here — they wrap the SAME underlying
+// model (Nano Banana 2 = gemini-3.1-flash-image-preview = fal-ai/nano-banana-2).
+// Gemini wins when both keys are present because the direct Google API call is
+// one hop fewer than going through fal.ai's wrapper. Either key alone is
+// completely sufficient for these three tools.
 //
-// nb2_smart_resize ignores this function entirely — it always uses fal.ai
-// because Gemini has no smart-resize equivalent. See the per-tool handler.
+// nb2_smart_resize uses its own routing (see the per-tool handler at the
+// nb2_smart_resize case). Both providers have a smart-resize implementation
+// but they're materially different: fal.ai uses a purpose-built endpoint
+// (Nano Banana Pro, single API call); Gemini uses NB2 + N calls + pngjs
+// center-crop. fal.ai wins when both keys are present because the purpose-built
+// endpoint is faster and doesn't have the "returned image smaller than target"
+// failure mode that the Gemini path can hit.
 function getProviderForGeneration() {
   if (GEMINI_KEY) return "gemini";
   if (FAL_KEY) return "fal";
@@ -969,7 +986,9 @@ async function geminiSmartResize({ source, outputDir, assetName, targetSizes, pr
 }
 
 // ---------------------------------------------------------------------------
-// Dispatcher — route to gemini (preferred) or fal (fallback)
+// Dispatcher — route to gemini (when both keys set) or fal (when only fal set).
+// Both providers fully implement these tools using the same underlying NB2
+// model; the "preference" is just about which API path runs.
 // ---------------------------------------------------------------------------
 
 async function dispatchGenerate(args) {
@@ -1131,8 +1150,9 @@ const TOOLS = [
     name: "nb2_smart_resize",
     description:
       "Pixel-perfect multi-size resize of an approved asset to one or more exact target dimensions. " +
-      "Two backends: (1) fal-ai/smart-resize (preferred when FAL_KEY is set, uses nano-banana-pro / Nano Banana Pro internally — single optimized API call), or " +
-      "(2) Gemini fallback when only GEMINI_API_KEY is set (uses gemini-3.1-flash-image-preview / Nano Banana 2 with one call per target + pngjs center-crop). " +
+      "Either key works (both are fully implemented). When both are set, fal.ai runs because its " +
+      "purpose-built endpoint (Nano Banana Pro, single API call) beats Gemini's path (NB2 + N calls + " +
+      "pngjs center-crop) for this task. " +
       "Pass the source image and target sizes as 'WxH' strings. Returns paths to each resized output.",
     inputSchema: {
       type: "object",
@@ -1254,8 +1274,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [{
           type: "text",
           text: "ERROR: nb2_smart_resize needs at least one API key. " +
-                "Set FAL_KEY (preferred — purpose-built endpoint) with: node setup-keys.js --fal\n" +
-                "Or set GEMINI_API_KEY (uses NB2 with center-crop fallback) with: node setup-keys.js --gemini",
+                "Either works — both providers fully implement this tool.\n" +
+                "  FAL_KEY:        node setup-keys.js --fal  (purpose-built NB Pro endpoint, single API call)\n" +
+                "  GEMINI_API_KEY: node setup-keys.js --gemini  (NB2 + pngjs center-crop, one call per target)",
         }],
       };
     }

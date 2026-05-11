@@ -93,10 +93,12 @@ echo  Dependencies installed and bundle built.
 :: -----------------------------------------------------------------------
 
 echo.
-echo  This plugin needs an API key to generate images:
-echo    Option 1 - Gemini  (preferred for generate / edit / upscale; works for smart-resize via NB2 + local crop): https://aistudio.google.com/apikey
-echo    Option 2 - fal.ai  (preferred for nb2_smart_resize via the purpose-built nano-banana-pro endpoint):        https://fal.ai/dashboard
-echo    Either key alone is sufficient. Setting BOTH gives each tool its optimal backend.
+echo  This plugin needs an API key to generate images.
+echo  EITHER KEY ALONE is fully sufficient for all 4 tools — both providers can do everything.
+echo  Setting BOTH only matters because each tool gets routed to its strongest backend.
+echo.
+echo    Option 1 - Google Gemini   https://aistudio.google.com/apikey
+echo    Option 2 - fal.ai          https://fal.ai/dashboard
 echo.
 set /p RUN_SETUP="  Set up API key(s) now? [Y/n] "
 if /i "!RUN_SETUP!"=="n" goto skip_keys

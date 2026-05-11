@@ -2,14 +2,26 @@
 /**
  * API key setup for slot-art-creator-node
  *
- * Supports two providers — either alone works for all 4 tools, but BOTH
- * gives you the best backend per tool:
- *   GEMINI_API_KEY  — preferred for nb2_generate / nb2_edit / nb2_upscale (Nano Banana 2)
- *                     fallback for nb2_smart_resize (NB2 + local center-crop via pngjs)
+ * Supports two providers — EITHER KEY ALONE is fully sufficient for all 4
+ * tools. Both providers have a complete implementation of every tool. With
+ * both keys set, the plugin routes each tool to its strongest backend.
+ *
+ *   GEMINI_API_KEY  — Google AI Studio. Routes generate/edit/upscale through
+ *                     Google's direct API (gemini-3.1-flash-image-preview =
+ *                     Nano Banana 2). Also runs smart_resize via NB2 + local
+ *                     pngjs center-crop.
  *                     https://aistudio.google.com/apikey
- *   FAL_KEY         — preferred for nb2_smart_resize (purpose-built endpoint, Nano Banana Pro)
- *                     fallback for the other tools (Nano Banana 2 via fal-ai/nano-banana-2)
+ *
+ *   FAL_KEY         — fal.ai. Routes generate/edit/upscale through fal-ai/
+ *                     nano-banana-2 (same NB2 model, wrapped by fal). Runs
+ *                     smart_resize through fal-ai/smart-resize — a purpose-
+ *                     built endpoint using Nano Banana PRO (different/larger
+ *                     model than NB2), single API call.
  *                     https://fal.ai/dashboard
+ *
+ * Routing when both keys are set:
+ *   generate / edit / upscale  → Gemini (one fewer API hop; same NB2 model)
+ *   smart_resize               → fal.ai (NB Pro endpoint is better for resize)
  *
  * Keys are written to a `.env` file at a STABLE user-level location:
  *   ~/.h5g-slot-art-creator/.env  (Mac/Linux)
@@ -185,8 +197,8 @@ async function cmdSetFal() {
   values["FAL_KEY"] = key;
   writeEnv(values);
   console.log(`\nWrote ${ENV_PATH}`);
-  console.log("fal.ai will be used for nb2_smart_resize (always) and as fallback");
-  console.log("for nb2_generate / nb2_edit / nb2_upscale when no Gemini key is set.");
+  console.log("fal.ai will handle all 4 tools. If you also set GEMINI_API_KEY,");
+  console.log("generate/edit/upscale switch to Gemini and smart_resize stays on fal.ai.");
   return 0;
 }
 
@@ -207,9 +219,9 @@ async function cmdSetGemini() {
   values["GEMINI_API_KEY"] = key;
   writeEnv(values);
   console.log(`\nWrote ${ENV_PATH}`);
-  console.log("Gemini will be the primary provider for nb2_generate / nb2_edit / nb2_upscale.");
-  console.log("nb2_smart_resize will fall back to Gemini (NB2 + local center-crop) if FAL_KEY isn't set;");
-  console.log("set FAL_KEY too for the purpose-built fal.ai endpoint (single API call, NB Pro).");
+  console.log("Gemini will handle all 4 tools. smart_resize uses Gemini's NB2 +");
+  console.log("pngjs center-crop path (one call per target size). If you also set FAL_KEY,");
+  console.log("smart_resize switches to fal.ai's purpose-built endpoint (NB Pro, single call).");
   return 0;
 }
 
@@ -222,29 +234,34 @@ async function cmdCheck() {
 
   if (geminiKey) {
     const { ok, msg } = await validateGemini(geminiKey);
-    const note = ok ? " — preferred for generate / edit / upscale; smart-resize fallback" : "";
-    console.log(`GEMINI_API_KEY  ${ok ? "OK" : "FAIL"}: ${msg}${note}`);
+    console.log(`GEMINI_API_KEY  ${ok ? "OK" : "FAIL"}: ${msg}`);
     if (!ok) rc = 1;
   } else {
     console.log("GEMINI_API_KEY  MISSING — run: node setup-keys.js --gemini");
   }
 
   if (falKey) {
-    console.log(`FAL_KEY         OK: key present (length ${falKey.length}) — preferred for smart-resize; fallback for other tools`);
+    console.log(`FAL_KEY         OK: key present (length ${falKey.length})`);
   } else {
-    console.log("FAL_KEY         MISSING — run: node setup-keys.js --fal  (recommended for fastest smart-resize)");
+    console.log("FAL_KEY         MISSING — run: node setup-keys.js --fal");
   }
 
+  // Routing summary — based on what's actually set.
+  console.log("");
   if (!falKey && !geminiKey) {
-    console.log("\nNeither key is set. At least one is required.");
-    console.log("Recommendation: set BOTH for full functionality.");
+    console.log("Neither key is set. At least one is required (either alone works for all 4 tools).");
     rc = 1;
-  } else if (!falKey) {
-    console.log("\nNote: All 4 tools will use Gemini (NB2). nb2_smart_resize will use the");
-    console.log("Gemini fallback (per-target generation + local pngjs center-crop). Add FAL_KEY");
-    console.log("for the purpose-built fal-ai/smart-resize endpoint.");
-  } else if (!geminiKey) {
-    console.log("\nNote: All 4 tools will use fal.ai. Add GEMINI_API_KEY to switch generate/edit/upscale to Gemini.");
+  } else if (geminiKey && falKey) {
+    console.log("Both keys set. Routing:");
+    console.log("  generate / edit / upscale  → Gemini (one fewer API hop, same NB2 model)");
+    console.log("  smart_resize               → fal.ai (purpose-built NB Pro endpoint)");
+  } else if (geminiKey) {
+    console.log("Gemini only. All 4 tools route through Gemini.");
+    console.log("  smart_resize uses NB2 + pngjs center-crop (one call per target).");
+    console.log("  Add FAL_KEY to switch smart_resize to fal.ai's purpose-built NB Pro endpoint.");
+  } else {
+    console.log("fal.ai only. All 4 tools route through fal.ai.");
+    console.log("  Add GEMINI_API_KEY to switch generate/edit/upscale to Gemini's direct API.");
   }
 
   return rc;
@@ -272,9 +289,12 @@ async function cmdInteractive() {
   console.log("\nslot-art-creator-node — API key setup");
   console.log("======================================");
   console.log("This plugin can use Google Gemini and/or fal.ai.");
+  console.log("Either key alone is fully sufficient for all 4 tools — both providers can");
+  console.log("do everything. Setting both only matters because each tool gets routed to");
+  console.log("its strongest backend:");
   console.log("");
-  console.log("  Gemini  — preferred for generate / edit / upscale; works for smart-resize via NB2 + local crop");
-  console.log("  fal.ai  — preferred for nb2_smart_resize (purpose-built endpoint); fallback for the other tools");
+  console.log("  generate / edit / upscale  → Gemini (same NB2 model, one fewer API hop)");
+  console.log("  smart_resize               → fal.ai (purpose-built NB Pro endpoint)");
   console.log("");
   console.log("Either key alone is sufficient. Setting BOTH gives each tool its optimal backend.\n");
 
