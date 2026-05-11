@@ -128,9 +128,13 @@ This survives plugin reinstalls and updates. The MCP server loads from
 this file automatically on startup. **If both keys are present, Gemini
 runs the three generation tools; `nb2_smart_resize` always uses fal.ai.**
 
-The MCP server also respects shell environment variables (`GEMINI_API_KEY`,
-`GOOGLE_API_KEY`, `FAL_KEY`) — useful when running under config managers /
-MDM in Claude Cowork.
+The MCP server also respects shell environment variables (`GEMINI_API_KEY`
+and `FAL_KEY`) — useful when running under config managers / MDM in Claude
+Cowork. For Gemini, the SDK also accepts the legacy `GOOGLE_API_KEY` name
+as a fallback; per [Google's official docs](https://ai.google.dev/gemini-api/docs/api-key)
+the two names are aliases for the same key and **you should set only one**.
+The plugin manifest declares `GEMINI_API_KEY` (the canonical name) so
+Cowork's plugin UI only prompts you once.
 
 ---
 
