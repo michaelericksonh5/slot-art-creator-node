@@ -6,6 +6,25 @@ Claude Code session restarts and conversation compaction.
 
 This document describes the canonical state model. Every skill follows it.
 
+## Contents
+
+- **File layout** — where project folders live, what's inside each
+- **`project.json` schema** — canonical structure: brief, style_anchor,
+  assets (key/sheet/symbols/backgrounds/ui/qa), counters, timestamps
+- **Skill startup protocol** — the 7-step routine every skill follows on
+  invocation
+- **Active-project pointer file** — `~/.h5g-slot-active-project.json`
+- **Path convention** — relative in JSON, absolute at use time, with
+  resolution rules for cross-platform safety
+- **Atomic writes (Drive Stream safety)** — tmp-write + rename pattern
+- **What happens after compaction** — how a fresh Claude session picks
+  up where the previous one left off
+- **What does NOT go in project memory** — chat messages, partial drafts,
+  raw prompt text
+- **Style anchor management** — building, storing, and reusing the
+  game-wide discipline block from §9.2.1 of nb2_prompting.md
+- **Non-linear workflow** — handling out-of-order step invocations
+
 ---
 
 ## File layout

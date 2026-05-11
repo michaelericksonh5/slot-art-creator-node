@@ -1,11 +1,13 @@
 /**
  * slot-art-creator-node — MCP server (Node.js)
  *
- * Exposes four MCP tools:
+ * Exposes five MCP tools:
  *   nb2_generate       — text-to-image
  *   nb2_edit           — image-to-image edit / reskin
  *   nb2_upscale        — 4K upscale
  *   nb2_smart_resize   — pixel-perfect multi-size resize
+ *   nb2_stage_image    — copy an external/chat-pasted image into the safe inputs
+ *                        folder so it can be used as a source for the others
  *
  * EITHER KEY ALONE is fully sufficient for all four tools — both providers have
  * a complete implementation of every tool. With both keys set, the plugin routes
@@ -536,6 +538,111 @@ async function validateImageInputs(rawInputs, label) {
 }
 
 // ---------------------------------------------------------------------------
+// Chat-image staging
+//
+// validateLocalImagePath rejects any path outside the allowed roots. That's
+// correct for the destructive tools (edit / upscale / smart_resize) — we
+// don't want a prompt-injected path to read arbitrary user files. But it
+// breaks the most natural use case: a user pastes an image in chat and asks
+// to edit it. Chat-pasted images live in temp paths far outside any allowed
+// root.
+//
+// Staging is the explicit bridge. nb2_stage_image takes any local path (no
+// containment check, but every OTHER guard still applies — file exists, real
+// image extension, not an env file, under the 50MB cap) or a URL (uses the
+// SSRF-guarded fetch) and copies/downloads it into ~/.h5g-slot-art-creator/
+// inputs/, which IS in the allowed-roots list. The staged path is what the
+// caller then passes to nb2_edit / nb2_upscale / nb2_smart_resize.
+//
+// Filenames are auto-uniqued via uniqueName so concurrent staging never
+// collides.
+// ---------------------------------------------------------------------------
+
+const STAGED_INPUTS_DIR = path.join(os.homedir(), ".h5g-slot-art-creator", "inputs");
+
+function mimeToImageExtension(mime) {
+  if (!mime) return ".png";
+  const m = mime.toLowerCase().split(";")[0].trim();
+  if (m === "image/jpeg" || m === "image/jpg") return ".jpg";
+  if (m === "image/webp") return ".webp";
+  return ".png";
+}
+
+async function stageImage({ source, label }) {
+  if (!source || typeof source !== "string") {
+    throw new Error("source must be an image path or URL");
+  }
+  if (source.includes("\0")) {
+    throw new Error("source contains an invalid path character");
+  }
+
+  ensureDir(STAGED_INPUTS_DIR);
+  const safeLabel = sanitizeAssetName(label, "chat_input");
+  const t0 = Date.now();
+
+  // Remote URL — re-use the SSRF-guarded fetch path. The size cap and
+  // content-type check inside fetchValidatedRemoteImage protect us here.
+  if (isRemoteUrl(source)) {
+    const { buffer, mimeType } = await fetchRemoteImageBuffer(source);
+    if (!mimeType.toLowerCase().startsWith("image/")) {
+      throw new Error(`source URL did not return an image (got ${mimeType})`);
+    }
+    const ext = mimeToImageExtension(mimeType);
+    const dest = uniqueName(STAGED_INPUTS_DIR, safeLabel, ext);
+    fs.writeFileSync(dest, buffer);
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+    return {
+      provider: "stage",
+      model: "url-fetch",
+      resolution: "(source-preserved)",
+      elapsed,
+      paths: [dest],
+      source_origin: source,
+    };
+  }
+
+  // Local file path — realpath, validate is a real image, copy. We
+  // intentionally do NOT apply the containment allowlist here; bypassing
+  // it is the entire purpose of staging. The other guards (extension,
+  // .env name, size cap, no NUL bytes) still apply.
+  const expanded = source.startsWith("~")
+    ? path.join(os.homedir(), source.slice(1))
+    : source;
+  let resolved;
+  try {
+    resolved = fs.realpathSync(path.resolve(expanded));
+  } catch (e) {
+    throw new Error(`source path not readable: ${source} (${e.code || e.message})`);
+  }
+  const stat = fs.statSync(resolved);
+  if (!stat.isFile()) {
+    throw new Error(`source must be a file: ${source}`);
+  }
+  const ext = path.extname(resolved).toLowerCase();
+  if (!ALLOWED_IMAGE_EXTENSIONS.has(ext)) {
+    throw new Error(`source must be .png, .jpg, .jpeg, or .webp (got ${ext || "(no ext)"}): ${source}`);
+  }
+  if (path.basename(resolved).toLowerCase().startsWith(".env")) {
+    throw new Error(`source cannot be an env file: ${source}`);
+  }
+  if (stat.size > MAX_REMOTE_IMAGE_BYTES) {
+    throw new Error(`source is too large (${stat.size} bytes; max ${MAX_REMOTE_IMAGE_BYTES})`);
+  }
+
+  const dest = uniqueName(STAGED_INPUTS_DIR, safeLabel, ext);
+  fs.copyFileSync(resolved, dest);
+  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+  return {
+    provider: "stage",
+    model: "local-copy",
+    resolution: "(source-preserved)",
+    elapsed,
+    paths: [dest],
+    source_origin: resolved,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Sidecar metadata (.meta.json) — written next to every output PNG
 //
 // Provenance for downstream tools, /slot-step-08, and human review.
@@ -576,6 +683,15 @@ const GEMINI_KEY =
 // faster.
 if (FAL_KEY) {
   fal.config({ credentials: FAL_KEY });
+}
+
+// Create the staged-inputs folder up front so chat-image staging always
+// works without a first-call mkdir race. Also surfaces permission errors
+// on startup rather than at first use.
+try {
+  ensureDir(STAGED_INPUTS_DIR);
+} catch (e) {
+  console.error(`[startup] could not create staged inputs dir ${STAGED_INPUTS_DIR}: ${e.message}`);
 }
 
 // Provider selection for the three generation tools (generate / edit / upscale).
@@ -1334,6 +1450,29 @@ const TOOLS = [
       required: ["source"],
     },
   },
+  {
+    name: "nb2_stage_image",
+    description:
+      "Copy an external image (chat-attached, downloaded, anywhere on disk, or a URL) into the safe inputs folder so it can then be passed as `source` or `references` to nb2_edit / nb2_upscale / nb2_smart_resize. " +
+      "**Use this whenever a user pastes/attaches an image in chat and asks for an edit, upscale, or resize** — chat-attached images live in temp paths outside the allowed-roots envelope, and the other tools will reject them otherwise. " +
+      "Also use it for any external image (download, screenshot, asset from another folder) that lives outside the active project root. " +
+      "Returns the staged absolute path inside ~/.h5g-slot-art-creator/inputs/. Idempotent — each call gets a fresh unique filename so concurrent staging never collides.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        source: {
+          type: "string",
+          description: "Absolute path to a local image file (PNG/JPG/JPEG/WEBP), a `~/`-relative path, OR an `http(s)://` URL. The path does NOT need to be inside any allowed root — bypassing that restriction is the purpose of staging.",
+        },
+        label: {
+          type: "string",
+          description: "Optional naming prefix for the staged file. Default: `chat_input`. Use a self-documenting prefix like `user_paste_HP1` or `ref_for_bezel` so ~/.h5g-slot-art-creator/inputs/ stays readable as it grows.",
+          default: "chat_input",
+        },
+      },
+      required: ["source"],
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1440,6 +1579,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 "  GEMINI_API_KEY: node setup-keys.js --gemini  (NB2 + pngjs center-crop, one call per target)",
         }],
         isError: true,
+      };
+    }
+
+    if (name === "nb2_stage_image") {
+      const result = await stageImage({
+        source: args.source,
+        label: args.label || null,
+      });
+      return {
+        content: formatResult(
+          result,
+          "nb2_stage_image OK — image is now usable as `source` or `references` for nb2_edit / nb2_upscale / nb2_smart_resize"
+        ),
       };
     }
 

@@ -12,6 +12,23 @@ If a brief lists any of these symbol prefixes, generate using the
 patterns below: `COL`, `ACT`, `HOT_x2`+, `HOT_ADD`, `HOT_COMB`,
 `HOT_COLLAPSE`, `HOT_PERSIST`, `BAG`, `MOJ`.
 
+## Contents — jump to the symbol you're generating
+
+- **Universal rules** — apply to every Loot Link symbol
+- **Collector (`COL`)** — vessel-with-vacuum aesthetic (chest, magnet, funnel)
+- **Activator (`ACT`)** — trigger / activator symbols (e.g. "PLAY" / "GO")
+- **Hotspot operators** — multipliers and accumulators that modify nearby cells
+  - **`HOT_x2` / `HOT_x3` / `HOT_x4` / `HOT_x5` / `HOT_x10`** — flat multipliers
+  - **`HOT_ADD`** — adds a fixed value to landed coins
+  - **`HOT_COMB`** — combines adjacent values
+  - **`HOT_COLLAPSE`** — collapses to a single high-value cell
+  - **`HOT_PERSIST`** — persists across spins
+- **Bag scatters (`BAG`)** — premium scatter-tier rewards
+- **Money emoji (`MOJ`)** — face-character coin variant
+
+Each section has its own pre-gen prompt + post-gen checks. Read only the
+section for the symbol you're generating.
+
 ## Universal rules (all Loot Link symbols)
 
 - **Background:** flat solid black, no gradients

@@ -41,6 +41,19 @@ pngjs for the crop, no native deps).
 
 Source: any approved image in the project folder.
 
+**If the user pastes / attaches an external asset in chat** that they want
+resized to multiple aspects, that path lives in a temp location outside
+the allowed-roots envelope — `nb2_smart_resize` will reject it. Stage it
+first:
+
+```
+nb2_stage_image({ source: "<chat-temp-path>", label: "user_resize_source" })
+  → ~/.h5g-slot-art-creator/inputs/user_resize_source_NNN.png
+```
+
+Pass the staged path as `source` to `nb2_smart_resize` in Step 4. See
+`shared/chat_image_staging.md` for full details.
+
 Targets: list of `{aspect_ratio, label}` pairs. Common combinations:
 
 | Use case | Targets |

@@ -202,6 +202,12 @@ When the user asks for "all symbols":
 - `shared/asset_naming.md` (per-symbol counter)
 - `shared/nb2_prompting.md` §9.2 (master formula), §9.5 (export BG), §9.7 (anti-patterns)
 - `shared/art_principles.md` §3 (symbols), §3.5 (cell-fill table)
+- `shared/chat_image_staging.md` — required when the user pastes/attaches
+  a reference image in chat (e.g. "use this image as a style reference
+  for HP1"). Chat-attached paths are outside the allowed-roots envelope
+  and would otherwise be rejected by `nb2_generate` / `nb2_edit`. Stage
+  with `nb2_stage_image` first, then pass the staged path in `references`
+  or `source`.
 
 ### Tier-specific templates (read on demand)
 

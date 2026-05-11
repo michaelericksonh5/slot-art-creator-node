@@ -26,10 +26,22 @@ instead.
 
 ### Step 1 — Pick the source asset
 
-The source must be an approved file in the project folder. Common sources:
+The source is usually an approved file in the project folder. Common sources:
 - `HP1_002.png` (the approved iteration of HP1)
 - `BG_base_001.png`
 - `Logo_hero_001.png`
+
+**If the user pastes / attaches an external asset in chat** that they want
+upscaled, that path lives in a temp location outside the allowed-roots
+envelope — `nb2_upscale` will reject it. Stage it first:
+
+```
+nb2_stage_image({ source: "<chat-temp-path>", label: "user_upscale_source" })
+  → ~/.h5g-slot-art-creator/inputs/user_upscale_source_NNN.png
+```
+
+Pass the staged path as `source` to `nb2_upscale` in Step 4. See
+`shared/chat_image_staging.md` for full details.
 
 ### Step 2 — Build the 6-part preservation prompt
 
@@ -136,6 +148,11 @@ Type `/slot-` to see the full numbered workflow.
 
 ## References
 
+- `shared/upscale_workflow.md` — Path-A explained (vision-LLM-in-the-loop,
+  N-and-pick batches, forbidden-adjective list, identity-lock clause).
+  This is the conceptual basis for this entire skill — read it once.
+- `shared/chat_image_staging.md` — required when the source isn't already
+  inside the active project folder
 - `shared/qa_preflight.md`, `shared/project_memory.md`, `shared/asset_naming.md`
 - `shared/nb2_prompting.md` §9.6 (edit/upscale operations)
 - `UPSCALE_TEMPLATE.md` (6-part preservation prompt template)

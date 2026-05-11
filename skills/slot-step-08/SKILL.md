@@ -48,54 +48,23 @@ MP1 → MP2 → LP1 → ... → LP6.
 
 ### Step 3 — Grade
 
-#### Symbol set checks
+**Read `QA_RUBRIC.md` for the full per-surface tables and edge cases.**
+The rubric is the canonical source. The summaries below are pointers for
+quick reference at grading time — they intentionally don't repeat every
+edge-case row from the rubric. If anything below feels under-specified
+for an asset you're grading, fall through to `QA_RUBRIC.md`.
 
-**Tier gradient (the primary set-level test):**
-Cover the labels and ask "which is higher value?" — the answer must be
-obvious. Grade each transition:
-- HP1 → HP2: HP2 perceptibly less saturated/warm
-- HP2 → MP1: MP1 noticeably cooler, less glow, smaller
-- MP → LP: LP clearly simplest, coolest, least ornamented
-- Wild: clearly breaks category and palette
-- Scatter: circular badge, identifiable as trigger
-
-**LP discipline:**
-- Zero gold/amber/warm trim on any LP
-- LP family consistent (all card royals, or all gems, etc. — never mixed)
-
-**Export background:**
-- HP/Wild/Scatter/Jackpot: flat solid black
-- LP: flat solid white
-- No gradients or patterns
-
-**Style consistency:**
-- All symbols share `style_lock` — could belong to the same game
-- Light direction consistent (upper-left ~10 o'clock)
-
-**Readability:**
-- Every symbol has clear silhouette at thumbnail size
-- Edge contrast adequate
-
-#### Background suite checks
-- Bottom 30% dark on all variants
-- Reel zone dimmed on all variants
-- Three-layer depth on all variants
-- Free-spins variant perceptibly more saturated/warm than base
-- Bonus variant has noticeably more drama
-- Background palette recedes behind symbol palette
-
-#### UI collection checks
-- Chrome ranks below symbols in brightness and visual weight
-- Bezel has transparent/open center
-- Banner tiers distinguishable (differ in size, palette, frame complexity)
-- Touch targets visually generous
-- Logo readable at thumbnail
-
-#### Cross-asset checks
-- Symbols, background, UI feel like one cohesive world
-- No surface competes with another at wrong hierarchy level
-  (BG never brighter than symbols; UI never busier than symbols)
-- Palette family consistent across all assets
+| Scope | What to check (summary — see QA_RUBRIC.md for full tables) |
+|---|---|
+| **Symbol set — tier gradient** | Cover the labels and ask "which is higher value?" — the answer must be obvious at HP1→HP2, HP2→MP1, MP→LP. Wild clearly breaks category + palette. Scatter is a circular badge identifiable as a trigger. |
+| **Symbol set — LP discipline** | Zero gold/amber/warm trim on any LP. LP family consistent (all card royals, or all gems, etc. — never mixed). |
+| **Symbol set — export BG** | HP/Wild/Scatter/Jackpot on flat solid black; LP on flat solid white; no gradients or patterns. |
+| **Symbol set — style** | All symbols share `style_lock`. Light direction consistent (upper-left ~10 o'clock). |
+| **Symbol set — readability** | Clear silhouette at thumbnail size on every symbol. |
+| **Backgrounds** | Bottom 30% dark on all variants. Reel zone dimmed. Three-layer depth. Free-spins more saturated/warm than base. Bonus has more drama. BG palette recedes behind symbol palette. |
+| **UI** | Chrome ranks below symbols in brightness and visual weight. Bezel has transparent/open center. Banner tiers distinguishable across ≥2 axes (see BANNERS_TEMPLATE.md). Touch targets visually generous. Logo readable at thumbnail. |
+| **Cross-asset** | Everything feels like one cohesive world. No surface competes at wrong hierarchy level. Palette family consistent. |
+| **Symbol/environment exclusivity** | No symbol-set subject is repeated across BG/frame/UI as a recurring decorative motif. See `shared/qa_preflight.md` "Symbol/environment exclusivity" for the rule and why it matters. |
 
 ### Step 4 — Auto-RED escalations
 

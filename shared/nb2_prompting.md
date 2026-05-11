@@ -3,6 +3,31 @@
 NB2 = `gemini-3.1-flash-image-preview`. This is the production prompt
 playbook every design skill in `slot-art-creator` follows.
 
+## Contents
+
+- **Model basics** — resolutions, aspect ratios, references, chat-mode
+  pitfalls, prompt-text vs tool-args rules, no `negative_prompt`
+- **§9.2 Master prompt structure** — the bracketed-block format every
+  shipped game uses
+  - **§9.2.1 Style Anchor** — write once from the brief, prepend to
+    every prompt (Gemini's `systemInstruction` equivalent)
+  - **§9.2.2 Reference-image discipline** — canonical "inherit ONLY X,
+    ignore Y" clause to prevent NB2 from copying reference BG colors
+  - **§9.2.3 Bracketed-block templates per symbol type** — HP, MP, LP,
+    Wild, Scatter
+- **Reel frame / bezel section** — thickness vocabulary, grid-dimension
+  rule, ultra-thin/thin templates
+- **Background section** — 9:16 skeleton with the four hard rules
+- **§9.3 Quality tag block** — reusable
+- **§9.4 Style library** — pick one per game and lock it
+- **§9.5 Export-background policy** — black vs white per tier
+- **§9.6 Edit operations** — in-place, isolate, recreate, style-transfer,
+  UI reskin, component separation
+- **§9.7 Hard rules** — never in any prompt (forbidden words + anti-pattern gallery)
+- **§9.8 Game Concept Brief fields** — what `slot-step-01` locks
+- **After every generation call** — show thumbnails, state save location,
+  one-sentence visual assessment
+
 ---
 
 ## Model basics

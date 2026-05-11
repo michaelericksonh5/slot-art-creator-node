@@ -62449,6 +62449,75 @@ async function validateImageInputs(rawInputs, label) {
   if (!Array.isArray(rawInputs)) throw new Error(`${label} must be an array of image paths or URLs`);
   return await Promise.all(rawInputs.map((input) => validateImageInput(input, label)));
 }
+var STAGED_INPUTS_DIR = path2.join(os.homedir(), ".h5g-slot-art-creator", "inputs");
+function mimeToImageExtension(mime) {
+  if (!mime) return ".png";
+  const m2 = mime.toLowerCase().split(";")[0].trim();
+  if (m2 === "image/jpeg" || m2 === "image/jpg") return ".jpg";
+  if (m2 === "image/webp") return ".webp";
+  return ".png";
+}
+async function stageImage({ source, label }) {
+  if (!source || typeof source !== "string") {
+    throw new Error("source must be an image path or URL");
+  }
+  if (source.includes("\0")) {
+    throw new Error("source contains an invalid path character");
+  }
+  ensureDir(STAGED_INPUTS_DIR);
+  const safeLabel = sanitizeAssetName(label, "chat_input");
+  const t0 = Date.now();
+  if (isRemoteUrl(source)) {
+    const { buffer, mimeType } = await fetchRemoteImageBuffer(source);
+    if (!mimeType.toLowerCase().startsWith("image/")) {
+      throw new Error(`source URL did not return an image (got ${mimeType})`);
+    }
+    const ext2 = mimeToImageExtension(mimeType);
+    const dest2 = uniqueName(STAGED_INPUTS_DIR, safeLabel, ext2);
+    fs3.writeFileSync(dest2, buffer);
+    const elapsed2 = ((Date.now() - t0) / 1e3).toFixed(1);
+    return {
+      provider: "stage",
+      model: "url-fetch",
+      resolution: "(source-preserved)",
+      elapsed: elapsed2,
+      paths: [dest2],
+      source_origin: source
+    };
+  }
+  const expanded = source.startsWith("~") ? path2.join(os.homedir(), source.slice(1)) : source;
+  let resolved;
+  try {
+    resolved = fs3.realpathSync(path2.resolve(expanded));
+  } catch (e2) {
+    throw new Error(`source path not readable: ${source} (${e2.code || e2.message})`);
+  }
+  const stat3 = fs3.statSync(resolved);
+  if (!stat3.isFile()) {
+    throw new Error(`source must be a file: ${source}`);
+  }
+  const ext = path2.extname(resolved).toLowerCase();
+  if (!ALLOWED_IMAGE_EXTENSIONS.has(ext)) {
+    throw new Error(`source must be .png, .jpg, .jpeg, or .webp (got ${ext || "(no ext)"}): ${source}`);
+  }
+  if (path2.basename(resolved).toLowerCase().startsWith(".env")) {
+    throw new Error(`source cannot be an env file: ${source}`);
+  }
+  if (stat3.size > MAX_REMOTE_IMAGE_BYTES) {
+    throw new Error(`source is too large (${stat3.size} bytes; max ${MAX_REMOTE_IMAGE_BYTES})`);
+  }
+  const dest = uniqueName(STAGED_INPUTS_DIR, safeLabel, ext);
+  fs3.copyFileSync(resolved, dest);
+  const elapsed = ((Date.now() - t0) / 1e3).toFixed(1);
+  return {
+    provider: "stage",
+    model: "local-copy",
+    resolution: "(source-preserved)",
+    elapsed,
+    paths: [dest],
+    source_origin: resolved
+  };
+}
 function writeSidecar(pngPath, meta2) {
   const sidecarPath = pngPath.replace(/\.png$/i, ".meta.json");
   const payload = {
@@ -62468,6 +62537,11 @@ var FAL_KEY = process.env.FAL_KEY || "";
 var GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
 if (FAL_KEY) {
   import_client.fal.config({ credentials: FAL_KEY });
+}
+try {
+  ensureDir(STAGED_INPUTS_DIR);
+} catch (e2) {
+  console.error(`[startup] could not create staged inputs dir ${STAGED_INPUTS_DIR}: ${e2.message}`);
 }
 function getProviderForGeneration() {
   if (GEMINI_KEY) return "gemini";
@@ -63003,6 +63077,25 @@ var TOOLS = [
       },
       required: ["source"]
     }
+  },
+  {
+    name: "nb2_stage_image",
+    description: "Copy an external image (chat-attached, downloaded, anywhere on disk, or a URL) into the safe inputs folder so it can then be passed as `source` or `references` to nb2_edit / nb2_upscale / nb2_smart_resize. **Use this whenever a user pastes/attaches an image in chat and asks for an edit, upscale, or resize** \u2014 chat-attached images live in temp paths outside the allowed-roots envelope, and the other tools will reject them otherwise. Also use it for any external image (download, screenshot, asset from another folder) that lives outside the active project root. Returns the staged absolute path inside ~/.h5g-slot-art-creator/inputs/. Idempotent \u2014 each call gets a fresh unique filename so concurrent staging never collides.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        source: {
+          type: "string",
+          description: "Absolute path to a local image file (PNG/JPG/JPEG/WEBP), a `~/`-relative path, OR an `http(s)://` URL. The path does NOT need to be inside any allowed root \u2014 bypassing that restriction is the purpose of staging."
+        },
+        label: {
+          type: "string",
+          description: "Optional naming prefix for the staged file. Default: `chat_input`. Use a self-documenting prefix like `user_paste_HP1` or `ref_for_bezel` so ~/.h5g-slot-art-creator/inputs/ stays readable as it grows.",
+          default: "chat_input"
+        }
+      },
+      required: ["source"]
+    }
   }
 ];
 var server = new Server(
@@ -63086,6 +63179,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           text: "ERROR: nb2_smart_resize needs at least one API key. Either works \u2014 both providers fully implement this tool.\n  FAL_KEY:        node setup-keys.js --fal  (purpose-built NB Pro endpoint, single API call)\n  GEMINI_API_KEY: node setup-keys.js --gemini  (NB2 + pngjs center-crop, one call per target)"
         }],
         isError: true
+      };
+    }
+    if (name === "nb2_stage_image") {
+      const result = await stageImage({
+        source: args.source,
+        label: args.label || null
+      });
+      return {
+        content: formatResult(
+          result,
+          "nb2_stage_image OK \u2014 image is now usable as `source` or `references` for nb2_edit / nb2_upscale / nb2_smart_resize"
+        )
       };
     }
     throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);

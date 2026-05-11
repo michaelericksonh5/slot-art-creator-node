@@ -19,6 +19,19 @@ For from-scratch UI design, use `/slot-step-06` instead.
 
 If no source image, stop. This skill does nothing without one.
 
+### If the user pastes / attaches the UI mock in chat
+
+Chat-attached images live in temp paths outside the allowed-roots envelope —
+`nb2_edit` will reject them. **Stage first**, then use the staged path:
+
+```
+nb2_stage_image({ source: "<chat-temp-path>", label: "ui_reskin_source" })
+  → ~/.h5g-slot-art-creator/inputs/ui_reskin_source_NNN.png
+```
+
+Pass that staged path as `source` to `nb2_edit` in Step 4. See
+`shared/chat_image_staging.md` for full details on when staging is required.
+
 ## Workflow
 
 ### Step 1 — Identify source and target
@@ -29,27 +42,14 @@ If no source image, stop. This skill does nothing without one.
 
 ### Step 2 — Build the reskin prompt
 
-Use the 5-part structure from `RESKIN_TEMPLATE.md`:
+Read the full 5-part bracketed-block prompt template in `RESKIN_TEMPLATE.md`
+(short — about 30 lines including the substitution guide). The structure
+locks layout preservation in part 1 and confines surface changes to part 2,
+which is the structural discipline NB2 needs to actually preserve positions
+when reskinning.
 
-```
-Reskin this slot game UI mock with a new theme. Preserve exactly:
-- pixel positions and proportions of every button, panel, label
-- count and arrangement of all controls
-- composition layout
-- typographic hierarchy
-- spacing and padding
-
-Surface changes only:
-- new theme: <theme_summary>
-- new palette: <palette_leads.primary> with <palette_leads.accents> accents
-- new material treatment for chrome, panels, button fills
-- new decorative motifs in same positions
-- new icon style for iconographic buttons
-
-Do NOT move any control. Do NOT add or remove controls. Do NOT change
-typographic hierarchy. The output is a reskinned version of the source
-with the same layout exactly.
-```
+Fill the template's placeholders from the brief's `theme_summary`,
+`palette_leads`, and `style_lock`.
 
 ### Step 3 — Pre-generation validation (Gate 1)
 
