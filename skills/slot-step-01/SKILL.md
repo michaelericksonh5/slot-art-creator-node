@@ -47,11 +47,35 @@ Required fields (full schema in `GAME_BRIEF_TEMPLATE.md`):
 - `mode_list` — `["base", "free spins", "bonus pick-me", ...]`
 - `rtp` — informational only
 
-### Step 3 — Confirm with user
+### Step 3 — Build the Style Anchor
 
-Show the brief, ask for sign-off. Get explicit "lock it" before writing.
+Construct a single ~60–90-word block of game-wide discipline that will
+be prepended verbatim to every future NB2 prompt (see
+`shared/nb2_prompting.md` §9.2.1). Fill the template with this brief's
+values:
 
-### Step 4 — Persist
+```
+You are generating art assets for a mobile slot machine game ("<game_name>"
+— <theme_summary>). Every output must be optimized for small phone
+screens — every element must be recognizable by silhouette alone when
+small on a phone. Use bold, clean shapes — no intricate micro-textures,
+no dense filigree that collapses at thumbnail size. High contrast between
+foreground and the flat background. Warm saturated colors signal high
+pay; cool muted colors signal low pay. Gold is reserved for premium and
+special symbols only. Maintain a consistent <style_lock> rendering
+technique across the entire set.
+```
+
+Save the filled-in string as `style_anchor` in both `game_brief.json`
+and the `brief` field of `project.json`. Every downstream skill reads
+this field and prepends it verbatim to every prompt.
+
+### Step 4 — Confirm with user
+
+Show the brief AND the style anchor, ask for sign-off. Get explicit
+"lock it" before writing.
+
+### Step 5 — Persist
 
 Atomic-write to BOTH:
 - `{project_root}/game_brief.json` — human-readable mirror
@@ -64,7 +88,7 @@ Update `project.json`:
 
 Update `~/.h5g-slot-active-project.json` to point here.
 
-### Step 5 — Next step nudge
+### Step 6 — Next step nudge
 
 ```
 ✓ Step 1 — Game Brief locked.

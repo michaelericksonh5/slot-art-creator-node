@@ -49,6 +49,8 @@ be dimmer than the dimmest symbol.
 
 ### Step 3 — Pre-generation validation (Gate 1)
 
+- [ ] `style_anchor` (from `project.json`) is prepended to the prompt
+- [ ] Bracketed-block format used: `[RENDER STYLE]`, `[COMPOSITION]`, `[MOOD/PALETTE]`, `[MOBILE CONSTRAINTS]`
 - [ ] `style_lock` in prompt verbatim
 - [ ] No hex / resolution / aspect ratio strings in prompt body
 - [ ] All four hard rules stated explicitly
@@ -56,6 +58,13 @@ be dimmer than the dimmest symbol.
 - [ ] No instruction to show reels or grid lines
 - [ ] Palette is cooler/less saturated than symbol palette
 - [ ] Variant modifier matches the requested variant
+- [ ] **Symbol/environment exclusivity:** for each subject in
+      `brief.symbol_manifest`, the prompt either (a) does not mention
+      it at all, or (b) mentions it exactly once as an intentional
+      callback. NEVER carpet the BG in a symbol-set subject. See
+      `shared/qa_preflight.md` "Symbol/environment exclusivity" for
+      the why and how. The theme has a wider vocabulary than the
+      symbol roster — pull from that for environmental motifs.
 
 ### Step 4 — Generate
 

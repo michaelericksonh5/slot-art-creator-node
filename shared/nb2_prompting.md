@@ -27,74 +27,248 @@ playbook every design skill in `slot-art-creator` follows.
 
 ---
 
-## §9.2 Master prompt formula
+## §9.2 Master prompt structure
+
+**Production-tested format.** Every shipped game (4470 Tesla, Gobble Stampede) uses
+the same two-piece structure: a once-per-game **Style Anchor** prepended to a
+**Body** with explicit `[BRACKETED SECTIONS]`. NB2 reasons better on structured,
+labeled prompts than on flat paragraphs — this is the largest single quality
+lever in the playbook.
 
 ```
-[SUBJECT] + [TIER] + [temperature-matched palette] + [style]
-+ [mobile constraints] + [quality tag block] + [semantic avoids]
+<STYLE ANCHOR — built once from the brief, prepended verbatim to every prompt>
+
+[RENDER STYLE — LOCKED to <reference|style_lock>]
+…rendering technique, surface finish, lighting direction, what NOT to do…
+
+[<SUBJECT-TYPE SHAPE> — <one-line silhouette family>]
+…plaque/frame/badge construction, layered build, size dominance…
+
+[COLOR SYSTEM FOR THIS SYMBOL]
+…tier, palette in this slot, dominant interior color, halo/aura treatment…
+
+[SUBJECT INSIDE — <name + role + tier>]
+…full subject brief, pose, identity, mood…
+
+[ANATOMY LOCK]   (optional — only when a recurring character appears)
+…exact feature list + "one head, two eyes…" count assertions…
+
+[MOBILE CONSTRAINTS]
+…thumbnail readability, motif cap, contrast, centered, padding…
+
+<quality tag line>
 ```
 
-### HP (character)
+Every `[BRACKETED HEADER]` should be on its own line. The body underneath
+can be one paragraph or several short ones. Do not omit headers even when a
+section is short — NB2 uses the structural breaks as soft attention anchors.
+
+### §9.2.1 Style Anchor — write once, reuse forever
+
+The Style Anchor is a **single block of game-wide discipline** built from
+`game_brief.json` and prepended verbatim to every prompt in the game's run.
+It exists so each per-symbol prompt can stay lean while the style/mood/mobile-
+readability lock is repeated reliably on every call. (In Gemini terms, this
+is the equivalent of `config.systemInstruction`. fal.ai has no equivalent
+field — for fal calls, the anchor is just prepended to the prompt body.)
+
+**Build it once when the brief is finalized in `slot-step-01`.** Save it to
+`project.json` as `style_anchor` (string). Reuse verbatim on every subsequent
+generation.
+
+**Template (fill from brief):**
 
 ```
-[character description], high-pay premium slot symbol, large and dominant,
-warm crimson and deep gold palette, soft inner rim glow,
-bold painterly slot game art slightly stylized, not photorealistic,
-centered on flat solid black background no gradients,
-clear silhouette at tiny thumbnail size, sharp clean edges,
-high quality game asset, professional slot game art,
-mobile-optimized icon, more valuable than all mid and low tier symbols.
+You are generating art assets for a mobile slot machine game ("<game_name>" —
+<one-sentence theme summary from brief>). Every output must be optimized for
+small phone screens — every element must be recognizable by silhouette alone
+when small on a phone. Use bold, clean shapes — no intricate micro-textures,
+no dense filigree that collapses at thumbnail size. High contrast between
+foreground and the flat background. Warm saturated colors signal high pay;
+cool muted colors signal low pay. Gold is reserved for premium and special
+symbols only. Maintain a consistent <style_lock> rendering technique across
+the entire set.
 ```
 
-### MP (themed object)
+**Rules:**
+- Build once per game, reuse verbatim. Do not rewrite per prompt.
+- Keep it 60–90 words. Longer dilutes attention.
+- Lives in `project.json.style_anchor` so every skill can read it.
+- Prepend to body with a blank line separator.
+
+### §9.2.2 Reference-image discipline
+
+When a prompt passes a reference image (key art, prior symbol, mood board),
+**state explicitly what to inherit and what to ignore**. Without this clause
+NB2 will copy the reference's background color and palette into the new
+symbol — a real production failure mode that shows up as off-tier colors.
+
+**Canonical clause** (paste at the end of `[RENDER STYLE — LOCKED]`):
 
 ```
-[object description], mid-pay slot symbol, one tier below the high-pay characters,
-moderate warm-leaning palette, no glow—subtle highlight only,
-[locked style phrase], stylized not photorealistic,
-centered on flat solid white background no gradients, visible padding around subject,
-clear silhouette, sharp clean edges, professional slot game art, mobile-optimized icon.
+Inherit ONLY <rendering technique / lighting / surface finish> from the
+reference. Ignore its <background color, palette, composition>. The prompt
+below is the single source of truth for those.
 ```
 
-### LP (card royal)
+Be explicit about both halves — both *what* to inherit and *what* to ignore.
+The vague phrasing "match the style" is not enough.
+
+### §9.2.3 Bracketed-block templates per symbol type
+
+Each template below assumes the Style Anchor (§9.2.1) is prepended verbatim.
+`<placeholders>` are filled from `game_brief.json` and the per-symbol manifest.
+
+#### HP (high-pay character or hero object)
 
 ```
-The letter "A" as a low-pay slot symbol, small and understated with generous empty space,
-cool muted palette—soft cyan and pale silver only, no warm gold or amber anywhere,
-not even trim, flat vector game icon design, letter shape reads first,
-theme decoration subtle and behind the letter,
-centered on flat solid white background no gradients,
-clear silhouette at tiny thumbnail size, sharp clean edges,
-professional slot game art. Do not use the word detailed.
+[RENDER STYLE — LOCKED to <reference|style_lock>]
+Match the reference for rendering technique, surface finish, and lighting
+direction (warm key from upper-left, cool fill from lower-right, warm rim
+along the upper silhouette). Bold confident forms, no drawn outlines, not
+photorealistic. Inherit ONLY the rendering technique from the reference —
+ignore its background color and palette, which are specified below.
+
+[PLAQUE SHAPE — <plaque family from brief>]
+<plaque construction>: outer metal frame in <palette_leads.primary>; inside
+the frame, a clean glossy enamel field (color specified below); thin inner
+metal lip separates the enamel from the subject. Large and dominant — the
+plaque fills most of the available space with only a small even margin of
+flat black around it.
+
+[COLOR SYSTEM FOR THIS SYMBOL]
+- Pay tier: high-pay premium symbol (HP<N>).
+- Enamel field color: <warm-leaning color from palette_leads.primary>.
+- Halo / aura treatment: warm-gold halo radiating from the plaque itself,
+  not a colored background fill — canvas background stays flat pure black.
+- Size phrasing: "large and dominant, commands the frame with a small border".
+
+[SUBJECT INSIDE — <subject from manifest>]
+<subject pose, identity, mood — 2–3 sentences>.
+
+[MOBILE CONSTRAINTS]
+Recognizable as a tiny thumbnail on a phone. Maximum three to five decorative
+motifs on the plaque frame. Bold clean shapes, high contrast between subject,
+enamel field, and outer black frame. Centered composition, perfectly upright,
+small even margin from canvas edges. Flat solid black background, no
+gradients, no patterns.
+
+high quality game asset, sharp clean edges, professional slot game art,
+mobile-optimized icon, clear strong silhouette at small sizes.
 ```
 
-### LP (themed object)
+#### MP (mid-pay themed object)
 
 ```
-[Small object] as a low-pay slot symbol, small and understated,
-cool muted [theme] palette, no warm gold or amber, flat vector game icon design,
-centered on flat solid white background no gradients, generous empty space,
-clear silhouette, sharp clean edges. Do not use the word detailed.
+[RENDER STYLE — LOCKED to <reference|style_lock>]
+Same rendering technique as the HP set. <surface-finish phrase from brief>.
+Subtle highlight only — no glow, no rim halo. Inherit ONLY rendering
+technique from the reference; ignore its background color and palette.
+
+[PLAQUE SHAPE — <plaque family from brief, simpler than HP>]
+<plaque construction, one tier less ornate than HP>. Generous size but
+visibly one tier below the HP plaques in frame complexity and outer scale.
+
+[COLOR SYSTEM FOR THIS SYMBOL]
+- Pay tier: mid-pay (MP<N>), one tier below the high-pay characters.
+- Palette: moderate warm-leaning <palette_leads.primary> — cooler/less
+  saturated than HP, no gold-on-LP carry-down.
+- No halo. Subtle highlight only.
+
+[SUBJECT INSIDE — <subject from manifest>]
+<subject brief>.
+
+[MOBILE CONSTRAINTS]
+Clear silhouette at thumbnail size. Visible padding around the subject.
+Centered. Flat solid black background, no gradients.
+
+high quality game asset, professional slot game art, mobile-optimized icon.
 ```
 
-### Wild
+#### LP (low-pay card royal or low-tier themed object)
 
 ```
-"WILD" label, special slot wild symbol, most readable text at reel cell size,
-unique electric cyan lightning palette that breaks the theme,
-barely contained fills frame edge to edge,
-[locked style phrase],
-centered on flat solid black background no gradients,
-clear silhouette, sharp clean edges, professional slot game art.
+[RENDER STYLE — LOCKED to <style_lock>]
+Flat vector game icon design. Letter shape (or object silhouette) reads
+first. No drawn outlines on subject. No painterly modeling. Inherit ONLY
+the rendering language from the style lock; do not pull warmth or trim
+from any HP reference.
+
+[BADGE SHAPE — minimal]
+Generous empty space around the subject. No ornate frame, no plaque, no
+metal — a simple flat field at most. The card letter or small themed
+object is the entire visual content.
+
+[COLOR SYSTEM FOR THIS SYMBOL]
+- Pay tier: low-pay (LP<N>).
+- Palette: cool muted only — soft cyan, pale silver, dusty blue, soft
+  desaturated <theme accent>. NO warm gold, NO amber, NO crimson, NO
+  warm trim anywhere, not even as accents.
+- Theme decoration: subtle and behind the letter (if card royal).
+
+[SUBJECT INSIDE — <letter|small object>]
+<one-line subject>. Small and understated.
+
+[MOBILE CONSTRAINTS]
+Clear silhouette at tiny thumbnail size. Flat solid white background, no
+gradients. Generous empty space. Sharp clean edges.
+
+professional slot game art. (Do not use the word "detailed".)
 ```
 
-### Scatter
+#### Wild — silhouette break + category break + color break
 
 ```
-"SCATTER" label, circular badge-shaped bonus symbol, warm luminous golden ticket,
-radiant warm palette, [locked style phrase],
-centered on flat solid black background no gradients,
-clear silhouette, sharp clean edges, professional slot game art.
+[RENDER STYLE — LOCKED to <style_lock>]
+Same rendering technique as the rest of the set.
+
+[BADGE SHAPE — categorically different from the pay symbols]
+This wild's outer silhouette must be a DIFFERENT SHAPE FAMILY than every
+pay symbol in the set — if the pay symbols use vertical cartouches or
+shields, this wild uses a radial sunburst, circular medallion, or hexagonal
+emblem. A player glancing at the reel must identify this as the WILD from
+peripheral vision alone, based on silhouette shape.
+
+[COLOR SYSTEM FOR THIS SYMBOL]
+- Wild's primary color must NOT appear in palette_leads.primary or .accents.
+- The wild's palette deliberately BREAKS the game's color story —
+  electric cyan / hot magenta / acid green are common choices.
+
+[SUBJECT INSIDE — "WILD" text label]
+The word "WILD" is the most readable text at reel cell size. The wild
+character or motif (if any) is secondary to the readable WILD text.
+Barely contained — fills the frame edge to edge.
+
+[MOBILE CONSTRAINTS]
+Centered on flat solid black background, no gradients. Clear silhouette
+at thumbnail size. Sharp clean edges.
+
+professional slot game art.
+```
+
+#### Scatter
+
+```
+[RENDER STYLE — LOCKED to <style_lock>]
+Same rendering technique as the rest of the set.
+
+[BADGE SHAPE — circular]
+Circular badge-shaped bonus symbol. Radial composition. Warm luminous
+glow radiating from the badge.
+
+[COLOR SYSTEM FOR THIS SYMBOL]
+- Warm gold-leaning palette — radiant, premium.
+- Halo / aura: strong warm-gold radiance, soft sparkle particles.
+
+[SUBJECT INSIDE — "<scatter_label>" badge]
+The word "<scatter_label>" (default: "SCATTER") clearly readable.
+A premium thematic icon — golden ticket, bonus coin, glowing emblem.
+
+[MOBILE CONSTRAINTS]
+Centered on flat solid black background, no gradients. Clear silhouette
+at thumbnail size.
+
+high quality game asset, professional slot game art.
 ```
 
 ### Reel frame / bezel

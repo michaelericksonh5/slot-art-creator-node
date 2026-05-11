@@ -54,6 +54,43 @@ surface the specific problem, and fix the prompt. Do not generate until clean.
 - [ ] Shape is "circular badge" (default) or as specified in brief
 - [ ] The word "SCATTER" or the brief's `scatter.label` appears in the subject
 
+### Symbol/environment exclusivity
+
+When generating environmental art (backgrounds, frames/bezels, UI chrome,
+banners, lobby tiles), check the symbol manifest before writing the prompt.
+
+**The rule:** Do not proliferate any subject from the symbol set across the
+environmental art. A subject that is one of the reel symbols should not
+appear as a recurring motif in the BG, frame, or UI.
+
+**Why:** Either failure mode breaks the visual hierarchy:
+- **Over-saturation** — the subject is everywhere, so the on-reel symbol
+  reads as common environmental decoration rather than a hero asset within
+  its tier.
+- **Over-empowerment** — the subject defines the entire game world, so
+  every other symbol feels subordinate to it, flattening the value
+  gradient the player needs to read the reels.
+
+Either way, the symbol loses the "hero of category" identity that drives
+pay-tier recognition.
+
+**Concrete checks for environment prompts:**
+
+| Check | Pass condition | Fail action |
+|---|---|---|
+| BG/frame/UI prompt mentions a symbol subject | Subject appears 0 times, OR appears exactly once as an intentional callback (e.g. a single petal trailing in the foreground) | Strip subject mentions, replace with the theme's broader environmental vocabulary |
+| Symbol's defining shape is repeated as decorative motif | Shape used 0 times in env art | Replace with a different theme motif that isn't a reel symbol |
+| Frame/bezel pulls thematic motifs | Motifs are from the wider theme vocabulary, not specifically from the symbol manifest | Swap to non-symbol theme elements |
+
+**Example:** A game has a flower as a symbol (HP2). The BG can be the
+broader scene (a graveyard at dusk), the frame can have theme-appropriate
+ornaments (skull motifs, scrollwork, candles), but the BG/frame should not
+be carpeted in that same flower — at most a single subtle callback.
+
+Every game's symbol roster is different. Always read the current brief's
+symbol manifest before writing environment prompts and apply this rule
+to whatever subjects are in the current set.
+
 ### Visual hierarchy awareness
 
 Before generating each symbol, answer these questions internally:

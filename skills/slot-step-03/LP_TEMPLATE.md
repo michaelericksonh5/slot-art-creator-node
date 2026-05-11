@@ -5,6 +5,10 @@ in a set (LP1–LP6). The LP family is locked in `brief.tier_plan.lp_family`
 and can be one of: `card_royals`, `suits`, `themed_objects`, `gems`. **Never
 mix families** within one set.
 
+These templates use the **bracketed-block prompt format** from
+`shared/nb2_prompting.md` §9.2. The game's **Style Anchor** (§9.2.1) is
+prepended to every prompt verbatim — it lives in `project.json.style_anchor`.
+
 ## Universal LP rules (all families)
 
 - **Background:** flat solid white, no gradients
@@ -12,6 +16,7 @@ mix families** within one set.
 - **Light:** flat or very subtle; no rim glow
 - **Size phrase:** "small and understated, generous empty space"
 - **Tier hierarchy:** clearly the simplest, coolest, least ornamented in the set
+- **No HP-style plaque.** LP is just the subject on a flat field.
 
 ## ⛔ LP forbidden words (hard gate)
 
@@ -34,15 +39,32 @@ validation will reject the prompt before NB2 sees it.
 This is the most common LP family. Each LP is one card royal letter/number.
 
 ```
-The letter "<letter>" as a low-pay slot symbol,
-small and understated with generous empty space,
-cool muted palette — soft cyan and pale silver only,
-no warm gold or amber anywhere, not even trim,
-flat vector game icon design,
-letter shape reads first, theme decoration subtle and behind the letter,
-centered on flat solid white background no gradients,
-clear silhouette at tiny thumbnail size, sharp clean edges,
-professional slot game art. Do not use the word detailed.
+[RENDER STYLE — LOCKED to <style_lock>]
+Flat vector game icon design. Letter shape reads first. No drawn outlines
+on the letter. No painterly modeling. No metallic surface. Do not pull
+any warmth or trim from any HP reference — LP exists outside the HP
+palette entirely.
+
+[BADGE SHAPE — minimal]
+Generous empty space around the letter. No ornate frame, no plaque, no
+metal — a simple flat field. The card letter is the entire visual content.
+
+[COLOR SYSTEM FOR THIS SYMBOL]
+- Pay tier: low-pay (LP<N>).
+- Palette: cool muted only — soft cyan, pale silver, dusty blue. NO
+  warm gold, NO amber, NO crimson, NO warm trim anywhere, not even as
+  accents.
+- Theme decoration: subtle and behind the letter — never competing
+  with the letter for legibility.
+
+[SUBJECT INSIDE — letter "<letter>"]
+The letter "<letter>" as a low-pay slot symbol. Small and understated.
+
+[MOBILE CONSTRAINTS]
+Clear silhouette at tiny thumbnail size. Flat solid white background, no
+gradients. Generous empty space. Sharp clean edges.
+
+professional slot game art. (Do not use the word "detailed".)
 ```
 
 ## LP family — `themed_objects`
@@ -51,13 +73,26 @@ Small theme-relevant objects (e.g., feathers, beads, scarabs, runes — never
 the same category as HP/MP).
 
 ```
-<subject> as a low-pay slot symbol,
-small and understated with generous empty space,
-cool muted <theme> palette, no warm gold or amber,
-flat vector game icon design,
-centered on flat solid white background no gradients,
-clear silhouette, sharp clean edges,
-professional slot game art. Do not use the word detailed.
+[RENDER STYLE — LOCKED to <style_lock>]
+Flat vector game icon design. Bold simple silhouette. No painterly
+modeling. No metallic surface. No warmth carried down from HP.
+
+[BADGE SHAPE — minimal]
+Generous empty space. No plaque, no frame. The object alone on a flat
+white field.
+
+[COLOR SYSTEM FOR THIS SYMBOL]
+- Pay tier: low-pay (LP<N>).
+- Palette: cool muted <theme> palette only. NO warm gold, NO amber.
+
+[SUBJECT INSIDE — <subject>]
+<subject> as a low-pay slot symbol. Small and understated.
+
+[MOBILE CONSTRAINTS]
+Clear silhouette at thumbnail size. Flat solid white background, no
+gradients. Generous empty space. Sharp clean edges.
+
+professional slot game art. (Do not use the word "detailed".)
 ```
 
 ## LP family — `gems`
@@ -65,15 +100,26 @@ professional slot game art. Do not use the word detailed.
 Faceted gemstones in cool colors only.
 
 ```
-<gem_type> gemstone as a low-pay slot symbol,
-small and understated with generous empty space,
-cool muted <gem_color> faceted gem,
-2 to 3 clean specular points (not 8 micro-facets),
-no warm gold or amber on the stone or setting,
-flat vector game icon design,
-centered on flat solid white background no gradients,
-clear silhouette, sharp clean edges,
-professional slot game art. Do not use the word detailed.
+[RENDER STYLE — LOCKED to <style_lock>]
+Flat vector game icon design. 2 to 3 clean specular points only — not
+8 micro-facets. No painterly modeling.
+
+[BADGE SHAPE — minimal]
+The gem alone on a flat white field. No plaque, no metal setting.
+
+[COLOR SYSTEM FOR THIS SYMBOL]
+- Pay tier: low-pay (LP<N>).
+- Palette: cool muted <gem_color> faceted gem only. NO warm gold or
+  amber on the stone or any setting.
+
+[SUBJECT INSIDE — <gem_type>]
+A <gem_color> <gem_type> gemstone as a low-pay slot symbol. Small.
+
+[MOBILE CONSTRAINTS]
+Clear silhouette at thumbnail size. Flat solid white background, no
+gradients. Generous empty space. Sharp clean edges.
+
+professional slot game art. (Do not use the word "detailed".)
 ```
 
 ## LP family — `suits` (♠ ♥ ♦ ♣)
@@ -81,18 +127,31 @@ professional slot game art. Do not use the word detailed.
 Stylized card suit icons themed to the game.
 
 ```
-<suit_name> playing card suit icon as a low-pay slot symbol,
-small and understated with generous empty space,
-cool muted palette — silver and pale theme color,
-flat vector game icon design,
-centered on flat solid white background no gradients,
-clear silhouette, sharp clean edges,
+[RENDER STYLE — LOCKED to <style_lock>]
+Flat vector game icon design. Bold simple suit silhouette.
+
+[BADGE SHAPE — minimal]
+Suit icon centered on flat white field, no frame.
+
+[COLOR SYSTEM FOR THIS SYMBOL]
+- Pay tier: low-pay (LP<N>).
+- Palette: cool muted — silver and pale theme color. NO warm gold or amber.
+
+[SUBJECT INSIDE — <suit_name>]
+<suit_name> playing card suit icon as a low-pay slot symbol.
+
+[MOBILE CONSTRAINTS]
+Clear silhouette at thumbnail size. Flat solid white background, no
+gradients. Generous empty space. Sharp clean edges.
+
 professional slot game art.
 ```
 
 ## Pre-gen quick checks
 
+- [ ] `style_anchor` (from `project.json`) is prepended to the prompt
 - [ ] Prompt contains ZERO forbidden words (see list above)
+- [ ] `[RENDER STYLE — LOCKED]` block present with explicit "no HP warmth carry-down" clause
 - [ ] Background is `flat solid white background, no gradients`
 - [ ] Palette is cool and muted only
 - [ ] LP family matches `brief.tier_plan.lp_family` (no mixing)
