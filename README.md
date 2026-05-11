@@ -6,7 +6,7 @@ High 5 Games slot machine art generation plugin for Claude Code and Claude Cowor
 **Two model families, your choice per call:**
 
 - **Nano Banana 2** ([fal.ai/models/fal-ai/nano-banana-2](https://fal.ai/models/fal-ai/nano-banana-2)) — 4 tools (`nb2_generate`, `nb2_edit`, `nb2_upscale`, `nb2_smart_resize`). Either Google Gemini OR fal.ai works fully. With both keys set, generate/edit/upscale routes to Gemini (direct API, same NB2 model) and smart-resize routes to fal.ai (purpose-built Nano Banana Pro endpoint).
-- **GPT Image 2** ([OpenAI gpt-image-2](https://developers.openai.com/api/docs/models/gpt-image-2), released April 2026) — 2 tools (`gpt2_generate`, `gpt2_edit`). Best for **accurate in-image text** (paytables, logos, banners with copy), **photorealistic 4K**, and **compositional multi-image edits**. More expensive per call than NB2 — use selectively for hero and text-heavy assets.
+- **GPT Image 2** ([OpenAI gpt-image-2](https://developers.openai.com/api/docs/models/gpt-image-2), released April 2026) — 3 tools (`gpt2_generate`, `gpt2_edit`, `gpt2_smart_resize`). Best for **accurate in-image text** (paytables, logos, banners with copy), **stable 2K photorealism** (4K targets are experimental per OpenAI; for genuine 4K, generate at 2K with gpt2 then upscale with `nb2_upscale`), and **compositional multi-image edits**. More expensive per call than NB2 — use selectively for hero and text-heavy assets. **No faithful upscale mode** (always regenerates; use `nb2_upscale` for true source-preserving upscales).
 
 Both families are independent — set whichever keys you need. The NB2
 family powers the bulk of the slot-step-* workflow; the gpt2 family is
@@ -135,7 +135,7 @@ Should show `slot-art-creator-node@h5g-plugins ... Status: √ enabled`.
 **Two key families with independent requirements:**
 
 - **NB2 family** (4 `nb2_*` tools): either `GEMINI_API_KEY` OR `FAL_KEY` is fully sufficient. Both routes each tool to its strongest backend.
-- **GPT Image 2 family** (2 `gpt2_*` tools): `OPENAI_API_KEY`. Optional — only needed if you want gpt-image-2 for paytables, logos, banners with required copy, photorealistic 4K, or compositional multi-image edits.
+- **GPT Image 2 family** (3 `gpt2_*` tools — `gpt2_generate`, `gpt2_edit`, `gpt2_smart_resize`): `OPENAI_API_KEY`. Optional — only needed if you want gpt-image-2 for paytables, logos, banners with required copy, stable-2K photorealism (4K is experimental), compositional multi-image edits, or text-preserving multi-aspect resize.
 
 | Provider | Get a key | Powers |
 |---|---|---|
@@ -155,10 +155,11 @@ Should show `slot-art-creator-node@h5g-plugins ... Status: √ enabled`.
 | If the asset needs... | Reach for... |
 |---|---|
 | Accurate text rendering in the image (paytables, logos, banners with copy) | `gpt2_generate` / `gpt2_edit` |
-| Photorealistic 4K (marketing hero shots) | `gpt2_generate` (size `4K`, quality `high`) |
+| Photorealistic 2K (marketing hero shots — gpt-image-2's stable ceiling) | `gpt2_generate` (size `2K`, quality `high`) — for genuine 4K, generate at 2K then run `nb2_upscale` |
 | Compositional editing combining 2-16 reference images | `gpt2_edit` with `extra_references` |
 | Routine slot symbols at thumbnail size | `nb2_generate` (NB2 is purpose-tuned, gpt2 is overkill and pricier) |
-| Multi-aspect resize / smart-resize | `nb2_smart_resize` (gpt-image-2 has no purpose-built resize) |
+| Multi-aspect resize of a **non-text** source (symbols, backgrounds, scenes) | `nb2_smart_resize` (fal.ai NB Pro purpose-built endpoint, single call, cheapest) |
+| Multi-aspect resize of a **text-heavy** source (paytables, logos, banners with copy) | `gpt2_smart_resize` (preserves text rendering across the resize; N parallel calls) |
 | Upscale an approved 2K asset to 4K | `nb2_upscale` (gpt-image-2 doesn't faithfully upscale — it generates fresh) |
 
 See `shared/gpt_image2_prompting.md` for the full gpt2 playbook (size mapping, quality settings, cost rule-of-thumb, per-skill recommendations).
@@ -343,14 +344,18 @@ cross-asset consistency review you can only do once a full set is done.
 
 ## MCP tools
 
-The bundled `nb2node` MCP server exposes 4 tools Claude calls directly:
+The bundled `nb2node` MCP server exposes 8 tools across two model families:
 
-| Tool | Description |
-|---|---|
-| `nb2_generate` | Text-to-image |
-| `nb2_edit` | Image-to-image edit / reskin |
-| `nb2_upscale` | Path-A 4K upscale |
-| `nb2_smart_resize` | Multi-size pixel-perfect resize. Either provider works — see [API keys](#api-keys) for routing details |
+| Tool | Family | Description |
+|---|---|---|
+| `nb2_generate` | NB2 | Text-to-image (Gemini/fal.ai routing) |
+| `nb2_edit` | NB2 | Image-to-image edit / reskin |
+| `nb2_upscale` | NB2 | Path-A 4K upscale (the only **faithful** upscale tool — preserves source pixels) |
+| `nb2_smart_resize` | NB2 | Multi-size pixel-perfect resize. Either provider works — see [API keys](#api-keys) for routing details |
+| `gpt2_generate` | gpt-image-2 | Text-to-image with gpt-image-2. Use for paytables, logos, banners with copy, hero photorealism. STABLE ceiling 2K; 4K experimental. |
+| `gpt2_edit` | gpt-image-2 | Image-to-image edit; accepts an array of up to ~16 reference images for compositional editing |
+| `gpt2_smart_resize` | gpt-image-2 | Multi-aspect recompose (N parallel edit calls). Use when source has text that must remain readable across the resize |
+| `nb2_stage_image` | helper | Copy any external/chat-attached image into the safe inputs folder so it can be passed as `source` or `references` to any of the above |
 
 ---
 

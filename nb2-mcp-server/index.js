@@ -1350,7 +1350,9 @@ async function dispatchEdit(args) {
 //
 // gpt-image-2 is a separate model from NB2 and behaves differently:
 //   - Strong text rendering (use for paytables, logos, banners with copy)
-//   - Native 4K support (3840x2160 / 2160x3840 / 2048x2048)
+//   - Stable native ceiling is 2K (2048x2048); 4K targets (3840x2160 / 2160x3840)
+//     are accepted by the API but flagged EXPERIMENTAL by OpenAI
+//   - No faithful upscale mode — always regenerates at the target size
 //   - Agentic planning — better at compositional briefs
 //   - Returns base64 (no temp URL — write straight to disk)
 //   - Edit accepts up to ~16 reference images for compositional editing
@@ -1564,12 +1566,33 @@ async function gpt2Edit({ prompt, source, mask, outputDir, assetName, imageSize,
   };
 }
 
+// Snap a target W×H to gpt-image-2's grid: multiples of 16, max edge 3840,
+// aspect ratio ≤3:1. Returns { width, height, snapped: bool, reason?: string }.
+// Common case the snap matters: 1920×1080 (the YouTube/Instagram default
+// NB2 uses) has height 1080, which isn't a multiple of 16 (1080÷16=67.5).
+// We round to nearest multiple of 16 in that dimension, prefer rounding up
+// to stay above the user's expressed minimum.
+function snapToGpt2Grid(w, h) {
+  let width = w, height = h;
+  let snapped = false;
+  if (width % 16 !== 0) { width = Math.ceil(width / 16) * 16; snapped = true; }
+  if (height % 16 !== 0) { height = Math.ceil(height / 16) * 16; snapped = true; }
+  // Clamp to max edge 3840
+  if (width > 3840) { width = 3840; snapped = true; }
+  if (height > 3840) { height = 3840; snapped = true; }
+  // Aspect ratio cap (3:1). If a snap pushed us out, give up — caller
+  // surfaces this as a clear error rather than silently changing the aspect.
+  const aspectExceeded = Math.max(width / height, height / width) > 3;
+  return { width, height, snapped, aspectExceeded };
+}
+
 // gpt2_smart_resize — produce multi-aspect variants of a source image using
 // gpt-image-2's edit endpoint. Same pattern as geminiSmartResize: for each
 // target WxH, call edit with the source + a recompose prompt, save the
-// result. Unlike fal-ai/smart-resize (purpose-built endpoint that does this
-// in one call), this issues N parallel edit calls. Cost scales linearly
-// with the number of targets.
+// result. Issues calls IN PARALLEL (Promise.all) since each is independent.
+// Unlike fal-ai/smart-resize (purpose-built endpoint that does this in one
+// server-side call), this is N round-trips. Cost scales linearly with the
+// number of targets.
 //
 // When to choose gpt2_smart_resize over nb2_smart_resize:
 //   - The source has text that must remain readable after recomposition.
@@ -1591,7 +1614,12 @@ async function gpt2SmartResize({ source, outputDir, assetName, targetSizes, prom
     );
   }
 
-  const sizes = validateTargetSizes(targetSizes);
+  // Default target sizes are gpt-image-2-safe (all multiples of 16). NB2's
+  // default of 1920x1080 / 1080x1920 won't pass gpt-image-2's grid check
+  // (1080 isn't a multiple of 16), so we override here.
+  const requestedSizes = (targetSizes && targetSizes.length > 0)
+    ? validateTargetSizes(targetSizes)
+    : ["2048x2048", "1920x1088", "1088x1920"];
   const q = quality || "high";
   ensureDir(outputDir);
 
@@ -1606,25 +1634,44 @@ async function gpt2SmartResize({ source, outputDir, assetName, targetSizes, prom
   })();
   const sourceMime = imageMimeType(path.extname(source).toLowerCase());
 
-  const saved = [];
   const overallT0 = Date.now();
 
-  for (const size of sizes) {
+  // Pre-snap and pre-validate every target before issuing calls. Surfacing
+  // a clear error up front beats getting halfway through a parallel batch
+  // and erroring on target 5 of 7.
+  const snappedTargets = requestedSizes.map((size) => {
     const match = /^(\d+)x(\d+)$/.exec(size);
-    const targetW = parseInt(match[1], 10);
-    const targetH = parseInt(match[2], 10);
+    const requestedW = parseInt(match[1], 10);
+    const requestedH = parseInt(match[2], 10);
+    const snap = snapToGpt2Grid(requestedW, requestedH);
+    if (snap.aspectExceeded) {
+      throw new Error(
+        `Target ${size} has aspect ratio outside gpt-image-2's ≤3:1 limit. ` +
+        `→ Use nb2_smart_resize for extreme aspect ratios (it has no such cap).`
+      );
+    }
+    return {
+      requested: size,
+      requestedW,
+      requestedH,
+      actualW: snap.width,
+      actualH: snap.height,
+      snapped: snap.snapped,
+      sizeStr: `${snap.width}x${snap.height}`,
+    };
+  });
 
-    // gpt-image-2's accepted sizes — snap to closest if the literal isn't
-    // in the official list. The literal WxH passes through if it satisfies
-    // the constraints (multiples of 16, max edge ≤3840, ratio ≤3:1).
-    const sizeStr = `${targetW}x${targetH}`;
-
+  // Process all targets in parallel — each call is independent (same source
+  // buffer, different size). Promise.all surfaces the first rejection, which
+  // is what we want for a multi-aspect deliverable (one failed size means
+  // the set isn't complete).
+  const results = await Promise.all(snappedTargets.map(async (t) => {
     const recomposePrompt =
       (prompt ? prompt + " " : "") +
-      `Recompose this image at ${targetW}x${targetH} (aspect ratio ${targetW}:${targetH} simplified) ` +
-      `while preserving the subject, palette, style, and overall mood. Adjust framing as needed to ` +
-      `fit the target shape; do not crop awkwardly. Keep the hero subject as the focal point. ` +
-      `Preserve any visible text exactly. Match the rendering style of the source exactly.`;
+      `Recompose this image at ${t.actualW}x${t.actualH} while preserving the subject, ` +
+      `palette, style, and overall mood. Adjust framing as needed to fit the target shape; ` +
+      `do not crop awkwardly. Keep the hero subject as the focal point. Preserve any visible ` +
+      `text exactly. Match the rendering style of the source exactly.`;
 
     const imageFile = await OpenAI.toFile(sourceBuffer, "source.png", { type: sourceMime });
 
@@ -1635,17 +1682,14 @@ async function gpt2SmartResize({ source, outputDir, assetName, targetSizes, prom
         model: "gpt-image-2",
         image: imageFile,
         prompt: recomposePrompt,
-        size: sizeStr,
+        size: t.sizeStr,
         quality: q,
         n: 1,
         output_format: "png",
       });
     } catch (err) {
-      // If the literal size was rejected (e.g. not multiple of 16, or the
-      // 4K experimental size failed), surface a clear message that names
-      // the offending target.
       throw new Error(
-        `gpt-image-2 rejected size ${sizeStr}: ${err.message}. ` +
+        `gpt-image-2 rejected size ${t.sizeStr} (requested ${t.requested}${t.snapped ? `, snapped from ${t.requestedW}x${t.requestedH}` : ""}): ${err.message}. ` +
         `→ gpt-image-2 requires dimensions to be multiples of 16, max edge 3840, ` +
         `aspect ratio ≤3:1. The 4K sizes (3840×2160 / 2160×3840) are experimental ` +
         `and sometimes fail — fall back to fal.ai's nb2_smart_resize (NB Pro) for ` +
@@ -1656,33 +1700,37 @@ async function gpt2SmartResize({ source, outputDir, assetName, targetSizes, prom
 
     const data = result.data || [];
     if (!data.length || !data[0].b64_json) {
-      throw new Error(`gpt-image-2 returned no image for target ${size}`);
+      throw new Error(`gpt-image-2 returned no image for target ${t.requested}`);
     }
 
-    const dest = uniqueName(outputDir, `${assetName}_${size}`, ".png");
+    // Filename uses the REQUESTED size so users can match outputs to what
+    // they asked for. The sidecar records the actual snapped size for traceability.
+    const dest = uniqueName(outputDir, `${assetName}_${t.requested}`, ".png");
     const buf = Buffer.from(data[0].b64_json, "base64");
     fs.writeFileSync(dest, buf);
-    saved.push(dest);
     writeSidecar(dest, {
       tool: "gpt2_smart_resize",
       provider: "OpenAI",
       model: "gpt-image-2",
       prompt: recomposePrompt,
-      image_size: size,
-      target_size: size,
-      gpt2_literal_size: sizeStr,
+      image_size: t.requested,
+      target_size: t.requested,
+      gpt2_literal_size: t.sizeStr,
+      gpt2_snapped: t.snapped,
       quality: q,
       reference_images: [],
       source_image: source,
       duration_seconds: Number(elapsed),
     });
-  }
+    return dest;
+  }));
 
+  const saved = results;
   const overallElapsed = ((Date.now() - overallT0) / 1000).toFixed(1);
   return {
     provider: "OpenAI",
     model: "gpt-image-2",
-    resolution: `${sizes.length} targets`,
+    resolution: `${snappedTargets.length} targets`,
     elapsed: overallElapsed,
     paths: saved,
   };
@@ -1971,7 +2019,7 @@ const TOOLS = [
     name: "gpt2_smart_resize",
     description:
       "Multi-aspect-ratio recomposition of a source image using gpt-image-2's edit endpoint. " +
-      "Same pattern as the Gemini fallback in nb2_smart_resize: issues one edit call per target size. " +
+      "Issues parallel edit calls (one per target size). " +
       "**Use when the source contains text that must remain readable after recomposition** — gpt-image-2 " +
       "preserves text far better than NB2 across aspect changes (paytables, banners with copy, anything " +
       "with a wordmark). Also use when the recompose needs reasoning about composition (e.g. specific " +
@@ -1980,6 +2028,8 @@ const TOOLS = [
       "faster, and a single API call. " +
       "gpt-image-2's STABLE production ceiling is 2K (2048×2048); the 4K targets (3840×2160 / 2160×3840) " +
       "are experimental and may fail — fall back to nb2_smart_resize for those. " +
+      "Dimensions are auto-snapped to multiples of 16 (gpt-image-2's grid requirement) — e.g. a requested " +
+      "1920x1080 becomes 1920x1088 internally, and the sidecar records both. " +
       "Requires OPENAI_API_KEY. Cost scales with the number of target sizes.",
     inputSchema: {
       type: "object",
@@ -1988,7 +2038,7 @@ const TOOLS = [
         target_sizes: {
           type: "array",
           items: { type: "string" },
-          description: "Target sizes as WxH strings. Each must satisfy gpt-image-2's constraints: multiples of 16, max edge ≤3840, aspect ratio ≤3:1. Example: [\"2048x2048\", \"2048x1152\", \"1152x2048\"]. Default: [\"2048x2048\", \"1920x1088\", \"1088x1920\"] (2K marketing trio).",
+          description: "Target sizes as WxH strings. The tool auto-snaps each dimension to the nearest multiple of 16 (gpt-image-2's grid requirement); the snapped size is recorded in the sidecar. Max edge 3840, aspect ratio ≤3:1 (extreme ratios will be rejected — use nb2_smart_resize for those). Default: [\"2048x2048\", \"1920x1088\", \"1088x1920\"] (gpt-image-2-safe 2K marketing trio).",
         },
         output_dir: { type: "string", description: "Output directory. Defaults to ~/Pictures/claude_nb2." },
         asset_name: { type: "string", description: "Base filename prefix (no extension). Default: resize.", default: "resize" },

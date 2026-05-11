@@ -5,13 +5,16 @@ playbook every design skill in `slot-art-creator` follows.
 
 > [!NOTE]
 > **There is a second model family available.** When `OPENAI_API_KEY` is
-> set, the plugin also exposes `gpt2_generate` and `gpt2_edit` for
-> OpenAI's gpt-image-2 model — which has different strengths (accurate
-> text rendering, native 4K, multi-image compositional editing). See
-> `shared/gpt_image2_prompting.md` for when to prefer gpt-image-2 over
-> NB2 (paytables, logos, banners with required copy, hero key art with
-> photorealism, multi-reference composition). This NB2 playbook covers
-> the four `nb2_*` tools only.
+> set, the plugin also exposes `gpt2_generate`, `gpt2_edit`, and
+> `gpt2_smart_resize` for OpenAI's gpt-image-2 model — which has different
+> strengths (accurate text rendering, stable 2K photorealism, multi-image
+> compositional editing, text-preserving multi-aspect resize). gpt-image-2's
+> stable production ceiling is 2K (2048×2048); the 4K targets are
+> experimental. See `shared/gpt_image2_prompting.md` for when to prefer
+> gpt-image-2 over NB2 (paytables, logos, banners with required copy,
+> hero key art with photorealism, multi-reference composition,
+> text-heavy multi-aspect resize). This NB2 playbook covers the four
+> `nb2_*` tools only.
 
 ## Contents
 
