@@ -134,6 +134,7 @@ Pick the rubric by what's being compared, not by mode:
 | Key art iterations | `shared/qa_preflight.md` Gate 1 universal checks + `shared/art_principles.md` §1 (the ten core principles — especially #5/#6/#7/#8) and §7 ("Background" bullet for three-layer composition + vignette) |
 | Symbol iterations | `shared/qa_preflight.md` "Symbol-specific pre-generation checks" + "Quick-grade table" + `shared/art_principles.md` §3 (symbols), §3.5 (cell-fill by tier), §10 ("Per-symbol" checklist) |
 | Full symbol set (tier gradient) | `shared/art_principles.md` §10 ("Per-set" checklist), `shared/qa_preflight.md` "Visual hierarchy awareness" + "Between symbols: hierarchy check", plus the auto-RED escalations from `skills/slot-step-08/SKILL.md` Step 4 |
+| WYS / SF / compound-prefix iterations (`WY*`, `WYS*`, `SF*`, `BWY*`, `WJP*`, `WDWY*`, `WDSF*`, `MUWD*`, `MUWDBO*`, `SFWY*`, `DHP*`) | The Symbol-iterations rubric above applies (silhouette, tier fill, palette warmth, style match), PLUS family-specific role discipline from `shared/symbol_vocabulary.md` "Routing by manifest role, not literal prefix" and the family template's role-overlay table — `skills/slot-step-03/COIN_TEMPLATE.md` (WYS family, 8 brief-driven roles) or `skills/slot-step-03/MYSTERY_TEMPLATE.md` (SF family, 14 brief-driven roles). Compounds: grade against the **dominant** family first, then check the secondary overlay per `skills/slot-step-03/SKILL.md` "Compound prefixes" table. The brief's `mechanic` field is the canonical role selector — a candidate that nails the family silhouette but the wrong role overlay is still a miss. |
 | Background iterations | `shared/art_principles.md` §7 ("Background" bullet — three-layer composition, vignette), `shared/qa_preflight.md` "Symbol/environment exclusivity", and `skills/slot-step-05/SKILL.md` Step 5 inline QA check list |
 | UI surface iterations | `shared/art_principles.md` §7 ("UI / HUD" bullet — touch targets, opacity, chrome ranks below symbols), `shared/qa_preflight.md` Gate 1 universal checks + Gate 2 post-generation check |
 | Avatar iterations | `skills/slot-step-08/QA_RUBRIC.md` "Per-avatar rubric" + the avatar discipline rules in `skills/slot-step-06/AVATAR_TEMPLATE.md` |
@@ -237,7 +238,11 @@ trigger it. This keeps the readonly contract clean.
 
 ## Hard rules
 
-- **Readonly.** No writes to disk, ever.
+- **Readonly.** This skill produces a transient inline report only.
+  It does not write `project.json`, does not modify any asset record,
+  does not create files in the project folder, and does not call any
+  MCP generation tool. (Reading is fine — the Read tool renders
+  images for comparison; that's the whole point of the skill.)
 - **Show the images.** Use the Read tool on every absolute path so
   Claude Code can render them inline. Don't grade from filenames alone.
 - **Cite the rubric.** Every finding traces to a specific section of
@@ -256,7 +261,16 @@ trigger it. This keeps the readonly contract clean.
 - `shared/qa_preflight.md` (per-asset rubrics)
 - `shared/art_principles.md` (the foundational design principles every
   rubric flows from — especially §3, §3.5, §7, §10)
+- `shared/symbol_vocabulary.md` (family + role model, including
+  routing by manifest role for WYS/SF/compound prefixes — needed for
+  the WYS/SF/compound rubric row above)
+- `shared/nb2_prompting.md` §9.2 (master prompt structure — read this
+  when grading a candidate's prompt construction, e.g. to confirm
+  the style anchor was prepended verbatim)
 - `skills/slot-step-08/QA_RUBRIC.md` (cross-asset rubric — fall through
   to this when grading sets, not individual candidates)
 - `skills/slot-step-06/LOGO_TEMPLATE.md` "Cross-lockup consistency check"
   (canonical guidance for logo trio comparisons)
+- `skills/slot-step-06/AVATAR_TEMPLATE.md` (canonical avatar discipline
+  + "Cross-cast consistency check" — fall through for avatar-iteration
+  and avatar-cast comparisons)

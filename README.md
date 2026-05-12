@@ -60,7 +60,7 @@ the workflow overview, or jump straight to `/slot-step-00` if you have a GDD or
    https://github.com/michaelericksonh5/claude-plugins
    ```
 7. After Cowork syncs (~5 seconds), `slot-art-creator-node` appears in the marketplace listing — click **Install**.
-8. Open the plugin's settings inside Cowork. You'll see env-var fields for `GEMINI_API_KEY` and `FAL_KEY` — paste your keys there (**not into chat** — credentials in chat get persisted in conversation history). See [API keys](#api-keys) for where to get them.
+8. Open the plugin's settings inside Cowork. You'll see env-var fields for `GEMINI_API_KEY`, `FAL_KEY`, and `OPENAI_API_KEY` — paste your keys there (**not into chat** — credentials in chat get persisted in conversation history). Either Gemini or fal.ai alone unlocks the four NB2 tools; OpenAI is optional and enables the two `gpt2_*` tools (`gpt2_generate`, `gpt2_edit`) for text-heavy surfaces like paytables, logos, and banners. See [API keys](#api-keys) for where to get them.
 9. **Restart Claude Desktop once** so the MCP server picks up the keys.
 10. In any Cowork chat, type `/slot-help` for the workflow overview, or `/slot-setup` if you want a guided check that your keys are configured correctly. Then `/slot-step-00` (if you have a GDD) or `/slot-step-01` (fresh concept).
 

@@ -96,7 +96,7 @@ list in Step 3 below depends on all six being present.
 - [ ] All 6 preservation axes covered in the prompt (Subject, Palette,
       Style, Edges, Background, Aspect ratio)
 - [ ] No hex / resolution / aspect ratio strings in prompt body
-- [ ] No instructions that contradict preservation (no "improve", "enhance", "add detail")
+- [ ] No instructions that contradict preservation. **Unscoped** "improve" / "enhance" / "add detail" language is contradiction — it tells NB2 to regenerate. The template's `Enhance only:` block (part 4 of `UPSCALE_TEMPLATE.md`) is the one exception and is **required**, not forbidden: it tightly scopes 2–4 enhance-only items (e.g. "edge sharpness, highlight crispness, subtle micro-surface detail") that the upscale step is allowed to touch. Anything outside that scoped block stays untouched.
 
 ### Step 4 — Generate
 

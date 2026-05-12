@@ -124,14 +124,19 @@ grouped by surface, are:
 - An avatar replicates a reel-symbol subject (breaks symbol/environment
   exclusivity — e.g. the HP1 phoenix also appearing as Avatar1)
 
-**Wheels (when in scope):**
+**Wheels (when in scope) — auto-RED items 11-13:**
+- **(11)** Per-slice files exist instead of a single complete wheel
+  graphic (outer frame + slices + hub + pointer must be one PNG)
+- **(12)** Wheel background is anything other than flat solid black
+- **(13)** Jackpot wheel labels contradict `brief.jackpot_tier_names`
+  (e.g. the slice for `JP1` says `Grand` when the brief maps
+  `JP1 = Mini`, or vice versa)
+
+Plus a rubric-derived RED from `QA_RUBRIC.md` "Per-wheel rubric →
+Slice color hierarchy" (not numbered in the auto-RED list because it
+falls out of the per-wheel rubric rather than the universal-RED list):
 - Wheel slice tier ordering inverts the pay spectrum (e.g. jackpot
   slice is cool slate while a low-value slice is warm gold)
-- Wheel background is anything other than flat solid black
-- Per-slice files exist instead of a single complete wheel graphic
-- Jackpot wheel labels contradict `brief.jackpot_tier_names` (e.g.
-  the slice for `JP1` says `Grand` when the brief maps `JP1 = Mini`,
-  or vice versa)
 
 ### Step 5 — Write the report
 

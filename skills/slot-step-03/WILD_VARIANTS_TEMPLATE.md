@@ -10,6 +10,12 @@ matches the variant in the brief. The base wild rules from
 `WILD_TEMPLATE.md` (theme break + color break + barely-contained sizing)
 apply to ALL variants.
 
+This template uses the **bracketed-block prompt format** from
+`shared/nb2_prompting.md` §9.2. The game's **Style Anchor** (§9.2.1)
+is prepended to every prompt verbatim — it lives in
+`project.json.style_anchor.text`. The `<style_lock>` placeholder
+below is substituted with the same text at prompt-assembly time.
+
 ## Universal rules (apply to every variant)
 
 - **Background:** flat solid black, no gradients

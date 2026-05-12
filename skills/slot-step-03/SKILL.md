@@ -276,10 +276,10 @@ When the user asks for "all symbols":
 - `WILD_TEMPLATE.md` — standard wild + how to break the theme
 - `WILD_VARIANTS_TEMPLATE.md` — sticky / stacked / expanding / walking / respin / transforming / multiplier / duplicating / scatter-wild hybrid
 - `SCATTER_TEMPLATE.md` — classic scatter / `SC`
-- `COIN_TEMPLATE.md` — `WY` coin and hold-and-spin family (gold / red / green / blue variants)
+- `COIN_TEMPLATE.md` — **WYS Family Template** for `WY` / `WY1`–`WY10+` / `WYS` / `WYS1+` and the `BWY` / `SFWY` compound prefixes. Covers the eight brief-driven roles within the WYS family: hold-and-spin coin, WYSIWYG collector, scatter (newer games), random-wilds shooter, collector+multiplier, adder, HP-equivalent payout, and Loot Link trigger. The brief's `mechanic` field selects which role overlay to apply on top of the universal coin/portal/spherical-token base.
 - `BONUS_TRIGGER_TEMPLATE.md` — `BO` bonus-game launcher (distinct from scatter)
 - `LOOTLINK_TEMPLATE.md` — Loot Link / Hotspot family (collector, activator, hotspot operators, bag scatters, money emoji)
-- `MYSTERY_TEMPLATE.md` — `SF` mystery / transform symbols
+- `MYSTERY_TEMPLATE.md` — **SF Family Template** for `SF` / `SF1`–`SF11+` and the `SFWY` / `WDSF` compound prefixes. Filename kept for backward compatibility — the original SF role was mystery transforms; the template now covers the full SF family. Fourteen brief-driven roles: mystery transform, five hotspot variants (multiplier / adder / combiner / collapse / persist), four collector variants (upgradable / immediate-payout / bonus-value / transforming), path-forming prize, lock-and-respin trigger, jackpot coin (SF role), and bonus-game trigger (SF role). The brief's `mechanic` field selects the role overlay.
 - `BLOCKER_TEMPLATE.md` — `BL` blocker / dead / obstacle symbols
 - `JACKPOT_TEMPLATE.md` — `JP1`–`JP6` metallic medallions (4-tier or 6-tier)
 - `PACHINKO_TEMPLATE.md` — Drop Zone family (`BALL`, `PEG`, `BUCKET_x*`)
