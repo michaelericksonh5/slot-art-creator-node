@@ -320,7 +320,9 @@ Same 5-part pattern:
   `slot-step-06/SKILL.md` Step 4:
   - `paytable` and `logo_<lockup>` prefer `gpt2_generate` when
     `OPENAI_API_KEY` is set — gpt-image-2 renders text correctly,
-    NB2 hallucinates letters in stylized fonts.
+    NB2 hallucinates letters in stylized fonts. **gpt-image-2 outputs
+    at up to 2K (2048px on the long edge) — do not request 4K from
+    this model family; use nb2_upscale after 2K for a genuine 4K.**
   - `bezel`, `hud`, `bonus_screen`, `multiplier_xN`, `lobby_tile`,
     `avatar_<id>` stay on NB2.
 - **This step also generates in-game avatars** (the player-facing

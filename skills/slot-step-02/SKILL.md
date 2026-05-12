@@ -55,9 +55,14 @@ Run from `shared/qa_preflight.md`:
 
 Call `mcp__nb2node__nb2_generate`:
 
+Before calling the tool, read `project.json.style_anchor.text` and prepend
+it verbatim as the first paragraph of the prompt. This ~70-word block was
+locked in `/slot-step-01` and is the canonical style token every generation
+tool reads. Do not paraphrase or abbreviate it.
+
 | API arg | Value |
 |---|---|
-| `prompt` | the composed prompt (no resolution / aspect ratio strings) |
+| `prompt` | `style_anchor.text` (verbatim, from `project.json`) + the composed key-art prompt body (no resolution / aspect ratio strings) |
 | `aspect_ratio` | `"1:1"` for the master; `"16:9"` for wide crop; `"9:16"` for tall crop |
 | `image_size` | `"4K"` for the master (key art is the most important asset) |
 | `output_dir` | `path.join(project_root, "Key_Art")` — every key art file lives in this subfolder. The folder is created on first write if it doesn't exist. |

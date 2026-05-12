@@ -57,8 +57,8 @@ be dimmer than the dimmest symbol.
 
 ### Step 3 — Pre-generation validation (Gate 1)
 
-- [ ] `style_anchor` (from `project.json`) is prepended to the prompt
-- [ ] Bracketed-block format used: `[RENDER STYLE]`, `[COMPOSITION]`, `[MOOD/PALETTE]`, `[MOBILE CONSTRAINTS]`
+- [ ] `style_anchor.text` (from `project.json`) is prepended verbatim as the first paragraph of the prompt
+- [ ] Prompt uses **structured prose** — NOT bracketed-block format (that's for symbols only; background templates in `PROMPT_TEMPLATES.md` are all prose)
 - [ ] `style_lock` in prompt verbatim
 - [ ] No hex / resolution / aspect ratio strings in prompt body
 - [ ] All four hard rules stated explicitly
@@ -76,11 +76,13 @@ be dimmer than the dimmest symbol.
 
 ### Step 4 — Generate
 
+Call `mcp__nb2node__nb2_generate`:
+
 | API arg | Value |
 |---|---|
 | `prompt` | composed prompt |
 | `aspect_ratio` | `"9:16"` portrait (default), `"16:9"` landscape, `"4:3"` tablet |
-| `image_size` | `"2K"` default; `"4K"` for marketing |
+| `image_size` | `"2K"` default; `"4K"` for marketing (**nb2_generate only** — gpt-image-2 caps at 2K; backgrounds always use NB2) |
 | `output_dir` | `path.join(project_root, "Backgrounds")` — every BG variant lives in this single folder. Folder is created on first write. |
 | `asset_name` | `"BG_<variant>"`, e.g. `"BG_base"`, `"BG_freespins"` (the MCP server appends `_NNN.png` and auto-increments by scanning `Backgrounds/`) |
 | `references` | absolute paths — resolve `style_anchor.key_art_path` and `assets.sheet.approved` against `project_root` first (`path.join(project_root, stored_relative_path)`), then pass the resolved absolutes. Filter null/undefined entries. |

@@ -169,9 +169,14 @@ Do not generate until clean.
 
 Call `mcp__nb2node__nb2_generate`:
 
+Prepend `project.json.style_anchor.text` verbatim as the first paragraph of
+the prompt for every symbol — HP, LP, WD, WYS, SF, and all others. This
+~70-word style block is the canonical anchor created in `/slot-step-01`. The
+per-template formula fills the rest of the prompt body after it.
+
 | API arg | Value |
 |---|---|
-| `prompt` | composed prompt (no resolution / aspect ratio strings) |
+| `prompt` | `style_anchor.text` (verbatim, from `project.json`) + the tier-template prompt body (no resolution / aspect ratio strings) |
 | `aspect_ratio` | `"1:1"` (always for symbols) |
 | `image_size` | `"2K"` (default; project minimum) |
 | `output_dir` | `path.join(project_root, "Symbol_Art")` — every reel symbol (HP, MP, LP, WD, SC, WY, BO, SF, BL, JP, COL, ACT, HOT_*, BAG, MOJ, D2_, D3_, SPLIT_, MULT_, BALL, PEG, BUCKET, …) lives in this single folder. Folder is created on first write. |
