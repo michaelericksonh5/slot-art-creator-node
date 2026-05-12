@@ -133,14 +133,33 @@ Any FAIL → patch prompt and regenerate (max 2 retries).
 
 ### Step 6 — Update state
 
-Append the relative path (e.g. `"Bezels/Bezel_reskin_001.png"`) to
-`project.json.assets.ui.<surface>.iterations`. If user approves, set
-`project.json.assets.ui.<surface>.approved` to that same relative path.
-The reskin iteration lands in the same `assets.ui.<surface>` slot as
-a from-scratch generation — reskin is just another way to produce a
-bezel/hud/paytable, not a separate asset type.
+Append an iteration record to `project.json.assets.ui.<surface>.iterations`
+per `shared/project_memory.md` → "Writing an iteration record
+(checklist for skills)". Reskin-specifics (this skill is edit-based,
+not fresh-generate, so the discipline differs from the other gen
+skills):
+- `path` = e.g. `"Bezels/Bezel_reskin_001.png"` — the reskin lands in
+  the source's category folder, not a separate "reskins" folder.
+- `prompt` = the rendered 5-part reskin prompt sent to the MCP tool.
+- `references` = `[<absolute key art path resolved to relative form>]`
+  for the style anchor passed in `extra_references`. The source UI
+  mock does NOT go in references — it goes in `parent_path`.
+- `parent_path` = the **source UI mock's path** (relative-with-subfolder
+  if the source was a project asset, or the staged input path if it
+  was a chat-attached image). Critical for this skill: the reskin's
+  lineage is the source, not a fresh generate.
+- `model` = either `gemini-3.1-flash-image-preview` / `fal-ai/nano-banana-2/edit`
+  (NB2 path) or `gpt-image-2` (gpt2 path), as reported in the response.
+- `attempt_index` increments for retries within the same source.
+
+If user approves, set `project.json.assets.ui.<surface>.approved` to
+the approved iteration's `path`. The reskin iteration lands in the
+same `assets.ui.<surface>` slot as a from-scratch generation — reskin
+is just another way to produce a bezel/hud/paytable, not a separate
+asset type.
 
 Set `current_step: "reskin_complete"`, `next_step: "/slot-step-08"`.
+Atomic-write `project.json`.
 
 Schema follows the canonical asset record shape in
 `shared/project_memory.md`.

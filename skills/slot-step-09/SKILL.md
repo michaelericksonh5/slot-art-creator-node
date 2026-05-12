@@ -192,11 +192,21 @@ The `iterations` and `approved` fields are NOT touched. The original
 file stays in place; the upscaled version lives in the same folder as
 a sibling and is referenced via the `upscaled` field.
 
+**Provenance.** The `upscaled` field is a flat path string, not an
+iteration object — the schema is intentionally narrower here because
+upscale is a terminal derivation. The full prompt + model + source
+lineage for each upscale lives in the per-file `<basename>.meta.json`
+sidecar the MCP server writes next to the PNG (existing behavior).
+If you need to debug "why does HP1's 4K look slightly different from
+its 2K", read `HP1_002_upscl_x2.meta.json` — it carries the prompt,
+the model the server routed to, the source path, and the timestamp.
+Skills don't have to surface this into `project.json` for upscales.
+
 Set `current_step: "upscale_in_progress"`, `next_step: "/slot-step-09"`
 (continue) or `"/slot-step-10"` (move to delivery variants).
 
 Schema follows the canonical asset record shape in `shared/project_memory.md`:
-`{iterations, approved, upscaled, resized}`.
+`{iterations, approved, upscaled, resized, metrics_summary, modes}`.
 
 ### Step 7 — Next step nudge
 

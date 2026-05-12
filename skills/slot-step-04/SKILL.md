@@ -146,12 +146,18 @@ Read the output. Check:
 
 ### Step 6 — Update state
 
-- Append the relative path (`"Symbol_Sheets/Sheet_NNN.png"`) to
-  `project.json.assets.sheet.iterations`
+- Append an iteration record to `project.json.assets.sheet.iterations`
+  per `shared/project_memory.md` → "Writing an iteration record
+  (checklist for skills)". Sheet-specifics:
+  `path` = `"Symbol_Sheets/Sheet_NNN.png"`;
+  `references` = `[<key art path>]` for ideation mode, or
+  `[<key art path>, <each approved symbol path>...]` for assemble mode
+  (with null-symbols filtered out);
+  `parent_path` = `null` (sheets are always fresh `nb2_generate`).
 - If user approves, set `project.json.assets.sheet.approved` to that
-  same relative path
-- Set `current_step: "sheet_locked"`, `next_step: "/slot-step-05"`
-- Atomic-write `project.json`
+  same relative path (matches one of `iterations[].path`).
+- Set `current_step: "sheet_locked"`, `next_step: "/slot-step-05"`.
+- Atomic-write `project.json`.
 
 Schema for the sheet slot follows the canonical asset record shape:
 `{iterations, approved, upscaled}`.

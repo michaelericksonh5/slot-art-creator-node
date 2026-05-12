@@ -158,6 +158,17 @@ including the subfolder. Examples:
 ]
 ```
 
+**Provenance.** Each `resized` entry is `{aspect, dimensions, path}` —
+the schema is intentionally narrow here because resize is a terminal
+derivation. The full prompt + model + source lineage for each variant
+lives in the per-file `<basename>.meta.json` sidecar the MCP server
+writes next to the PNG (existing behavior). If you need to debug
+"why does the 16:9 crop look different from the 1:1", read
+`Key_Art_003_resize_3840_2160.meta.json` — it carries the recompose
+prompt, the model the server routed to (fal-ai/smart-resize or
+gemini-3.1-flash-image-preview), the source path, and the timestamp.
+Skills don't surface this into `project.json` for resizes.
+
 Set `current_step: "delivery_complete"`, `next_step: null` (project done)
 or `"/slot-step-08"` to re-audit the final delivery.
 

@@ -87,20 +87,39 @@ iterate?"
 
 ### Step 5 — User approves OR iterates
 
+**Persist the iteration record immediately after every generation** —
+before asking for approval. Append an iteration record to
+`project.json.assets.key.iterations` per `shared/project_memory.md` →
+"Writing an iteration record (checklist for skills)". Key art
+specifics:
+- `path` = `"Key_Art/Key_Art_NNN.png"` (or `"Key_Art/Key_Art_wide_NNN.png"`
+  / `"Key_Art/Key_Art_tall_NNN.png"` for crop variants).
+- `prompt` = the fully rendered prompt sent to `nb2_generate` (or
+  `nb2_edit` for iterate-by-edit flows).
+- `references` = `[]` for fresh generates; `["Key_Art/Key_Art_NNN.png"]`
+  with the source path when this was an iterate-by-edit on a prior
+  master.
+- `parent_path` = `null` for `nb2_generate`; the source's
+  relative-with-subfolder path for `nb2_edit` iterations.
+- `attempt_index` = increment within the same key-art session if the
+  user keeps asking for tweaks (3rd master attempt → `3`).
+
 **On approve:**
-- Append the relative path (`"Key_Art/Key_Art_NNN.png"`) to `project.json.assets.key.iterations`
 - Set `project.json.assets.key.approved` = the approved relative path
-- Set `project.json.style_anchor.key_art_path` = the approved relative path (e.g. `"Key_Art/Key_Art_003.png"`)
-- Set `project.json.style_anchor.locked_at` = now
-- Set `current_step: "key_art_locked"`, `next_step: "/slot-step-03"`
-- Atomic-write `project.json`
+  (matches one of the `iterations[].path` values).
+- Set `project.json.style_anchor.key_art_path` = the same approved
+  relative path (e.g. `"Key_Art/Key_Art_003.png"`).
+- Set `project.json.style_anchor.locked_at` = now.
+- Set `current_step: "key_art_locked"`, `next_step: "/slot-step-03"`.
+- Atomic-write `project.json`.
 
 **On iterate:**
-- User describes the change ("warmer", "different hero pose", etc.)
+- User describes the change ("warmer", "different hero pose", etc.).
 - Build a new prompt or call `mcp__nb2node__nb2_edit` referencing the
   previous `Key_Art_NNN.png` if the change is small (pass the absolute
-  path: `path.join(project_root, "Key_Art", "Key_Art_NNN.png")`)
-- Generate again at the next filename — never overwrite
+  path: `path.join(project_root, "Key_Art", "Key_Art_NNN.png")`).
+- Generate again at the next filename — never overwrite. Append a
+  fresh iteration record per the rules above.
 
 ### Step 6 — Generate wide and tall crops (optional)
 

@@ -202,10 +202,28 @@ Read the output image immediately:
 ### Step 6 — Update state
 
 After every generation:
-- Append the relative path (`"Symbol_Art/HP1_NNN.png"`) to
-  `project.json.assets.symbols.<SymbolID>.iterations`
+- **Append an iteration record** to
+  `project.json.assets.symbols.<SymbolID>.iterations`. Use the object
+  form documented in `shared/project_memory.md` → "Iteration record
+  shape" + "Writing an iteration record (checklist for skills)". Key
+  field discipline for this skill:
+  - `path` = `"Symbol_Art/HP1_NNN.png"` (relative-with-subfolder).
+  - `prompt` = the **fully rendered prompt** you just sent —
+    `style_anchor.text` substituted verbatim, palette substituted,
+    `<theme>` / `<mystery.subject>` / etc. all filled in.
+  - `references` = `[<style anchor path>, <prior tier anchors if used>]`
+    in relative-with-subfolder form. Empty `[]` if you somehow passed
+    none (against the Hard rules below — always pass key art).
+  - `model` = the value the MCP tool reported in its response (e.g.
+    `gemini-3.1-flash-image-preview` or `fal-ai/nano-banana-2`).
+  - `attempt_index` = 1 for the first try on this symbol; increment
+    for each BLOCK auto-retry in this conversation. A clean PASS at
+    `attempt_index: 2` records "the gate flagged once".
+  - `parent_path` = `null` (fresh generate). Mode-variant generation
+    via `nb2_edit` is the exception — see `/slot-step-03 mode:<x>` in
+    `shared/mode_variants.md`.
 - If user marked it approved, set `project.json.assets.symbols.<SymbolID>.approved`
-  to that same relative path
+  to that same relative path (the record's `path` field).
 - Set `current_step: "symbols_in_progress"` (or `"sheet_locked"` if you're
   done with all manifest entries — check the manifest)
 - Set `next_step: "/slot-step-03"` (continue) or
@@ -214,7 +232,11 @@ After every generation:
 - Atomic-write `project.json`
 
 Schema for each symbol slot follows the canonical asset record shape in
-`shared/project_memory.md`: `{iterations, approved, upscaled, resized}`.
+`shared/project_memory.md`: `{iterations, approved, upscaled, resized,
+metrics_summary, modes}`. The MCP server has already written a
+`<basename>.meta.json` sidecar next to the PNG with the same prompt +
+model + references — `project.json` is the in-memory query interface,
+the sidecar is the per-file ground truth.
 
 ### Step 7 — Next step nudge
 

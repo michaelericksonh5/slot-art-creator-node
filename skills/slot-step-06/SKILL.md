@@ -185,35 +185,48 @@ All paths stored in `project.json` are relative to `project_root` and
 include the subfolder, e.g. `"Bezels/Bezel_001.png"`,
 `"Win_Banners/Banner_big_001.png"`, `"Avatars/Avatar1_002.png"`.
 
+**Universal write protocol.** Every generation here appends an
+**iteration record** (object form per `shared/project_memory.md` →
+"Iteration record shape" + "Writing an iteration record (checklist
+for skills)") to the appropriate slot's `iterations[]`. The record
+captures `path` + `prompt` + `references` + `model` + `image_size` +
+`aspect_ratio` + `attempt_index` + `parent_path` + `timestamp` per
+the shared contract. For most UI surfaces `parent_path` is `null`
+(fresh `nb2_generate` / `gpt2_generate`); for any surface that uses
+`nb2_edit` or `gpt2_edit` against a prior approved asset (rare in
+this skill — typical for `/slot-step-07` reskins), set `parent_path`
+to the source's relative-with-subfolder path.
+
 For surfaces with a flat slot (`bezel`, `hud`, `paytable`, `bonus_screen`,
 `lobby_tile`):
-- Append the relative path to `project.json.assets.ui.<surface>.iterations`
+- Append the iteration record to `project.json.assets.ui.<surface>.iterations`.
 - If user approves, set `project.json.assets.ui.<surface>.approved` to
-  that same relative path
+  the approved iteration's `path` field.
 
 For nested groups (`banners.<tier>`, `multipliers.<denom>`, `logos.<lockup>`):
-- Append the relative path to `project.json.assets.ui.banners.<tier>.iterations`
-  (etc.)
-- If user approves, set `.approved` on the nested record
+- Append the iteration record to `project.json.assets.ui.banners.<tier>.iterations`
+  (or the equivalent nested slot for multipliers / logos).
+- If user approves, set `.approved` on the nested record to the
+  approved iteration's `path` field.
 
 For **avatars** (the in-game character family):
-- Append the relative path to `project.json.assets.avatars.<AvatarN>.iterations`
-  where `<AvatarN>` is `Avatar1` through `Avatar5`
+- Append the iteration record to `project.json.assets.avatars.<AvatarN>.iterations`
+  where `<AvatarN>` is `Avatar1` through `Avatar5`.
 - If user approves, set `project.json.assets.avatars.<AvatarN>.approved`
-  to that same relative path
+  to the approved iteration's `path` field.
 - The `assets.avatars` object is created in the schema even when a game
   has zero avatars — slots stay at `{iterations: [], approved: null}`
-  until something lands
+  until something lands.
 
 For **wheels** (`wheel_jackpot`, `wheel_bonus`, `wheel_multiplier`,
 `wheel_pickem`):
-- Append the relative path to `project.json.assets.ui.wheels.<variant>.iterations`
-  where `<variant>` is `jackpot` / `bonus` / `multiplier` / `pickem`
+- Append the iteration record to `project.json.assets.ui.wheels.<variant>.iterations`
+  where `<variant>` is `jackpot` / `bonus` / `multiplier` / `pickem`.
 - If user approves, set `project.json.assets.ui.wheels.<variant>.approved`
-  to that same relative path
+  to the approved iteration's `path` field.
 - Each wheel variant is its own slot — a game with both a jackpot
   wheel AND a multiplier wheel has both slots populated; a game with
-  no wheels at all leaves them at `{iterations: [], approved: null}`
+  no wheels at all leaves them at `{iterations: [], approved: null}`.
 
 Set `current_step: "ui_in_progress"`, `next_step: "/slot-step-06"`
 (continue) or `"/slot-step-08"` (move to audit).

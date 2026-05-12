@@ -356,6 +356,25 @@ The fields are:
 
 **Why we record the rendered prompt, not the template form.** Template files (`HP_TEMPLATE.md`, `JACKPOT_TEMPLATE.md`, etc.) are version-controlled in git, so their state at any point is recoverable. The **rendered** prompt — with style_anchor, palette, theme substituted — is what NB2 actually saw, and it's what you need to debug "why did this one come out wrong" or A/B-test "what changed between attempt 1 and attempt 2". The substituted form is the actually-useful artifact.
 
+### Writing an iteration record (checklist for skills)
+
+When a generation skill (`/slot-step-02` / `/slot-step-03` / `/slot-step-04` / `/slot-step-05` / `/slot-step-06` / `/slot-step-07` / `/slot-step-09` / `/slot-step-10`) finishes an MCP call and needs to persist the result, this is the **canonical write protocol**:
+
+1. **Build the iteration record object.** Every field from "Iteration record shape" above must be present (use `null` only where the table explicitly allows it).
+2. **Fill `prompt` with the FULLY RENDERED prompt** — exactly what you sent to the MCP tool. All `<style_lock>`, `<palette_leads.primary>`, `<theme>`, `<mystery.subject>`, etc. substituted with the locked values from `project.json.brief` and `project.json.style_anchor.text`. Template form is recoverable from git; the rendered form is the actually-useful artifact.
+3. **Fill `references` with the array you actually passed** (relative-with-subfolder paths, resolved against `project_root`). Pass `[]` (empty array) if you passed no references, never `null`.
+4. **Pull `model` from the MCP tool's response** — every gen tool reports the provider + model it routed to in the response body (e.g. `gemini-3.1-flash-image-preview`, `fal-ai/nano-banana-2`, `gpt-image-2`). Don't guess from the route; the response is authoritative.
+5. **Track `attempt_index` based on conversation state.** For a fresh generate (user asked for a new asset, or first try on a new symbol), `attempt_index = 1`. For an auto-retry triggered by a BLOCK at the inline-QA gate, increment from the prior attempt (so the second try is `2`, the third is `3`). Don't reset between user approvals — a clean PASS at `attempt_index: 2` is a record of "the gate flagged once".
+6. **Set `parent_path` when the call was edit-based.** `nb2_generate` / `gpt2_generate` → `parent_path: null`. `nb2_edit` / `gpt2_edit` / `nb2_upscale` / `nb2_smart_resize` → the relative-with-subfolder path of the `source` arg you passed. Mode-variant calls that use `nb2_edit` on the base-mode approved asset → the base-mode approved path. Captures lineage.
+7. **Use the response timestamp** for `timestamp`. The MCP tool's response carries an ISO timestamp; use that, not the current time at write time.
+8. **Append, don't overwrite.** `iterations[]` is append-only. The new record goes at the end of the array — never re-order, never delete, never replace a prior entry (even if you regret it).
+9. **`approved` is still a flat path string.** Setting `approved` doesn't touch `iterations[]` — it just points at one of the existing `iterations[].path` values. If the user approves the latest one, `approved` becomes that record's `path`. To "un-approve", set `approved` back to `null` or to a prior iteration's path. The history stays intact regardless.
+10. **Atomic-write `project.json`** per the existing tmp-write+rename pattern. Bump `updated_at`.
+
+**Per-image .meta.json sidecars.** The MCP server already writes a `<basename>.meta.json` next to every generated PNG (existing behavior, see `nb2-mcp-server/index.js` → `writeSidecar`). That file carries the same provenance fields. The two are intentionally redundant: the sidecar is the per-file ground truth that survives moving the project folder; the `project.json.assets.*.iterations[]` array is the in-memory in-place query interface. Skills should use the `project.json` array for normal workflow; the sidecar is the fallback if `project.json` is ever corrupted.
+
+**Skip the legacy flat-string form for new writes.** Even when reading a project with legacy flat-string `iterations`, when you add the next entry, switch the whole array to objects. Mixing object and string entries in one array makes downstream queries fragile.
+
 ### `metrics_summary` field
 
 `/slot-step-08` runs `nb2_measure` on each approved asset during audit and writes a compact summary into the asset record. The full per-image metrics live in a sidecar file next to the image (`<asset>.metrics.json`) — the summary in `project.json` is the subset that fits in-memory for cross-asset queries (tier-pairwise deltas, LP warmth scan, etc.).

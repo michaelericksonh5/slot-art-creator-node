@@ -105,10 +105,16 @@ Read the output:
 
 ### Step 6 — Update state
 
-- Append the relative path (`"Backgrounds/BG_<variant>_NNN.png"`) to
-  `project.json.assets.backgrounds.<variant>.iterations`
+- Append an iteration record to
+  `project.json.assets.backgrounds.<variant>.iterations` per
+  `shared/project_memory.md` → "Writing an iteration record
+  (checklist for skills)". Background specifics:
+  `path` = `"Backgrounds/BG_<variant>_NNN.png"`;
+  `references` = `[<key art path>, <approved sheet path if any>]`;
+  `parent_path` = `null` (backgrounds are always fresh `nb2_generate`);
+  `attempt_index` increments for retries within this variant.
 - If user approves, set `project.json.assets.backgrounds.<variant>.approved`
-  to that same relative path
+  to that same relative path (matches one of `iterations[].path`).
 - Set `current_step: "backgrounds_in_progress"` (or check if all needed
   variants are approved → `"ui_in_progress"` is the next natural state once
   the user moves on)
