@@ -389,7 +389,7 @@ cross-asset consistency review you can only do once a full set is done.
 
 ## MCP tools
 
-The bundled `nb2node` MCP server exposes 7 tools across two model families:
+The bundled `nb2node` MCP server exposes 8 tools across two model families plus two helpers:
 
 | Tool | Family | Description |
 |---|---|---|
@@ -400,6 +400,7 @@ The bundled `nb2node` MCP server exposes 7 tools across two model families:
 | `gpt2_generate` | gpt-image-2 | Text-to-image with gpt-image-2 at 1K or 2K. Use for paytables, logos, banners with copy, hero photorealism. For 4K, generate at 2K here then run `nb2_upscale`. |
 | `gpt2_edit` | gpt-image-2 | Image-to-image edit with optional mask; accepts an array of up to ~16 reference images for compositional editing |
 | `nb2_stage_image` | helper | Copy any external/chat-attached image into the safe inputs folder so it can be passed as `source` or `references` to any of the above |
+| `nb2_measure` | helper | OKLCH color metrics, fill percentage, and background-uniformity audit for a single PNG. Used by `/slot-step-08` for numeric QA checks. Generation tools accept `measure: true` to auto-run it on each output. |
 
 **`output_dir` contract (v1.5.5+).** Every generation tool requires
 `output_dir` to be an absolute path. Inside a `/slot-step-*` skill, that
@@ -419,6 +420,11 @@ outside a project.
 | `shared/project_memory.md` | Project state schema, startup protocol, atomic writes |
 | `shared/asset_naming.md` | Filename convention, per-label counter logic |
 | `shared/qa_preflight.md` | Two-gate validation protocol |
-| `shared/nb2_prompting.md` | Master prompt formula, templates, style library |
+| `shared/nb2_prompting.md` | Master prompt formula, bracketed-block templates, style library |
+| `shared/gpt_image2_prompting.md` | When to prefer gpt-image-2 over NB2, size/quality settings, cost rules |
 | `shared/art_principles.md` | Mobile slot art principles — silhouette, hierarchy, lighting, CVD |
+| `shared/symbol_vocabulary.md` | Full H5G prefix system (HP, MP, LP, WD, WYS, SF, Loot Link family, compounds, etc.) |
+| `shared/mode_variants.md` | Game mode variants (base, free-spins, bonus) — discipline for slot-step-03 |
+| `shared/chat_image_staging.md` | How to stage chat-attached images into the allowed-roots envelope before passing to MCP tools |
 | `shared/upscale_workflow.md` | Path-A upscale loop |
+| `shared/production_handoff.md` | Final delivery checklist and handoff package spec |
