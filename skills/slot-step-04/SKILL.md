@@ -20,10 +20,16 @@ mode for the final sheet.
 
 ## Startup protocol
 
-1. Resolve active project
-2. Load `project.json`, `game_brief.json`
+Follow `shared/project_memory.md` → "Skill startup protocol", including
+the "no active project — guide through setup" pattern.
+
+1. Resolve active project. **If none exists**, route to `/slot-step-01`
+   → `/slot-step-02` → resume contact-sheet generation here in the same
+   conversation.
+2. Load `project.json`, `game_brief.json`.
 3. Read `project.json.style_anchor.key_art_path` (the locked key art) —
-   required for both modes
+   required for both modes. **If not locked**, route to `/slot-step-02`
+   first, then resume.
 4. Detect mode by counting approved symbols:
    - Iterate `project.json.assets.symbols.*.approved`
    - If <50% of manifest symbols have a non-null `approved` field → **ideation mode** (default)
@@ -75,13 +81,18 @@ contact sheet for review/handoff.
   (read each from the project root)
 - Key art for style continuity reference (`style_anchor.key_art_path`)
 
-**Approach:** call `mcp__nb2node__nb2_edit` with all approved symbols as
-references and a layout-focused prompt that says "compose these symbols on
+**Approach:** call `mcp__nb2node__nb2_generate` (same tool as Mode A —
+see Step 4 below) with all approved symbols passed in the `references`
+array and a layout-focused prompt that says "compose these symbols on
 one canvas in a grid, preserve each one's exact appearance, add only
 spacing and a unified backdrop."
 
-This is closer to a layout op than a generation. The individual symbols
-are already locked; the sheet just stages them.
+Conceptually this is closer to a layout op than a generation — the
+individual symbols are already locked, the sheet just stages them — but
+the API call is `nb2_generate` with multiple references, not
+`nb2_edit`. `nb2_edit` requires a single `source` image; an
+ideation/assemble contact sheet has multiple approved symbols and no
+single source.
 
 ### Choose mode (or override)
 
@@ -112,9 +123,9 @@ Call `mcp__nb2node__nb2_generate`:
 | `prompt` | composed sheet prompt |
 | `aspect_ratio` | match the grid — typically `"5:4"` for a 5x4 grid display, or `"1:1"` if symbols are arranged in a tight square |
 | `image_size` | `"4K"` (sheets render many cells; need the resolution) |
-| `output_dir` | `{project_root}` |
-| `asset_name` | `"Sheet"` (the MCP server appends `_NNN.png` and auto-increments) |
-| `references` | absolute paths — resolve each filename in `project.json` against `project_root` first. Pass `[key_art_path, HP1_approved, LP1_approved, WD1_approved]` as absolute paths to anchor the style and palette range. |
+| `output_dir` | `path.join(project_root, "Symbol_Sheets")` — all contact sheets land here. Folder is created on first write. |
+| `asset_name` | `"Sheet"` (the MCP server appends `_NNN.png` and auto-increments by scanning `Symbol_Sheets/`) |
+| `references` | absolute paths — resolve each path in `project.json` against `project_root` first. **Mode A (ideation)**: only the key art is reliably available, so pass `[style_anchor.key_art_path]` plus any GDD reference images you read in earlier. **Mode B (assemble)**: pass `[style_anchor.key_art_path, HP1_approved, MP1_approved, LP1_approved, WD1_approved]` (skip any whose `.approved` is null — never pass a literal "null"). Filter null/undefined paths before the call; `uploadLocalFile` inside the MCP tool will throw ENOENT if you don't. |
 
 ### Step 5 — Inline QA check (Gate 2)
 
@@ -135,10 +146,18 @@ Read the output. Check:
 
 ### Step 6 — Update state
 
-- Append output filename to `project.json.assets.sheet.iterations`
-- If user approves, set `project.json.assets.sheet.approved` to that filename
-- Set `current_step: "sheet_locked"`, `next_step: "/slot-step-05"`
-- Atomic-write `project.json`
+- Append an iteration record to `project.json.assets.sheet.iterations`
+  per `shared/project_memory.md` → "Writing an iteration record
+  (checklist for skills)". Sheet-specifics:
+  `path` = `"Symbol_Sheets/Sheet_NNN.png"`;
+  `references` = `[<key art path>]` for ideation mode, or
+  `[<key art path>, <each approved symbol path>...]` for assemble mode
+  (with null-symbols filtered out);
+  `parent_path` = `null` (sheets are always fresh `nb2_generate`).
+- If user approves, set `project.json.assets.sheet.approved` to that
+  same relative path (matches one of `iterations[].path`).
+- Set `current_step: "sheet_locked"`, `next_step: "/slot-step-05"`.
+- Atomic-write `project.json`.
 
 Schema for the sheet slot follows the canonical asset record shape:
 `{iterations, approved, upscaled}`.
@@ -148,13 +167,13 @@ Schema for the sheet slot follows the canonical asset record shape:
 In ideation mode:
 ```
 ✓ Step 4 — Ideation sheet generated.
-  File: Sheet_001.png
+  File: Symbol_Sheets/Sheet_001.png
   All 13 symbols proposed at a glance ✓
-  Folder: <project_root>
-  Open:   file:///<project_root with / separators>
+  Folder: <project_root>/Symbol_Sheets/
+  Open:   file:///<project_root>/Symbol_Sheets/
 
 Next options:
-  - Iterate on this sheet for a different direction (run /slot-04 again)
+  - Iterate on this sheet for a different direction (run /slot-step-04 again)
   - Refine the strongest symbols at high fidelity in `/slot-step-03`
     (each symbol will use Sheet_001.png as a reference)
   - Generate the background in `/slot-step-05`
@@ -165,10 +184,10 @@ Type `/slot-` to see the full numbered workflow.
 In assemble mode:
 ```
 ✓ Step 4 — Symbol sheet locked.
-  File: Sheet_007.png
+  File: Symbol_Sheets/Sheet_007.png
   All 13 approved symbols composed on one canvas ✓
-  Folder: <project_root>
-  Open:   file:///<project_root with / separators>
+  Folder: <project_root>/Symbol_Sheets/
+  Open:   file:///<project_root>/Symbol_Sheets/
 
 Next: run `/slot-step-05` to generate the game background.
 

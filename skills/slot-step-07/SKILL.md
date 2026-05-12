@@ -12,12 +12,20 @@ For from-scratch UI design, use `/slot-step-06` instead.
 
 ## Startup protocol
 
-1. Resolve active project
-2. Load `project.json`, `game_brief.json`
-3. Read `style_anchor.key_art_path` — the new theme's visual anchor
-4. **Required source image**: the UI mock to reskin. User provides the path.
+Follow `shared/project_memory.md` → "Skill startup protocol", including
+the "no active project — guide through setup" pattern.
 
-If no source image, stop. This skill does nothing without one.
+1. Resolve active project. **If none exists**, route to `/slot-step-01`
+   → `/slot-step-02` → resume the reskin here in the same conversation.
+2. Load `project.json`, `game_brief.json`.
+3. Read `style_anchor.key_art_path` — the new theme's visual anchor.
+   **If not locked**, route to `/slot-step-02` first; the new theme
+   needs an anchor to reskin against.
+4. **Required source image**: the UI mock to reskin. User provides the
+   path. Without a source image, this skill has nothing to operate on —
+   ask the user to attach or path-to one before continuing. (This is
+   distinct from the prerequisite-chain pattern above; it's a per-call
+   input the user controls, not a project setup state.)
 
 ### If the user pastes / attaches the UI mock in chat
 
@@ -60,40 +68,51 @@ Fill the template's placeholders from the brief's `theme_summary`,
 
 ### Step 4 — Generate (edit operation)
 
-**Choose the right tool first** — inspect the source image for text density:
+**Pick the right tool first.** Text-heavy source UIs (paytables, logos,
+HUDs with baked button labels, partner reference UIs full of copy)
+preserve their wording more reliably with gpt-image-2; everything else
+preserves layout better with NB2. Decision rule:
 
-- **Art-dominant (buttons, bezels, backgrounds with minimal text):** use
-  `nb2_edit`. NB2 is strong at visual reskins and handles palette + material
-  changes reliably.
-- **Text-heavy (HUD balance displays, paytable screens, lobby tiles with
-  readable labels, bet-panel copy):** use `gpt2_edit` instead.
-  `nb2_edit` cannot accurately reproduce text — it will scramble or drop
-  button labels and numerals. `gpt2_edit` renders text faithfully.
-  Requires `OPENAI_API_KEY`. If not set, fall back to `nb2_edit` and flag
-  to the user that text may need manual correction.
+| Source UI has visible required text? | `OPENAI_API_KEY` set? | Use this tool |
+|---|---|---|
+| yes (labels, wordmarks, pay values) | yes | `mcp__nb2node__gpt2_edit` |
+| yes | no | `mcp__nb2node__nb2_edit` (be ready for 2–4 attempts to keep text legible; verify every label at the QA gate) |
+| no (pure chrome — bezel, panel, decorative banner) | either | `mcp__nb2node__nb2_edit` |
 
-**nb2_edit call (art-dominant):**
+See `shared/gpt_image2_prompting.md` — its routing table lists this
+skill explicitly. Both tools take the source UI mock in the same
+`source` arg, and both take `extra_references` as an **array of
+absolute paths** (server schema: `array<string>`). The typical usage
+here is a single-element array carrying the locked key art as a style
+anchor; pass `[<absolute key art path>]` to either tool. The
+difference is compositional behavior: `gpt2_edit` composes the
+`source` plus every entry in `extra_references` into the output,
+while `nb2_edit` treats the array as style references only.
+
+**API args (NB2 path — pure chrome reskins):**
 
 | API arg | Value |
 |---|---|
 | `prompt` | composed reskin prompt |
-| `source` | absolute path to the source UI mock |
-| `aspect_ratio` | match the source image's ratio (omit to inherit) |
+| `source` | absolute path to the source UI mock — resolve any relative filenames against `project_root` first (`path.join(project_root, stored_relative_path)`) |
+| `aspect_ratio` | match the source image's ratio (omit to inherit, or pass explicitly) |
 | `image_size` | `"2K"` minimum |
-| `output_dir` | `{project_root}` |
-| `asset_name` | `"<SurfaceLabel>_reskin"` (server appends `_NNN.png`) |
-| `extra_references` | `[<absolute path to style_anchor.key_art_path>]` |
+| `output_dir` | **the source's category folder** — `path.join(project_root, "<SourceFolder>")`. Look at the source path: if it lives in `Bezels/`, the reskin lands in `Bezels/`; if it lives in `HUD/`, the reskin lands in `HUD/`. This keeps each surface's iterations together regardless of whether they came from generate or reskin. |
+| `asset_name` | `"<SurfaceLabel>_reskin"`, e.g. `"Bezel_reskin"`, `"HUD_reskin"`, `"Paytable_reskin"`. The MCP server appends `_NNN.png` and auto-increments by scanning the target folder for files with that prefix. |
+| `extra_references` | absolute path — resolve `style_anchor.key_art_path` against `project_root`, then pass `[<absolute>]` to lock the new theme. |
 
-**gpt2_edit call (text-heavy):**
+**API args (gpt2 path — text-heavy source UIs):**
 
 | API arg | Value |
 |---|---|
-| `prompt` | composed reskin prompt (same template, same structure) |
-| `source` | absolute path to the source UI mock |
-| `image_size` | `"2K"` (gpt-image-2's stable ceiling — always specify explicitly) |
-| `output_dir` | `{project_root}` |
-| `asset_name` | `"<SurfaceLabel>_reskin"` |
-| `extra_references` | `[<absolute path to style_anchor.key_art_path>]` |
+| `prompt` | same composed reskin prompt; gpt-image-2 honours the layout-preservation discipline when the source UI mock is passed as `source` (primary input) and the key art rides along as a style reference |
+| `source` | absolute path to the source UI mock — same as the NB2 path. This is the **primary input** the edit operates on. Resolve any relative filename against `project_root` first; stage chat-attached paths via `nb2_stage_image` before passing them here. |
+| `extra_references` | `[<absolute key art path>]` — gpt-image-2 composes the `source` plus every entry in `extra_references` together, so use this slot for **style anchors only** (the locked key art is the typical entry). Don't put the source UI mock here too — it goes in `source`. |
+| `aspect_ratio` | match source |
+| `image_size` | `"2K"` (the stable production ceiling) |
+| `quality` | `"high"` |
+| `output_dir` | same per-surface routing as the NB2 path — the source's category folder |
+| `asset_name` | same convention as NB2 |
 
 ### Step 5 — Inline QA check — 8-axis layout-preservation rubric
 
@@ -114,10 +133,33 @@ Any FAIL → patch prompt and regenerate (max 2 retries).
 
 ### Step 6 — Update state
 
-Append to `project.json.assets.ui.<surface>.iterations`. If user approves,
-set `project.json.assets.ui.<surface>.approved`.
+Append an iteration record to `project.json.assets.ui.<surface>.iterations`
+per `shared/project_memory.md` → "Writing an iteration record
+(checklist for skills)". Reskin-specifics (this skill is edit-based,
+not fresh-generate, so the discipline differs from the other gen
+skills):
+- `path` = e.g. `"Bezels/Bezel_reskin_001.png"` — the reskin lands in
+  the source's category folder, not a separate "reskins" folder.
+- `prompt` = the rendered 5-part reskin prompt sent to the MCP tool.
+- `references` = `[<absolute key art path resolved to relative form>]`
+  for the style anchor passed in `extra_references`. The source UI
+  mock does NOT go in references — it goes in `parent_path`.
+- `parent_path` = the **source UI mock's path** (relative-with-subfolder
+  if the source was a project asset, or the staged input path if it
+  was a chat-attached image). Critical for this skill: the reskin's
+  lineage is the source, not a fresh generate.
+- `model` = either `gemini-3.1-flash-image-preview` / `fal-ai/nano-banana-2/edit`
+  (NB2 path) or `gpt-image-2` (gpt2 path), as reported in the response.
+- `attempt_index` increments for retries within the same source.
+
+If user approves, set `project.json.assets.ui.<surface>.approved` to
+the approved iteration's `path`. The reskin iteration lands in the
+same `assets.ui.<surface>` slot as a from-scratch generation — reskin
+is just another way to produce a bezel/hud/paytable, not a separate
+asset type.
 
 Set `current_step: "reskin_complete"`, `next_step: "/slot-step-08"`.
+Atomic-write `project.json`.
 
 Schema follows the canonical asset record shape in
 `shared/project_memory.md`.
@@ -126,11 +168,11 @@ Schema follows the canonical asset record shape in
 
 ```
 ✓ Step 7 — UI Reskin complete.
-  Source : <source path>
-  Output : <Output filename>
+  Source : <source relative path, e.g. Bezels/Bezel_001.png>
+  Output : <output relative path, e.g. Bezels/Bezel_reskin_001.png>
   Layout preserved across all 8 axes ✓
-  Folder: <project_root>
-  Open:   file:///<project_root with / separators>
+  Folder: <project_root>/<SourceFolder>/
+  Open:   file:///<project_root>/<SourceFolder>/
 
 Next: run `/slot-step-08` for the final cross-asset audit
 or continue with more reskins.
@@ -149,5 +191,7 @@ Type `/slot-` to see the full numbered workflow.
 ## References
 
 - `shared/qa_preflight.md`, `shared/project_memory.md`, `shared/asset_naming.md`
-- `shared/nb2_prompting.md` §9.6 (edit ops)
+- `shared/nb2_prompting.md` §9.6 (edit ops — in-place / isolate / recreate / style-transfer / UI reskin / component separation)
+- `shared/gpt_image2_prompting.md` (when to prefer `gpt2_edit` over `nb2_edit` — text-heavy source UIs; this skill's routing table is sourced from there)
+- `shared/chat_image_staging.md` (required pre-step when the source UI mock is chat-attached — staging copies it into the allowed-roots envelope)
 - `RESKIN_TEMPLATE.md` (5-part reskin template, 8-axis rubric)

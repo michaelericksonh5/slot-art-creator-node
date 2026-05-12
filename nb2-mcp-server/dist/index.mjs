@@ -3234,8 +3234,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path4) {
-      let input = path4;
+    function removeDotSegments(path5) {
+      let input = path5;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3487,8 +3487,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path4, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path4 && path4 !== "/" ? path4 : void 0;
+        const [path5, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path5 && path5 !== "/" ? path5 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -6881,12 +6881,12 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f3;
     };
-    function addFormats(ajv, list, fs4, exportName) {
+    function addFormats(ajv, list, fs5, exportName) {
       var _a6;
       var _b;
       (_a6 = (_b = ajv.opts.code).formats) !== null && _a6 !== void 0 ? _a6 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f3 of list)
-        ajv.addFormat(f3, fs4[f3]);
+        ajv.addFormat(f3, fs5[f3]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -7195,9 +7195,9 @@ var require_utils2 = __commonJS({
         path: parts.slice(2).join("/") || void 0
       };
     }
-    function resolveEndpointPath(app, path4, defaultPath) {
-      if (path4) {
-        return `/${path4.replace(/^\/+/, "")}`;
+    function resolveEndpointPath(app, path5, defaultPath) {
+      if (path5) {
+        return `/${path5.replace(/^\/+/, "")}`;
       }
       if (app.endsWith(defaultPath)) {
         return void 0;
@@ -7612,17 +7612,17 @@ var require_request = __commonJS({
     function buildUrl(id, options = {}) {
       var _a6, _b;
       const method = ((_a6 = options.method) !== null && _a6 !== void 0 ? _a6 : "post").toLowerCase();
-      const path4 = ((_b = options.path) !== null && _b !== void 0 ? _b : "").replace(/^\//, "").replace(/\/{2,}/, "/");
+      const path5 = ((_b = options.path) !== null && _b !== void 0 ? _b : "").replace(/^\//, "").replace(/\/{2,}/, "/");
       const input = options.input;
       const params = Object.assign(Object.assign({}, options.query || {}), method === "get" ? input : {});
       const queryParams = Object.keys(params).length > 0 ? `?${new URLSearchParams(params).toString()}` : "";
       if ((0, utils_1.isValidUrl)(id)) {
         const url2 = id.endsWith("/") ? id : `${id}/`;
-        return `${url2}${path4}${queryParams}`;
+        return `${url2}${path5}${queryParams}`;
       }
       const appId = (0, utils_1.ensureEndpointIdFormat)(id);
       const subdomain = options.subdomain ? `${options.subdomain}.` : "";
-      const url = `https://${subdomain}fal.run/${appId}/${path4}`;
+      const url = `https://${subdomain}fal.run/${appId}/${path5}`;
       return `${url.replace(/\/$/, "")}${queryParams}`;
     }
   }
@@ -10607,7 +10607,7 @@ var require_realtime = __commonJS({
       authInProgress: (0, robot3_1.state)((0, robot3_1.transition)("authenticated", "connecting", (0, robot3_1.reduce)(setToken)), (0, robot3_1.transition)("unauthorized", "idle", (0, robot3_1.reduce)(expireToken), (0, robot3_1.reduce)(closeConnection)), (0, robot3_1.transition)("send", "authInProgress", (0, robot3_1.reduce)(enqueueMessage)), (0, robot3_1.transition)("close", "idle", (0, robot3_1.reduce)(closeConnection))),
       active: (0, robot3_1.state)((0, robot3_1.transition)("send", "active", (0, robot3_1.reduce)(sendMessage)), (0, robot3_1.transition)("authenticated", "active", (0, robot3_1.reduce)(setToken)), (0, robot3_1.transition)("unauthorized", "idle", (0, robot3_1.reduce)(expireToken)), (0, robot3_1.transition)("connectionClosed", "idle", (0, robot3_1.reduce)(expireToken), (0, robot3_1.reduce)(closeConnection)), (0, robot3_1.transition)("close", "idle", (0, robot3_1.reduce)(expireToken), (0, robot3_1.reduce)(closeConnection)))
     }, initialState);
-    function buildRealtimeUrl(app, { token, maxBuffering, path: path4 }) {
+    function buildRealtimeUrl(app, { token, maxBuffering, path: path5 }) {
       var _a6;
       if (maxBuffering !== void 0 && (maxBuffering < 1 || maxBuffering > 60)) {
         throw new Error("The `maxBuffering` must be between 1 and 60 (inclusive)");
@@ -10619,7 +10619,7 @@ var require_realtime = __commonJS({
         queryParams.set("max_buffering", maxBuffering.toFixed(0));
       }
       const appId = (0, utils_1.ensureEndpointIdFormat)(app);
-      const resolvedPath = (_a6 = (0, utils_1.resolveEndpointPath)(app, path4, "/realtime")) !== null && _a6 !== void 0 ? _a6 : "";
+      const resolvedPath = (_a6 = (0, utils_1.resolveEndpointPath)(app, path5, "/realtime")) !== null && _a6 !== void 0 ? _a6 : "";
       return `wss://fal.run/${appId}${resolvedPath}?${queryParams.toString()}`;
     }
     var DEFAULT_THROTTLE_INTERVAL = 128;
@@ -10728,7 +10728,7 @@ var require_realtime = __commonJS({
             clientOnly = (0, utils_1.isReact)() && !(0, runtime_1.isBrowser)(),
             connectionKey = crypto.randomUUID(),
             maxBuffering,
-            path: path4,
+            path: path5,
             throttleInterval = DEFAULT_THROTTLE_INTERVAL,
             encodeMessage: encodeMessageOverride,
             decodeMessage: decodeMessageOverride,
@@ -10762,7 +10762,7 @@ var require_realtime = __commonJS({
               tokenRefreshGeneration++;
               const generation = tokenRefreshGeneration;
               const appId = (0, utils_1.ensureEndpointIdFormat)(app);
-              const resolvedPath = (_a6 = (0, utils_1.resolveEndpointPath)(app, path4, "/realtime")) !== null && _a6 !== void 0 ? _a6 : "";
+              const resolvedPath = (_a6 = (0, utils_1.resolveEndpointPath)(app, path5, "/realtime")) !== null && _a6 !== void 0 ? _a6 : "";
               const fetchToken = tokenProvider ? () => tokenProvider(`${appId}${resolvedPath}`) : () => {
                 console.warn("[fal.realtime] Using the default token provider is deprecated. Please provide a `tokenProvider` function to `fal.realtime.connect()`. See https://docs.fal.ai/model-apis/client#client-side-usage-with-token-provider for more information.");
                 return (0, auth_1.getTemporaryAuthToken)(app, config2);
@@ -10806,7 +10806,7 @@ var require_realtime = __commonJS({
               });
             }
             if (machine.current === "connecting" && previousState !== machine.current && token !== void 0) {
-              const ws = new WebSocket(buildRealtimeUrl(app, { token, maxBuffering, path: path4 }));
+              const ws = new WebSocket(buildRealtimeUrl(app, { token, maxBuffering, path: path5 }));
               ws.onopen = () => {
                 var _a7, _b;
                 send2({ type: "connected", websocket: ws });
@@ -17858,22 +17858,22 @@ var init_from = __esm({
     init_file();
     init_fetch_blob();
     ({ stat } = fs);
-    blobFromSync = (path4, type) => fromBlob(statSync(path4), path4, type);
-    blobFrom = (path4, type) => stat(path4).then((stat3) => fromBlob(stat3, path4, type));
-    fileFrom = (path4, type) => stat(path4).then((stat3) => fromFile(stat3, path4, type));
-    fileFromSync = (path4, type) => fromFile(statSync(path4), path4, type);
-    fromBlob = (stat3, path4, type = "") => new fetch_blob_default([new BlobDataItem({
-      path: path4,
+    blobFromSync = (path5, type) => fromBlob(statSync(path5), path5, type);
+    blobFrom = (path5, type) => stat(path5).then((stat3) => fromBlob(stat3, path5, type));
+    fileFrom = (path5, type) => stat(path5).then((stat3) => fromFile(stat3, path5, type));
+    fileFromSync = (path5, type) => fromFile(statSync(path5), path5, type);
+    fromBlob = (stat3, path5, type = "") => new fetch_blob_default([new BlobDataItem({
+      path: path5,
       size: stat3.size,
       lastModified: stat3.mtimeMs,
       start: 0
     })], { type });
-    fromFile = (stat3, path4, type = "") => new file_default([new BlobDataItem({
-      path: path4,
+    fromFile = (stat3, path5, type = "") => new file_default([new BlobDataItem({
+      path: path5,
       size: stat3.size,
       lastModified: stat3.mtimeMs,
       start: 0
-    })], basename(path4), { type, lastModified: stat3.mtimeMs });
+    })], basename(path5), { type, lastModified: stat3.mtimeMs });
     BlobDataItem = class _BlobDataItem {
       #path;
       #start;
@@ -23052,9 +23052,9 @@ var require_util3 = __commonJS({
     exports.removeUndefinedValuesInObject = removeUndefinedValuesInObject;
     exports.isValidFile = isValidFile;
     exports.getWellKnownCertificateConfigFileLocation = getWellKnownCertificateConfigFileLocation;
-    var fs4 = __require("fs");
+    var fs5 = __require("fs");
     var os2 = __require("os");
-    var path4 = __require("path");
+    var path5 = __require("path");
     var WELL_KNOWN_CERTIFICATE_CONFIG_FILE = "certificate_config.json";
     var CLOUDSDK_CONFIG_DIRECTORY = "gcloud";
     function snakeToCamel(str2) {
@@ -23140,15 +23140,15 @@ var require_util3 = __commonJS({
     }
     async function isValidFile(filePath) {
       try {
-        const stats = await fs4.promises.lstat(filePath);
+        const stats = await fs5.promises.lstat(filePath);
         return stats.isFile();
       } catch (e2) {
         return false;
       }
     }
     function getWellKnownCertificateConfigFileLocation() {
-      const configDir = process.env.CLOUDSDK_CONFIG || (_isWindows() ? path4.join(process.env.APPDATA || "", CLOUDSDK_CONFIG_DIRECTORY) : path4.join(process.env.HOME || "", ".config", CLOUDSDK_CONFIG_DIRECTORY));
-      return path4.join(configDir, WELL_KNOWN_CERTIFICATE_CONFIG_FILE);
+      const configDir = process.env.CLOUDSDK_CONFIG || (_isWindows() ? path5.join(process.env.APPDATA || "", CLOUDSDK_CONFIG_DIRECTORY) : path5.join(process.env.HOME || "", ".config", CLOUDSDK_CONFIG_DIRECTORY));
+      return path5.join(configDir, WELL_KNOWN_CERTIFICATE_CONFIG_FILE);
     }
     function _isWindows() {
       return os2.platform().startsWith("win");
@@ -25096,11 +25096,11 @@ var require_getCredentials = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.getCredentials = getCredentials;
-    var path4 = __require("path");
-    var fs4 = __require("fs");
+    var path5 = __require("path");
+    var fs5 = __require("fs");
     var util_1 = __require("util");
     var errorWithCode_1 = require_errorWithCode();
-    var readFile = fs4.readFile ? (0, util_1.promisify)(fs4.readFile) : async () => {
+    var readFile = fs5.readFile ? (0, util_1.promisify)(fs5.readFile) : async () => {
       throw new errorWithCode_1.ErrorWithCode("use key rather than keyFile.", "MISSING_CREDENTIALS");
     };
     var ExtensionFiles;
@@ -25168,7 +25168,7 @@ var require_getCredentials = __commonJS({
        * @returns An instance of a class that implements ICredentialsProvider.
        */
       static create(keyFilePath) {
-        const keyFileExtension = path4.extname(keyFilePath);
+        const keyFileExtension = path5.extname(keyFilePath);
         switch (keyFileExtension) {
           case ExtensionFiles.JSON:
             return new JsonCredentialsProvider(keyFilePath);
@@ -26777,12 +26777,12 @@ var require_filesubjecttokensupplier = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.FileSubjectTokenSupplier = void 0;
     var util_1 = __require("util");
-    var fs4 = __require("fs");
-    var readFile = (0, util_1.promisify)(fs4.readFile ?? (() => {
+    var fs5 = __require("fs");
+    var readFile = (0, util_1.promisify)(fs5.readFile ?? (() => {
     }));
-    var realpath = (0, util_1.promisify)(fs4.realpath ?? (() => {
+    var realpath = (0, util_1.promisify)(fs5.realpath ?? (() => {
     }));
-    var lstat = (0, util_1.promisify)(fs4.lstat ?? (() => {
+    var lstat = (0, util_1.promisify)(fs5.lstat ?? (() => {
     }));
     var FileSubjectTokenSupplier = class {
       filePath;
@@ -26900,7 +26900,7 @@ var require_certificatesubjecttokensupplier = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.CertificateSubjectTokenSupplier = exports.InvalidConfigurationError = exports.CertificateSourceUnavailableError = exports.CERTIFICATE_CONFIGURATION_ENV_VARIABLE = void 0;
     var util_1 = require_util3();
-    var fs4 = __require("fs");
+    var fs5 = __require("fs");
     var crypto_1 = __require("crypto");
     var https3 = __require("https");
     exports.CERTIFICATE_CONFIGURATION_ENV_VARIABLE = "GOOGLE_API_CERTIFICATE_CONFIG";
@@ -26994,7 +26994,7 @@ var require_certificatesubjecttokensupplier = __commonJS({
         const configPath = this.certificateConfigPath;
         let fileContents;
         try {
-          fileContents = await fs4.promises.readFile(configPath, "utf8");
+          fileContents = await fs5.promises.readFile(configPath, "utf8");
         } catch (err) {
           throw new CertificateSourceUnavailableError(`Failed to read certificate config file at: ${configPath}`);
         }
@@ -27019,14 +27019,14 @@ var require_certificatesubjecttokensupplier = __commonJS({
       async #getKeyAndCert(certPath, keyPath) {
         let cert, key;
         try {
-          cert = await fs4.promises.readFile(certPath);
+          cert = await fs5.promises.readFile(certPath);
           new crypto_1.X509Certificate(cert);
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           throw new CertificateSourceUnavailableError(`Failed to read certificate file at ${certPath}: ${message}`);
         }
         try {
-          key = await fs4.promises.readFile(keyPath);
+          key = await fs5.promises.readFile(keyPath);
           (0, crypto_1.createPrivateKey)(key);
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
@@ -27045,7 +27045,7 @@ var require_certificatesubjecttokensupplier = __commonJS({
           return JSON.stringify([leafCert.raw.toString("base64")]);
         }
         try {
-          const chainPems = await fs4.promises.readFile(this.trustChainPath, "utf8");
+          const chainPems = await fs5.promises.readFile(this.trustChainPath, "utf8");
           const pemBlocks = chainPems.match(/-----BEGIN CERTIFICATE-----[^-]+-----END CERTIFICATE-----/g) ?? [];
           const chainCerts = pemBlocks.map((pem, index) => {
             try {
@@ -27747,7 +27747,7 @@ var require_pluggable_auth_handler = __commonJS({
     exports.PluggableAuthHandler = exports.ExecutableError = void 0;
     var executable_response_1 = require_executable_response();
     var childProcess = __require("child_process");
-    var fs4 = __require("fs");
+    var fs5 = __require("fs");
     var ExecutableError = class extends Error {
       /**
        * The exit code returned by the executable.
@@ -27832,14 +27832,14 @@ var require_pluggable_auth_handler = __commonJS({
         }
         let filePath;
         try {
-          filePath = await fs4.promises.realpath(this.outputFile);
+          filePath = await fs5.promises.realpath(this.outputFile);
         } catch {
           return void 0;
         }
-        if (!(await fs4.promises.lstat(filePath)).isFile()) {
+        if (!(await fs5.promises.lstat(filePath)).isFile()) {
           return void 0;
         }
-        const responseString = await fs4.promises.readFile(filePath, {
+        const responseString = await fs5.promises.readFile(filePath, {
           encoding: "utf8"
         });
         if (responseString === "") {
@@ -28250,11 +28250,11 @@ var require_googleauth = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GoogleAuth = exports.GoogleAuthExceptionMessages = void 0;
     var child_process_1 = __require("child_process");
-    var fs4 = __require("fs");
+    var fs5 = __require("fs");
     var gaxios_1 = require_src3();
     var gcpMetadata = require_src5();
     var os2 = __require("os");
-    var path4 = __require("path");
+    var path5 = __require("path");
     var crypto_1 = require_crypto3();
     var computeclient_1 = require_computeclient();
     var idtokenclient_1 = require_idtokenclient();
@@ -28540,12 +28540,12 @@ var require_googleauth = __commonJS({
         } else {
           const home = process.env["HOME"];
           if (home) {
-            location = path4.join(home, ".config");
+            location = path5.join(home, ".config");
           }
         }
         if (location) {
-          location = path4.join(location, "gcloud", "application_default_credentials.json");
-          if (!fs4.existsSync(location)) {
+          location = path5.join(location, "gcloud", "application_default_credentials.json");
+          if (!fs5.existsSync(location)) {
             location = null;
           }
         }
@@ -28566,8 +28566,8 @@ var require_googleauth = __commonJS({
           throw new Error("The file path is invalid.");
         }
         try {
-          filePath = fs4.realpathSync(filePath);
-          if (!fs4.lstatSync(filePath).isFile()) {
+          filePath = fs5.realpathSync(filePath);
+          if (!fs5.lstatSync(filePath).isFile()) {
             throw new Error();
           }
         } catch (err) {
@@ -28576,7 +28576,7 @@ var require_googleauth = __commonJS({
           }
           throw err;
         }
-        const readStream = fs4.createReadStream(filePath);
+        const readStream = fs5.createReadStream(filePath);
         return this.fromStream(readStream, options);
       }
       /**
@@ -28888,8 +28888,8 @@ var require_googleauth = __commonJS({
         if (this.jsonContent) {
           return this._cacheClientFromJSON(this.jsonContent, this.clientOptions);
         } else if (this.keyFilename) {
-          const filePath = path4.resolve(this.keyFilename);
-          const stream = fs4.createReadStream(filePath);
+          const filePath = path5.resolve(this.keyFilename);
+          const stream = fs5.createReadStream(filePath);
           return await this.fromStreamAsync(stream, this.clientOptions);
         } else if (this.apiKey) {
           const client = await this.fromAPIKey(this.apiKey, this.clientOptions);
@@ -35004,7 +35004,7 @@ var require_png = __commonJS({
     var Parser = require_parser_async();
     var Packer = require_packer_async();
     var PNGSync = require_png_sync();
-    var PNG2 = exports.PNG = function(options) {
+    var PNG3 = exports.PNG = function(options) {
       Stream5.call(this);
       options = options || {};
       this.width = options.width | 0;
@@ -35033,9 +35033,9 @@ var require_png = __commonJS({
       this._parser.on("close", this._handleClose.bind(this));
       this._packer.on("error", this.emit.bind(this, "error"));
     };
-    util.inherits(PNG2, Stream5);
-    PNG2.sync = PNGSync;
-    PNG2.prototype.pack = function() {
+    util.inherits(PNG3, Stream5);
+    PNG3.sync = PNGSync;
+    PNG3.prototype.pack = function() {
       if (!this.data || !this.data.length) {
         this.emit("error", "No data provided");
         return this;
@@ -35047,7 +35047,7 @@ var require_png = __commonJS({
       );
       return this;
     };
-    PNG2.prototype.parse = function(data, callback) {
+    PNG3.prototype.parse = function(data, callback) {
       if (callback) {
         let onParsed, onError;
         onParsed = function(parsedData) {
@@ -35065,27 +35065,27 @@ var require_png = __commonJS({
       this.end(data);
       return this;
     };
-    PNG2.prototype.write = function(data) {
+    PNG3.prototype.write = function(data) {
       this._parser.write(data);
       return true;
     };
-    PNG2.prototype.end = function(data) {
+    PNG3.prototype.end = function(data) {
       this._parser.end(data);
     };
-    PNG2.prototype._metadata = function(metadata) {
+    PNG3.prototype._metadata = function(metadata) {
       this.width = metadata.width;
       this.height = metadata.height;
       this.emit("metadata", metadata);
     };
-    PNG2.prototype._gamma = function(gamma) {
+    PNG3.prototype._gamma = function(gamma) {
       this.gamma = gamma;
     };
-    PNG2.prototype._handleClose = function() {
+    PNG3.prototype._handleClose = function() {
       if (!this._parser.writable && !this._packer.readable) {
         this.emit("close");
       }
     };
-    PNG2.bitblt = function(src, dst, srcX, srcY, width, height, deltaX, deltaY) {
+    PNG3.bitblt = function(src, dst, srcX, srcY, width, height, deltaX, deltaY) {
       srcX |= 0;
       srcY |= 0;
       width |= 0;
@@ -35107,11 +35107,11 @@ var require_png = __commonJS({
         );
       }
     };
-    PNG2.prototype.bitblt = function(dst, srcX, srcY, width, height, deltaX, deltaY) {
-      PNG2.bitblt(this, dst, srcX, srcY, width, height, deltaX, deltaY);
+    PNG3.prototype.bitblt = function(dst, srcX, srcY, width, height, deltaX, deltaY) {
+      PNG3.bitblt(this, dst, srcX, srcY, width, height, deltaX, deltaY);
       return this;
     };
-    PNG2.adjustGamma = function(src) {
+    PNG3.adjustGamma = function(src) {
       if (src.gamma) {
         for (let y = 0; y < src.height; y++) {
           for (let x2 = 0; x2 < src.width; x2++) {
@@ -35126,8 +35126,8 @@ var require_png = __commonJS({
         src.gamma = 0;
       }
     };
-    PNG2.prototype.adjustGamma = function() {
-      PNG2.adjustGamma(this);
+    PNG3.prototype.adjustGamma = function() {
+      PNG3.adjustGamma(this);
     };
   }
 });
@@ -35203,8 +35203,8 @@ var require_package4 = __commonJS({
 // node_modules/dotenv/lib/main.js
 var require_main = __commonJS({
   "node_modules/dotenv/lib/main.js"(exports, module) {
-    var fs4 = __require("fs");
-    var path4 = __require("path");
+    var fs5 = __require("fs");
+    var path5 = __require("path");
     var os2 = __require("os");
     var crypto2 = __require("crypto");
     var packageJson = require_package4();
@@ -35312,7 +35312,7 @@ var require_main = __commonJS({
       if (options && options.path && options.path.length > 0) {
         if (Array.isArray(options.path)) {
           for (const filepath of options.path) {
-            if (fs4.existsSync(filepath)) {
+            if (fs5.existsSync(filepath)) {
               possibleVaultPath = filepath.endsWith(".vault") ? filepath : `${filepath}.vault`;
             }
           }
@@ -35320,15 +35320,15 @@ var require_main = __commonJS({
           possibleVaultPath = options.path.endsWith(".vault") ? options.path : `${options.path}.vault`;
         }
       } else {
-        possibleVaultPath = path4.resolve(process.cwd(), ".env.vault");
+        possibleVaultPath = path5.resolve(process.cwd(), ".env.vault");
       }
-      if (fs4.existsSync(possibleVaultPath)) {
+      if (fs5.existsSync(possibleVaultPath)) {
         return possibleVaultPath;
       }
       return null;
     }
     function _resolveHome(envPath) {
-      return envPath[0] === "~" ? path4.join(os2.homedir(), envPath.slice(1)) : envPath;
+      return envPath[0] === "~" ? path5.join(os2.homedir(), envPath.slice(1)) : envPath;
     }
     function _configVault(options) {
       const debug = Boolean(options && options.debug);
@@ -35345,7 +35345,7 @@ var require_main = __commonJS({
       return { parsed };
     }
     function configDotenv(options) {
-      const dotenvPath = path4.resolve(process.cwd(), ".env");
+      const dotenvPath = path5.resolve(process.cwd(), ".env");
       let encoding = "utf8";
       const debug = Boolean(options && options.debug);
       const quiet = options && "quiet" in options ? options.quiet : true;
@@ -35369,13 +35369,13 @@ var require_main = __commonJS({
       }
       let lastError;
       const parsedAll = {};
-      for (const path5 of optionPaths) {
+      for (const path6 of optionPaths) {
         try {
-          const parsed = DotenvModule.parse(fs4.readFileSync(path5, { encoding }));
+          const parsed = DotenvModule.parse(fs5.readFileSync(path6, { encoding }));
           DotenvModule.populate(parsedAll, parsed, options);
         } catch (e2) {
           if (debug) {
-            _debug(`Failed to load ${path5} ${e2.message}`);
+            _debug(`Failed to load ${path6} ${e2.message}`);
           }
           lastError = e2;
         }
@@ -35390,7 +35390,7 @@ var require_main = __commonJS({
         const shortPaths = [];
         for (const filePath of optionPaths) {
           try {
-            const relative2 = path4.relative(process.cwd(), filePath);
+            const relative2 = path5.relative(process.cwd(), filePath);
             shortPaths.push(relative2);
           } catch (e2) {
             if (debug) {
@@ -35730,10 +35730,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path4) {
-  if (!path4)
+function getElementAtPath(obj, path5) {
+  if (!path5)
     return obj;
-  return path4.reduce((acc, key) => acc?.[key], obj);
+  return path5.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -36142,11 +36142,11 @@ function explicitlyAborted(x2, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path4, issues) {
+function prefixIssues(path5, issues) {
   return issues.map((iss) => {
     var _a6;
     (_a6 = iss).path ?? (_a6.path = []);
-    iss.path.unshift(path4);
+    iss.path.unshift(path5);
     return iss;
   });
 }
@@ -36293,16 +36293,16 @@ function flattenError(error2, mapper = (issue2) => issue2.message) {
 }
 function formatError(error2, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error3, path4 = []) => {
+  const processError = (error3, path5 = []) => {
     for (const issue2 of error3.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path4, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path5, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path4, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path5, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path4, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path5, ...issue2.path]);
       } else {
-        const fullpath = [...path4, ...issue2.path];
+        const fullpath = [...path5, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -47615,7 +47615,7 @@ var Batches = class extends BaseModule {
       params
     );
     const urlParams = body["_url"];
-    const path4 = formatMap2("{model}:batchGenerateContent", urlParams);
+    const path5 = formatMap2("{model}:batchGenerateContent", urlParams);
     const batch = body["batch"];
     const inputConfig = batch["inputConfig"];
     const requestsWrapper = inputConfig["requests"];
@@ -47636,7 +47636,7 @@ var Batches = class extends BaseModule {
     delete body["config"];
     delete body["_url"];
     delete body["_query"];
-    return { path: path4, body };
+    return { path: path5, body };
   }
   // Helper function to get the first GCS URI
   getGcsUri(src) {
@@ -47692,16 +47692,16 @@ var Batches = class extends BaseModule {
   async createInternal(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = createBatchJobParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("batchPredictionJobs", body["_url"]);
+      path5 = formatMap2("batchPredictionJobs", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -47716,12 +47716,12 @@ var Batches = class extends BaseModule {
       });
     } else {
       const body = createBatchJobParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{model}:batchGenerateContent", body["_url"]);
+      path5 = formatMap2("{model}:batchGenerateContent", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -47746,18 +47746,18 @@ var Batches = class extends BaseModule {
   async createEmbeddingsInternal(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = createEmbeddingsBatchJobParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{model}:asyncBatchEmbedContent", body["_url"]);
+      path5 = formatMap2("{model}:asyncBatchEmbedContent", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -47786,16 +47786,16 @@ var Batches = class extends BaseModule {
   async get(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = getBatchJobParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("batchPredictionJobs/{name}", body["_url"]);
+      path5 = formatMap2("batchPredictionJobs/{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -47810,12 +47810,12 @@ var Batches = class extends BaseModule {
       });
     } else {
       const body = getBatchJobParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("batches/{name}", body["_url"]);
+      path5 = formatMap2("batches/{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -47843,16 +47843,16 @@ var Batches = class extends BaseModule {
    */
   async cancel(params) {
     var _a6, _b, _c, _d;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = cancelBatchJobParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("batchPredictionJobs/{name}:cancel", body["_url"]);
+      path5 = formatMap2("batchPredictionJobs/{name}:cancel", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       await this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -47861,12 +47861,12 @@ var Batches = class extends BaseModule {
       });
     } else {
       const body = cancelBatchJobParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("batches/{name}:cancel", body["_url"]);
+      path5 = formatMap2("batches/{name}:cancel", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       await this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -47878,16 +47878,16 @@ var Batches = class extends BaseModule {
   async listInternal(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = listBatchJobsParametersToVertex(params);
-      path4 = formatMap2("batchPredictionJobs", body["_url"]);
+      path5 = formatMap2("batchPredictionJobs", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -47910,12 +47910,12 @@ var Batches = class extends BaseModule {
       });
     } else {
       const body = listBatchJobsParametersToMldev(params);
-      path4 = formatMap2("batches", body["_url"]);
+      path5 = formatMap2("batches", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -47952,16 +47952,16 @@ var Batches = class extends BaseModule {
   async delete(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = deleteBatchJobParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("batchPredictionJobs/{name}", body["_url"]);
+      path5 = formatMap2("batchPredictionJobs/{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "DELETE",
@@ -47982,12 +47982,12 @@ var Batches = class extends BaseModule {
       });
     } else {
       const body = deleteBatchJobParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("batches/{name}", body["_url"]);
+      path5 = formatMap2("batches/{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "DELETE",
@@ -48876,16 +48876,16 @@ var Caches = class extends BaseModule {
   async create(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = createCachedContentParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("cachedContents", body["_url"]);
+      path5 = formatMap2("cachedContents", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -48899,12 +48899,12 @@ var Caches = class extends BaseModule {
       });
     } else {
       const body = createCachedContentParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("cachedContents", body["_url"]);
+      path5 = formatMap2("cachedContents", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -48932,16 +48932,16 @@ var Caches = class extends BaseModule {
   async get(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = getCachedContentParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -48955,12 +48955,12 @@ var Caches = class extends BaseModule {
       });
     } else {
       const body = getCachedContentParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -48988,16 +48988,16 @@ var Caches = class extends BaseModule {
   async delete(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = deleteCachedContentParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "DELETE",
@@ -49020,12 +49020,12 @@ var Caches = class extends BaseModule {
       });
     } else {
       const body = deleteCachedContentParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "DELETE",
@@ -49065,16 +49065,16 @@ var Caches = class extends BaseModule {
   async update(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = updateCachedContentParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "PATCH",
@@ -49088,12 +49088,12 @@ var Caches = class extends BaseModule {
       });
     } else {
       const body = updateCachedContentParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "PATCH",
@@ -49110,16 +49110,16 @@ var Caches = class extends BaseModule {
   async listInternal(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = listCachedContentsParametersToVertex(params);
-      path4 = formatMap2("cachedContents", body["_url"]);
+      path5 = formatMap2("cachedContents", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -49142,12 +49142,12 @@ var Caches = class extends BaseModule {
       });
     } else {
       const body = listCachedContentsParametersToMldev(params);
-      path4 = formatMap2("cachedContents", body["_url"]);
+      path5 = formatMap2("cachedContents", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -49743,18 +49743,18 @@ var Files = class extends BaseModule {
   async listInternal(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = listFilesParametersToMldev(params);
-      path4 = formatMap2("files", body["_url"]);
+      path5 = formatMap2("files", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -49780,18 +49780,18 @@ var Files = class extends BaseModule {
   async createInternal(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = createFileParametersToMldev(params);
-      path4 = formatMap2("upload/v1beta/files", body["_url"]);
+      path5 = formatMap2("upload/v1beta/files", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -49826,18 +49826,18 @@ var Files = class extends BaseModule {
   async get(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = getFileParametersToMldev(params);
-      path4 = formatMap2("files/{file}", body["_url"]);
+      path5 = formatMap2("files/{file}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -49867,18 +49867,18 @@ var Files = class extends BaseModule {
   async delete(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = deleteFileParametersToMldev(params);
-      path4 = formatMap2("files/{file}", body["_url"]);
+      path5 = formatMap2("files/{file}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "DELETE",
@@ -49904,18 +49904,18 @@ var Files = class extends BaseModule {
   async registerFilesInternal(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = internalRegisterFilesParametersToMldev(params);
-      path4 = formatMap2("files:register", body["_url"]);
+      path5 = formatMap2("files:register", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -55070,13 +55070,13 @@ var ApiClient = class {
       throw new Error("HTTP options are not correctly set.");
     }
   }
-  constructUrl(path4, httpOptions, prependProjectLocation) {
+  constructUrl(path5, httpOptions, prependProjectLocation) {
     const urlElement = [this.getRequestUrlInternal(httpOptions)];
     if (prependProjectLocation) {
       urlElement.push(this.getBaseResourcePath());
     }
-    if (path4 !== "") {
-      urlElement.push(path4);
+    if (path5 !== "") {
+      urlElement.push(path5);
     }
     const url = new URL(`${urlElement.join("/")}`);
     return url;
@@ -55361,8 +55361,8 @@ var ApiClient = class {
       file: fileToUpload
     };
     const fileName = this.getFileName(file);
-    const path4 = formatMap2("upload/v1beta/files", body["_url"]);
-    const uploadUrl = await this.fetchUploadUrl(path4, fileToUpload.sizeBytes, fileToUpload.mimeType, fileName, body, config2 === null || config2 === void 0 ? void 0 : config2.httpOptions);
+    const path5 = formatMap2("upload/v1beta/files", body["_url"]);
+    const uploadUrl = await this.fetchUploadUrl(path5, fileToUpload.sizeBytes, fileToUpload.mimeType, fileName, body, config2 === null || config2 === void 0 ? void 0 : config2.httpOptions);
     return uploader.upload(file, uploadUrl, this);
   }
   /**
@@ -55386,13 +55386,13 @@ var ApiClient = class {
     if (mimeType === void 0 || mimeType === "") {
       throw new Error("Can not determine mimeType. Please provide mimeType in the config.");
     }
-    const path4 = `upload/v1beta/${fileSearchStoreName}:uploadToFileSearchStore`;
+    const path5 = `upload/v1beta/${fileSearchStoreName}:uploadToFileSearchStore`;
     const fileName = this.getFileName(file);
     const body = {};
     if (config2 != null) {
       uploadToFileSearchStoreConfigToMldev(config2, body);
     }
-    const uploadUrl = await this.fetchUploadUrl(path4, sizeBytes, mimeType, fileName, body, config2 === null || config2 === void 0 ? void 0 : config2.httpOptions);
+    const uploadUrl = await this.fetchUploadUrl(path5, sizeBytes, mimeType, fileName, body, config2 === null || config2 === void 0 ? void 0 : config2.httpOptions);
     return uploader.uploadToFileSearchStore(file, uploadUrl, this);
   }
   /**
@@ -55405,7 +55405,7 @@ var ApiClient = class {
     const downloader = this.clientOptions.downloader;
     await downloader.download(params, this);
   }
-  async fetchUploadUrl(path4, sizeBytes, mimeType, fileName, body, configHttpOptions) {
+  async fetchUploadUrl(path5, sizeBytes, mimeType, fileName, body, configHttpOptions) {
     var _a6;
     let httpOptions = {};
     if (configHttpOptions) {
@@ -55418,7 +55418,7 @@ var ApiClient = class {
       };
     }
     const httpResponse = await this.request({
-      path: path4,
+      path: path5,
       body: JSON.stringify(body),
       httpMethod: "POST",
       httpOptions
@@ -56614,16 +56614,16 @@ var Models = class extends BaseModule {
   async generateContentInternal(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = generateContentParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{model}:generateContent", body["_url"]);
+      path5 = formatMap2("{model}:generateContent", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -56646,12 +56646,12 @@ var Models = class extends BaseModule {
       });
     } else {
       const body = generateContentParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{model}:generateContent", body["_url"]);
+      path5 = formatMap2("{model}:generateContent", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -56677,17 +56677,17 @@ var Models = class extends BaseModule {
   async generateContentStreamInternal(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = generateContentParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{model}:streamGenerateContent?alt=sse", body["_url"]);
+      path5 = formatMap2("{model}:streamGenerateContent?alt=sse", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       const apiClient = this.apiClient;
       response = apiClient.requestStream({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -56723,13 +56723,13 @@ var Models = class extends BaseModule {
       });
     } else {
       const body = generateContentParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{model}:streamGenerateContent?alt=sse", body["_url"]);
+      path5 = formatMap2("{model}:streamGenerateContent?alt=sse", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       const apiClient = this.apiClient;
       response = apiClient.requestStream({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -56789,17 +56789,17 @@ var Models = class extends BaseModule {
   async embedContentInternal(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = embedContentParametersPrivateToVertex(this.apiClient, params, params);
       const endpointUrl = tIsVertexEmbedContentModel(params.model) ? "{model}:embedContent" : "{model}:predict";
-      path4 = formatMap2(endpointUrl, body["_url"]);
+      path5 = formatMap2(endpointUrl, body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -56822,12 +56822,12 @@ var Models = class extends BaseModule {
       });
     } else {
       const body = embedContentParametersPrivateToMldev(this.apiClient, params);
-      path4 = formatMap2("{model}:batchEmbedContents", body["_url"]);
+      path5 = formatMap2("{model}:batchEmbedContents", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -56856,16 +56856,16 @@ var Models = class extends BaseModule {
   async generateImagesInternal(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = generateImagesParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{model}:predict", body["_url"]);
+      path5 = formatMap2("{model}:predict", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -56888,12 +56888,12 @@ var Models = class extends BaseModule {
       });
     } else {
       const body = generateImagesParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{model}:predict", body["_url"]);
+      path5 = formatMap2("{model}:predict", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -56922,16 +56922,16 @@ var Models = class extends BaseModule {
   async editImageInternal(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = editImageParametersInternalToVertex(this.apiClient, params);
-      path4 = formatMap2("{model}:predict", body["_url"]);
+      path5 = formatMap2("{model}:predict", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -56962,16 +56962,16 @@ var Models = class extends BaseModule {
   async upscaleImageInternal(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = upscaleImageAPIParametersInternalToVertex(this.apiClient, params);
-      path4 = formatMap2("{model}:predict", body["_url"]);
+      path5 = formatMap2("{model}:predict", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -57023,16 +57023,16 @@ var Models = class extends BaseModule {
   async recontextImage(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = recontextImageParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{model}:predict", body["_url"]);
+      path5 = formatMap2("{model}:predict", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -57074,16 +57074,16 @@ var Models = class extends BaseModule {
   async segmentImage(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = segmentImageParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{model}:predict", body["_url"]);
+      path5 = formatMap2("{model}:predict", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -57113,16 +57113,16 @@ var Models = class extends BaseModule {
   async get(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = getModelParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -57137,12 +57137,12 @@ var Models = class extends BaseModule {
       });
     } else {
       const body = getModelParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -57160,16 +57160,16 @@ var Models = class extends BaseModule {
   async listInternal(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = listModelsParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{models_url}", body["_url"]);
+      path5 = formatMap2("{models_url}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -57192,12 +57192,12 @@ var Models = class extends BaseModule {
       });
     } else {
       const body = listModelsParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{models_url}", body["_url"]);
+      path5 = formatMap2("{models_url}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -57240,16 +57240,16 @@ var Models = class extends BaseModule {
   async update(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = updateModelParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{model}", body["_url"]);
+      path5 = formatMap2("{model}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "PATCH",
@@ -57264,12 +57264,12 @@ var Models = class extends BaseModule {
       });
     } else {
       const body = updateModelParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "PATCH",
@@ -57298,16 +57298,16 @@ var Models = class extends BaseModule {
   async delete(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = deleteModelParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "DELETE",
@@ -57330,12 +57330,12 @@ var Models = class extends BaseModule {
       });
     } else {
       const body = deleteModelParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "DELETE",
@@ -57377,16 +57377,16 @@ var Models = class extends BaseModule {
   async countTokens(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = countTokensParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{model}:countTokens", body["_url"]);
+      path5 = formatMap2("{model}:countTokens", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -57409,12 +57409,12 @@ var Models = class extends BaseModule {
       });
     } else {
       const body = countTokensParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{model}:countTokens", body["_url"]);
+      path5 = formatMap2("{model}:countTokens", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -57458,16 +57458,16 @@ var Models = class extends BaseModule {
   async computeTokens(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = computeTokensParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{model}:computeTokens", body["_url"]);
+      path5 = formatMap2("{model}:computeTokens", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -57498,16 +57498,16 @@ var Models = class extends BaseModule {
   async generateVideosInternal(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = generateVideosParametersToVertex(this.apiClient, params);
-      path4 = formatMap2("{model}:predictLongRunning", body["_url"]);
+      path5 = formatMap2("{model}:predictLongRunning", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -57524,12 +57524,12 @@ var Models = class extends BaseModule {
       });
     } else {
       const body = generateVideosParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("{model}:predictLongRunning", body["_url"]);
+      path5 = formatMap2("{model}:predictLongRunning", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -57631,16 +57631,16 @@ var Operations = class extends BaseModule {
   async getVideosOperationInternal(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = getOperationParametersToVertex(params);
-      path4 = formatMap2("{operationName}", body["_url"]);
+      path5 = formatMap2("{operationName}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -57652,12 +57652,12 @@ var Operations = class extends BaseModule {
       return response;
     } else {
       const body = getOperationParametersToMldev(params);
-      path4 = formatMap2("{operationName}", body["_url"]);
+      path5 = formatMap2("{operationName}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -57672,16 +57672,16 @@ var Operations = class extends BaseModule {
   async fetchPredictVideosOperationInternal(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = fetchPredictOperationParametersToVertex(params);
-      path4 = formatMap2("{resourceName}:fetchPredictOperation", body["_url"]);
+      path5 = formatMap2("{resourceName}:fetchPredictOperation", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -58347,20 +58347,20 @@ var Tokens = class extends BaseModule {
   async create(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("The client.tokens.create method is only supported by the Gemini Developer API.");
     } else {
       const body = createAuthTokenParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("auth_tokens", body["_url"]);
+      path5 = formatMap2("auth_tokens", body["_url"]);
       queryParams = body["_query"];
       delete body["config"];
       delete body["_url"];
       delete body["_query"];
       const transformedBody = convertBidiSetupToTokenSetup(body, params.config);
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(transformedBody),
         httpMethod: "POST",
@@ -58470,18 +58470,18 @@ var Documents = class extends BaseModule {
   async get(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = getDocumentParametersToMldev(params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -58502,18 +58502,18 @@ var Documents = class extends BaseModule {
    */
   async delete(params) {
     var _a6, _b;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = deleteDocumentParametersToMldev(params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       await this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "DELETE",
@@ -58525,18 +58525,18 @@ var Documents = class extends BaseModule {
   async listInternal(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = listDocumentsParametersToMldev(params);
-      path4 = formatMap2("{parent}/documents", body["_url"]);
+      path5 = formatMap2("{parent}/documents", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -58653,18 +58653,18 @@ var FileSearchStores = class extends BaseModule {
   async create(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = createFileSearchStoreParametersToMldev(this.apiClient, params);
-      path4 = formatMap2("fileSearchStores", body["_url"]);
+      path5 = formatMap2("fileSearchStores", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -58687,18 +58687,18 @@ var FileSearchStores = class extends BaseModule {
   async get(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = getFileSearchStoreParametersToMldev(params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -58719,18 +58719,18 @@ var FileSearchStores = class extends BaseModule {
    */
   async delete(params) {
     var _a6, _b;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = deleteFileSearchStoreParametersToMldev(params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       await this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "DELETE",
@@ -58742,18 +58742,18 @@ var FileSearchStores = class extends BaseModule {
   async listInternal(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = listFileSearchStoresParametersToMldev(params);
-      path4 = formatMap2("fileSearchStores", body["_url"]);
+      path5 = formatMap2("fileSearchStores", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -58773,18 +58773,18 @@ var FileSearchStores = class extends BaseModule {
   async uploadToFileSearchStoreInternal(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = uploadToFileSearchStoreParametersToMldev(params);
-      path4 = formatMap2("upload/v1beta/{file_search_store_name}:uploadToFileSearchStore", body["_url"]);
+      path5 = formatMap2("upload/v1beta/{file_search_store_name}:uploadToFileSearchStore", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -58812,18 +58812,18 @@ var FileSearchStores = class extends BaseModule {
   async importFile(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = importFileParametersToMldev(params);
-      path4 = formatMap2("{file_search_store_name}:importFile", body["_url"]);
+      path5 = formatMap2("{file_search_store_name}:importFile", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -59186,12 +59186,12 @@ function encodeURIPath(str2) {
   return str2.replace(/[^A-Za-z0-9\-._~!$&'()*+,;=:@]+/g, encodeURIComponent);
 }
 var EMPTY = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.create(null));
-var createPathTagFunction = (pathEncoder = encodeURIPath) => (function path4(statics, ...params) {
+var createPathTagFunction = (pathEncoder = encodeURIPath) => (function path5(statics, ...params) {
   if (statics.length === 1)
     return statics[0];
   let postPath = false;
   const invalidSegments = [];
-  const path5 = statics.reduce((previousValue, currentValue, index) => {
+  const path6 = statics.reduce((previousValue, currentValue, index) => {
     var _a6, _b, _c;
     if (/[?#]/.test(currentValue)) {
       postPath = true;
@@ -59209,7 +59209,7 @@ var createPathTagFunction = (pathEncoder = encodeURIPath) => (function path4(sta
     }
     return previousValue + currentValue + (index === params.length ? "" : encoded);
   }, "");
-  const pathOnly = path5.split(/[?#]/, 1)[0];
+  const pathOnly = path6.split(/[?#]/, 1)[0];
   const invalidSegmentPattern = /(^|\/)(?:\.|%2e){1,2}(?=\/|$)/gi;
   let match;
   while ((match = invalidSegmentPattern.exec(pathOnly)) !== null) {
@@ -59233,10 +59233,10 @@ var createPathTagFunction = (pathEncoder = encodeURIPath) => (function path4(sta
     }, "");
     throw new GeminiNextGenAPIClientError(`Path parameters result in path with invalid segments:
 ${invalidSegments.map((e2) => e2.error).join("\n")}
-${path5}
+${path6}
 ${underline}`);
   }
-  return path5;
+  return path6;
 });
 var path = /* @__PURE__ */ createPathTagFunction(encodeURIPath);
 var BaseInteractions = class extends APIResource {
@@ -60068,9 +60068,9 @@ var BaseGeminiNextGenAPIClient = class _BaseGeminiNextGenAPIClient {
   makeStatusError(status, error2, message, headers) {
     return APIError.generate(status, error2, message, headers);
   }
-  buildURL(path4, query, defaultBaseURL) {
+  buildURL(path5, query, defaultBaseURL) {
     const baseURL = !this.baseURLOverridden() && defaultBaseURL || this.baseURL;
-    const url = isAbsoluteURL(path4) ? new URL(path4) : new URL(baseURL + (baseURL.endsWith("/") && path4.startsWith("/") ? path4.slice(1) : path4));
+    const url = isAbsoluteURL(path5) ? new URL(path5) : new URL(baseURL + (baseURL.endsWith("/") && path5.startsWith("/") ? path5.slice(1) : path5));
     const defaultQuery = this.defaultQuery();
     const pathQuery = Object.fromEntries(url.searchParams);
     if (!isEmptyObj(defaultQuery) || !isEmptyObj(pathQuery)) {
@@ -60099,24 +60099,24 @@ var BaseGeminiNextGenAPIClient = class _BaseGeminiNextGenAPIClient {
    */
   async prepareRequest(request, { url, options }) {
   }
-  get(path4, opts) {
-    return this.methodRequest("get", path4, opts);
+  get(path5, opts) {
+    return this.methodRequest("get", path5, opts);
   }
-  post(path4, opts) {
-    return this.methodRequest("post", path4, opts);
+  post(path5, opts) {
+    return this.methodRequest("post", path5, opts);
   }
-  patch(path4, opts) {
-    return this.methodRequest("patch", path4, opts);
+  patch(path5, opts) {
+    return this.methodRequest("patch", path5, opts);
   }
-  put(path4, opts) {
-    return this.methodRequest("put", path4, opts);
+  put(path5, opts) {
+    return this.methodRequest("put", path5, opts);
   }
-  delete(path4, opts) {
-    return this.methodRequest("delete", path4, opts);
+  delete(path5, opts) {
+    return this.methodRequest("delete", path5, opts);
   }
-  methodRequest(method, path4, opts) {
+  methodRequest(method, path5, opts) {
     return this.request(Promise.resolve(opts).then((opts2) => {
-      return Object.assign({ method, path: path4 }, opts2);
+      return Object.assign({ method, path: path5 }, opts2);
     }));
   }
   request(options, remainingRetries = null) {
@@ -60290,8 +60290,8 @@ var BaseGeminiNextGenAPIClient = class _BaseGeminiNextGenAPIClient {
   async buildRequest(inputOptions, { retryCount = 0 } = {}) {
     var _b, _c, _d;
     const options = Object.assign({}, inputOptions);
-    const { method, path: path4, query, defaultBaseURL } = options;
-    const url = this.buildURL(path4, query, defaultBaseURL);
+    const { method, path: path5, query, defaultBaseURL } = options;
+    const url = this.buildURL(path5, query, defaultBaseURL);
     if ("timeout" in options)
       validatePositiveInteger("timeout", options.timeout);
     options.timeout = (_b = options.timeout) !== null && _b !== void 0 ? _b : this.timeout;
@@ -61385,16 +61385,16 @@ var Tunings = class extends BaseModule {
   async getInternal(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = getTuningJobParametersToVertex(params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -61415,12 +61415,12 @@ var Tunings = class extends BaseModule {
       });
     } else {
       const body = getTuningJobParametersToMldev(params);
-      path4 = formatMap2("{name}", body["_url"]);
+      path5 = formatMap2("{name}", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -61444,16 +61444,16 @@ var Tunings = class extends BaseModule {
   async listInternal(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = listTuningJobsParametersToVertex(params);
-      path4 = formatMap2("tuningJobs", body["_url"]);
+      path5 = formatMap2("tuningJobs", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "GET",
@@ -61492,16 +61492,16 @@ var Tunings = class extends BaseModule {
   async cancel(params) {
     var _a6, _b, _c, _d;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = cancelTuningJobParametersToVertex(params);
-      path4 = formatMap2("{name}:cancel", body["_url"]);
+      path5 = formatMap2("{name}:cancel", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -61524,12 +61524,12 @@ var Tunings = class extends BaseModule {
       });
     } else {
       const body = cancelTuningJobParametersToMldev(params);
-      path4 = formatMap2("{name}:cancel", body["_url"]);
+      path5 = formatMap2("{name}:cancel", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -61555,16 +61555,16 @@ var Tunings = class extends BaseModule {
   async tuneInternal(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       const body = createTuningJobParametersPrivateToVertex(params, params);
-      path4 = formatMap2("tuningJobs", body["_url"]);
+      path5 = formatMap2("tuningJobs", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -61590,18 +61590,18 @@ var Tunings = class extends BaseModule {
   async tuneMldevInternal(params) {
     var _a6, _b;
     let response;
-    let path4 = "";
+    let path5 = "";
     let queryParams = {};
     if (this.apiClient.isVertexAI()) {
       throw new Error("This method is only supported by the Gemini Developer API.");
     } else {
       const body = createTuningJobParametersPrivateToMldev(params);
-      path4 = formatMap2("tunedModels", body["_url"]);
+      path5 = formatMap2("tunedModels", body["_url"]);
       queryParams = body["_query"];
       delete body["_url"];
       delete body["_query"];
       response = this.apiClient.request({
-        path: path4,
+        path: path5,
         queryParams,
         body: JSON.stringify(body),
         httpMethod: "POST",
@@ -63867,12 +63867,12 @@ function encodeURIPath2(str2) {
   return str2.replace(/[^A-Za-z0-9\-._~!$&'()*+,;=:@]+/g, encodeURIComponent);
 }
 var EMPTY2 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.create(null));
-var createPathTagFunction2 = (pathEncoder = encodeURIPath2) => function path4(statics, ...params) {
+var createPathTagFunction2 = (pathEncoder = encodeURIPath2) => function path5(statics, ...params) {
   if (statics.length === 1)
     return statics[0];
   let postPath = false;
   const invalidSegments = [];
-  const path5 = statics.reduce((previousValue, currentValue, index) => {
+  const path6 = statics.reduce((previousValue, currentValue, index) => {
     if (/[?#]/.test(currentValue)) {
       postPath = true;
     }
@@ -63889,7 +63889,7 @@ var createPathTagFunction2 = (pathEncoder = encodeURIPath2) => function path4(st
     }
     return previousValue + currentValue + (index === params.length ? "" : encoded);
   }, "");
-  const pathOnly = path5.split(/[?#]/, 1)[0];
+  const pathOnly = path6.split(/[?#]/, 1)[0];
   const invalidSegmentPattern = /(?<=^|\/)(?:\.|%2e){1,2}(?=\/|$)/gi;
   let match;
   while ((match = invalidSegmentPattern.exec(pathOnly)) !== null) {
@@ -63910,10 +63910,10 @@ var createPathTagFunction2 = (pathEncoder = encodeURIPath2) => function path4(st
     }, "");
     throw new OpenAIError(`Path parameters result in path with invalid segments:
 ${invalidSegments.map((e2) => e2.error).join("\n")}
-${path5}
+${path6}
 ${underline}`);
   }
-  return path5;
+  return path6;
 };
 var path2 = /* @__PURE__ */ createPathTagFunction2(encodeURIPath2);
 
@@ -70804,9 +70804,9 @@ var OpenAI = class {
     this.apiKey = token;
     return true;
   }
-  buildURL(path4, query, defaultBaseURL) {
+  buildURL(path5, query, defaultBaseURL) {
     const baseURL = !__classPrivateFieldGet(this, _OpenAI_instances, "m", _OpenAI_baseURLOverridden).call(this) && defaultBaseURL || this.baseURL;
-    const url = isAbsoluteURL2(path4) ? new URL(path4) : new URL(baseURL + (baseURL.endsWith("/") && path4.startsWith("/") ? path4.slice(1) : path4));
+    const url = isAbsoluteURL2(path5) ? new URL(path5) : new URL(baseURL + (baseURL.endsWith("/") && path5.startsWith("/") ? path5.slice(1) : path5));
     const defaultQuery = this.defaultQuery();
     const pathQuery = Object.fromEntries(url.searchParams);
     if (!isEmptyObj2(defaultQuery) || !isEmptyObj2(pathQuery)) {
@@ -70834,24 +70834,24 @@ var OpenAI = class {
    */
   async prepareRequest(request, { url, options }) {
   }
-  get(path4, opts) {
-    return this.methodRequest("get", path4, opts);
+  get(path5, opts) {
+    return this.methodRequest("get", path5, opts);
   }
-  post(path4, opts) {
-    return this.methodRequest("post", path4, opts);
+  post(path5, opts) {
+    return this.methodRequest("post", path5, opts);
   }
-  patch(path4, opts) {
-    return this.methodRequest("patch", path4, opts);
+  patch(path5, opts) {
+    return this.methodRequest("patch", path5, opts);
   }
-  put(path4, opts) {
-    return this.methodRequest("put", path4, opts);
+  put(path5, opts) {
+    return this.methodRequest("put", path5, opts);
   }
-  delete(path4, opts) {
-    return this.methodRequest("delete", path4, opts);
+  delete(path5, opts) {
+    return this.methodRequest("delete", path5, opts);
   }
-  methodRequest(method, path4, opts) {
+  methodRequest(method, path5, opts) {
     return this.request(Promise.resolve(opts).then((opts2) => {
-      return { method, path: path4, ...opts2 };
+      return { method, path: path5, ...opts2 };
     }));
   }
   request(options, remainingRetries = null) {
@@ -70970,8 +70970,8 @@ var OpenAI = class {
     }));
     return { response, options, controller, requestLogID, retryOfRequestLogID, startTime };
   }
-  getAPIList(path4, Page2, opts) {
-    return this.requestAPIList(Page2, opts && "then" in opts ? opts.then((opts2) => ({ method: "get", path: path4, ...opts2 })) : { method: "get", path: path4, ...opts });
+  getAPIList(path5, Page2, opts) {
+    return this.requestAPIList(Page2, opts && "then" in opts ? opts.then((opts2) => ({ method: "get", path: path5, ...opts2 })) : { method: "get", path: path5, ...opts });
   }
   requestAPIList(Page2, options) {
     const request = this.makeRequest(options, null, void 0);
@@ -71065,8 +71065,8 @@ var OpenAI = class {
   }
   async buildRequest(inputOptions, { retryCount = 0 } = {}) {
     const options = { ...inputOptions };
-    const { method, path: path4, query, defaultBaseURL } = options;
-    const url = this.buildURL(path4, query, defaultBaseURL);
+    const { method, path: path5, query, defaultBaseURL } = options;
+    const url = this.buildURL(path5, query, defaultBaseURL);
     if ("timeout" in options)
       validatePositiveInteger2("timeout", options.timeout);
     options.timeout = options.timeout ?? this.timeout;
@@ -71197,39 +71197,394 @@ OpenAI.Skills = Skills;
 OpenAI.Videos = Videos;
 
 // index.js
-var import_pngjs = __toESM(require_png(), 1);
-import * as fs3 from "fs";
-import * as path3 from "path";
+var import_pngjs2 = __toESM(require_png(), 1);
+import * as fs4 from "fs";
+import * as path4 from "path";
 import * as os from "os";
 import * as net from "net";
 import * as http3 from "http";
 import * as https2 from "https";
 import { lookup } from "dns/promises";
 import { fileURLToPath } from "url";
-var __dirname = path3.dirname(fileURLToPath(import.meta.url));
+
+// lib/measurements.js
+var import_pngjs = __toESM(require_png(), 1);
+import * as fs3 from "fs";
+import * as path3 from "path";
+function srgbToLinear(c) {
+  c = c / 255;
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+function linearRGBToOklab(r2, g, b) {
+  const lLong = 0.4122214708 * r2 + 0.5363325363 * g + 0.0514459929 * b;
+  const mLong = 0.2119034982 * r2 + 0.6806995451 * g + 0.1073969566 * b;
+  const sLong = 0.0883024619 * r2 + 0.2817188376 * g + 0.6299787005 * b;
+  const l_ = Math.cbrt(lLong);
+  const m_ = Math.cbrt(mLong);
+  const s_ = Math.cbrt(sLong);
+  return {
+    L: 0.2104542553 * l_ + 0.793617785 * m_ - 0.0040720468 * s_,
+    a: 1.9779984951 * l_ - 2.428592205 * m_ + 0.4505937099 * s_,
+    b: 0.0259040371 * l_ + 0.7827717662 * m_ - 0.808675766 * s_
+  };
+}
+function oklabToOklch(L, a, b) {
+  const c = Math.sqrt(a * a + b * b);
+  let h2 = Math.atan2(b, a) * 180 / Math.PI;
+  if (h2 < 0) h2 += 360;
+  return { l: L, c, h: h2 };
+}
+function srgbBytesToOklch(r2, g, b) {
+  const lab = linearRGBToOklab(
+    srgbToLinear(r2),
+    srgbToLinear(g),
+    srgbToLinear(b)
+  );
+  return oklabToOklch(lab.L, lab.a, lab.b);
+}
+function readPNG(absolutePath) {
+  const buf = fs3.readFileSync(absolutePath);
+  const png = import_pngjs.PNG.sync.read(buf);
+  return png;
+}
+function downsample(png, maxEdge = 256) {
+  const { width: W, height: H, data } = png;
+  const scale = Math.max(W, H) / maxEdge;
+  if (scale <= 1) {
+    return { width: W, height: H, pixels: data, originalScale: 1 };
+  }
+  const newW = Math.max(1, Math.round(W / scale));
+  const newH = Math.max(1, Math.round(H / scale));
+  const out = new Uint8Array(newW * newH * 4);
+  for (let y = 0; y < newH; y++) {
+    const y0 = Math.floor(y / newH * H);
+    const y1 = Math.min(H, Math.floor((y + 1) / newH * H));
+    for (let x2 = 0; x2 < newW; x2++) {
+      const x0 = Math.floor(x2 / newW * W);
+      const x1 = Math.min(W, Math.floor((x2 + 1) / newW * W));
+      let sumR = 0, sumG = 0, sumB = 0, sumA = 0, count = 0;
+      for (let yy = y0; yy < y1; yy++) {
+        for (let xx = x0; xx < x1; xx++) {
+          const idx = (yy * W + xx) * 4;
+          sumR += data[idx];
+          sumG += data[idx + 1];
+          sumB += data[idx + 2];
+          sumA += data[idx + 3];
+          count++;
+        }
+      }
+      const oi = (y * newW + x2) * 4;
+      out[oi] = Math.round(sumR / count);
+      out[oi + 1] = Math.round(sumG / count);
+      out[oi + 2] = Math.round(sumB / count);
+      out[oi + 3] = Math.round(sumA / count);
+    }
+  }
+  return { width: newW, height: newH, pixels: out, originalScale: scale };
+}
+function oklchToCartesian({ l, c, h: h2 }) {
+  const rad = h2 * Math.PI / 180;
+  return [l, c * Math.cos(rad), c * Math.sin(rad)];
+}
+function cartesianToOklch([l, x2, y]) {
+  const c = Math.sqrt(x2 * x2 + y * y);
+  let h2 = Math.atan2(y, x2) * 180 / Math.PI;
+  if (h2 < 0) h2 += 360;
+  return { l, c, h: h2 };
+}
+function dist3(a, b) {
+  const dx = a[0] - b[0], dy = a[1] - b[1], dz = a[2] - b[2];
+  return dx * dx + dy * dy + dz * dz;
+}
+function kmeansOklch(samples, k = 8, maxIters = 12) {
+  if (samples.length === 0) return [];
+  if (samples.length <= k) {
+    return samples.map((s2) => ({ centroid: s2, members: [s2] }));
+  }
+  const cartesians = samples.map(oklchToCartesian);
+  const centroidsCart = [];
+  centroidsCart.push(cartesians[Math.floor(Math.random() * cartesians.length)]);
+  while (centroidsCart.length < k) {
+    const distances = cartesians.map(
+      (p) => Math.min(...centroidsCart.map((c) => dist3(p, c)))
+    );
+    const sum = distances.reduce((a, b) => a + b, 0);
+    if (sum === 0) break;
+    let r2 = Math.random() * sum;
+    let pickedIdx = 0;
+    for (let i2 = 0; i2 < distances.length; i2++) {
+      r2 -= distances[i2];
+      if (r2 <= 0) {
+        pickedIdx = i2;
+        break;
+      }
+    }
+    centroidsCart.push(cartesians[pickedIdx]);
+  }
+  let assignments = new Array(cartesians.length);
+  for (let iter = 0; iter < maxIters; iter++) {
+    let changed = false;
+    for (let i2 = 0; i2 < cartesians.length; i2++) {
+      let bestIdx = 0;
+      let bestDist = Infinity;
+      for (let c = 0; c < centroidsCart.length; c++) {
+        const d = dist3(cartesians[i2], centroidsCart[c]);
+        if (d < bestDist) {
+          bestDist = d;
+          bestIdx = c;
+        }
+      }
+      if (assignments[i2] !== bestIdx) {
+        assignments[i2] = bestIdx;
+        changed = true;
+      }
+    }
+    if (!changed && iter > 0) break;
+    const newCentroids = centroidsCart.map(() => [0, 0, 0, 0]);
+    for (let i2 = 0; i2 < cartesians.length; i2++) {
+      const a = assignments[i2];
+      newCentroids[a][0] += cartesians[i2][0];
+      newCentroids[a][1] += cartesians[i2][1];
+      newCentroids[a][2] += cartesians[i2][2];
+      newCentroids[a][3] += 1;
+    }
+    for (let c = 0; c < newCentroids.length; c++) {
+      const [sx, sy, sz, n] = newCentroids[c];
+      if (n > 0) centroidsCart[c] = [sx / n, sy / n, sz / n];
+    }
+  }
+  const counts = new Array(centroidsCart.length).fill(0);
+  for (const a of assignments) counts[a]++;
+  return centroidsCart.map((c, i2) => ({
+    centroid: cartesianToOklch(c),
+    count: counts[i2]
+  }));
+}
+function analyzeBorder(downsampled) {
+  const { width: W, height: H, pixels } = downsampled;
+  const samples = [];
+  const ringDepth = Math.max(1, Math.floor(Math.min(W, H) * 0.03));
+  for (let y = 0; y < H; y++) {
+    for (let x2 = 0; x2 < W; x2++) {
+      const onTop = y < ringDepth;
+      const onBot = y >= H - ringDepth;
+      const onLeft = x2 < ringDepth;
+      const onRight = x2 >= W - ringDepth;
+      if (!(onTop || onBot || onLeft || onRight)) continue;
+      const i2 = (y * W + x2) * 4;
+      samples.push([pixels[i2], pixels[i2 + 1], pixels[i2 + 2], pixels[i2 + 3]]);
+    }
+  }
+  if (samples.length === 0) {
+    return {
+      color: { r: 0, g: 0, b: 0, a: 255 },
+      uniformity_score: 1
+    };
+  }
+  let sumR = 0, sumG = 0, sumB = 0, sumA = 0;
+  for (const s2 of samples) {
+    sumR += s2[0];
+    sumG += s2[1];
+    sumB += s2[2];
+    sumA += s2[3];
+  }
+  const meanR = sumR / samples.length;
+  const meanG = sumG / samples.length;
+  const meanB = sumB / samples.length;
+  const meanA = sumA / samples.length;
+  let varSum = 0;
+  for (const s2 of samples) {
+    const dr = s2[0] - meanR;
+    const dg = s2[1] - meanG;
+    const db = s2[2] - meanB;
+    varSum += dr * dr + dg * dg + db * db;
+  }
+  const variance = varSum / samples.length;
+  const stddev = Math.sqrt(variance);
+  const uniformity_score = Math.max(0, Math.min(1, 1 - stddev / 64));
+  return {
+    color: {
+      r: Math.round(meanR),
+      g: Math.round(meanG),
+      b: Math.round(meanB),
+      a: Math.round(meanA)
+    },
+    uniformity_score
+  };
+}
+function buildSubjectMask(downsampled, bgColor) {
+  const { width: W, height: H, pixels } = downsampled;
+  const mask = new Uint8Array(W * H);
+  const threshold = 32;
+  for (let y = 0; y < H; y++) {
+    for (let x2 = 0; x2 < W; x2++) {
+      const i2 = (y * W + x2) * 4;
+      const a = pixels[i2 + 3];
+      if (a < 128) {
+        mask[y * W + x2] = 0;
+        continue;
+      }
+      const dr = pixels[i2] - bgColor.r;
+      const dg = pixels[i2 + 1] - bgColor.g;
+      const db = pixels[i2 + 2] - bgColor.b;
+      const d = Math.sqrt(dr * dr + dg * dg + db * db);
+      mask[y * W + x2] = d > threshold ? 1 : 0;
+    }
+  }
+  return mask;
+}
+function fillStats(mask, W, H) {
+  let count = 0;
+  let minX = W, minY = H, maxX = -1, maxY = -1;
+  for (let y = 0; y < H; y++) {
+    for (let x2 = 0; x2 < W; x2++) {
+      if (mask[y * W + x2]) {
+        count++;
+        if (x2 < minX) minX = x2;
+        if (x2 > maxX) maxX = x2;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  const fillPct = count / (W * H);
+  const bbox = count > 0 ? { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 } : null;
+  return { fill_pct: fillPct, bounding_box: bbox };
+}
+function edgeDensity(downsampled) {
+  const { width: W, height: H, pixels } = downsampled;
+  const gray = new Float32Array(W * H);
+  for (let i2 = 0; i2 < W * H; i2++) {
+    const p = i2 * 4;
+    gray[i2] = 0.2126 * pixels[p] + 0.7152 * pixels[p + 1] + 0.0722 * pixels[p + 2];
+  }
+  let sumMag = 0;
+  let count = 0;
+  for (let y = 1; y < H - 1; y++) {
+    for (let x2 = 1; x2 < W - 1; x2++) {
+      const tl = gray[(y - 1) * W + (x2 - 1)];
+      const tc = gray[(y - 1) * W + x2];
+      const tr = gray[(y - 1) * W + (x2 + 1)];
+      const ml = gray[y * W + (x2 - 1)];
+      const mr = gray[y * W + (x2 + 1)];
+      const bl = gray[(y + 1) * W + (x2 - 1)];
+      const bc = gray[(y + 1) * W + x2];
+      const br = gray[(y + 1) * W + (x2 + 1)];
+      const gx = -tl - 2 * ml - bl + tr + 2 * mr + br;
+      const gy = -tl - 2 * tc - tr + bl + 2 * bc + br;
+      sumMag += Math.sqrt(gx * gx + gy * gy);
+      count++;
+    }
+  }
+  const meanMag = count > 0 ? sumMag / count : 0;
+  return Math.min(1, meanMag / 1020);
+}
+function samplePixelsForClustering(downsampled, mask, maxSamples = 4e3) {
+  const { width: W, height: H, pixels } = downsampled;
+  const subjectPixels = [];
+  for (let y = 0; y < H; y++) {
+    for (let x2 = 0; x2 < W; x2++) {
+      if (mask[y * W + x2]) {
+        const i2 = (y * W + x2) * 4;
+        subjectPixels.push([pixels[i2], pixels[i2 + 1], pixels[i2 + 2]]);
+      }
+    }
+  }
+  if (subjectPixels.length === 0) return [];
+  let chosen = subjectPixels;
+  if (subjectPixels.length > maxSamples) {
+    chosen = [];
+    const step = subjectPixels.length / maxSamples;
+    for (let i2 = 0; i2 < maxSamples; i2++) {
+      chosen.push(subjectPixels[Math.floor(i2 * step)]);
+    }
+  }
+  return chosen.map(([r2, g, b]) => srgbBytesToOklch(r2, g, b));
+}
+async function measureImage(absolutePath) {
+  if (!path3.isAbsolute(absolutePath)) {
+    throw new Error(
+      `measureImage requires an absolute path. Got: "${absolutePath}"`
+    );
+  }
+  if (!fs3.existsSync(absolutePath)) {
+    throw new Error(`Image not found: ${absolutePath}`);
+  }
+  const png = readPNG(absolutePath);
+  const W = png.width, H = png.height;
+  const down = downsample(png, 256);
+  const border = analyzeBorder(down);
+  const mask = buildSubjectMask(down, border.color);
+  const { fill_pct, bounding_box } = fillStats(mask, down.width, down.height);
+  const edge_density = edgeDensity(down);
+  const samples = samplePixelsForClustering(down, mask);
+  const clusters = kmeansOklch(samples, 8);
+  const totalCount = clusters.reduce((acc, c) => acc + (c.count || 0), 0) || 1;
+  const dominant = clusters.filter((c) => c.count > 0).map((c) => ({
+    l: round3(c.centroid.l),
+    c: round3(c.centroid.c),
+    h: Math.round(c.centroid.h),
+    pct: round3(c.count / totalCount)
+  })).sort((a, b) => b.pct - a.pct);
+  const bgOklch = srgbBytesToOklch(border.color.r, border.color.g, border.color.b);
+  return {
+    measured_iteration: path3.basename(absolutePath),
+    last_measured: (/* @__PURE__ */ new Date()).toISOString(),
+    width: W,
+    height: H,
+    // SUMMARY fields (embedded into project.json.assets.*.metrics_summary):
+    dominant_color_oklch: dominant.slice(0, 6),
+    fill_pct: round3(fill_pct),
+    bg_uniformity_score: round3(border.uniformity_score),
+    edge_density: round3(edge_density),
+    // DETAILED fields (sidecar only):
+    bounding_box,
+    background: {
+      rgb: border.color,
+      oklch: {
+        l: round3(bgOklch.l),
+        c: round3(bgOklch.c),
+        h: Math.round(bgOklch.h)
+      },
+      uniformity_score: round3(border.uniformity_score)
+    },
+    cluster_count: dominant.length
+  };
+}
+function round3(n) {
+  return Math.round(n * 1e3) / 1e3;
+}
+function writeSidecar(imagePath, metrics) {
+  const sidecarPath = imagePath.replace(/\.png$/i, ".metrics.json");
+  fs3.writeFileSync(sidecarPath, JSON.stringify(metrics, null, 2));
+  return sidecarPath;
+}
+
+// index.js
+var __dirname = path4.dirname(fileURLToPath(import.meta.url));
 function findPluginRoot(startDir) {
   let dir = startDir;
   for (let i2 = 0; i2 < 4; i2++) {
-    if (fs3.existsSync(path3.join(dir, ".claude-plugin", "plugin.json"))) return dir;
-    const parent = path3.dirname(dir);
+    if (fs4.existsSync(path4.join(dir, ".claude-plugin", "plugin.json"))) return dir;
+    const parent = path4.dirname(dir);
     if (parent === dir) break;
     dir = parent;
   }
-  return path3.resolve(startDir, "..");
+  return path4.resolve(startDir, "..");
 }
 var PLUGIN_ROOT = findPluginRoot(__dirname);
 function readServerVersion() {
   const candidates = [
-    path3.join(__dirname, "package.json"),
+    path4.join(__dirname, "package.json"),
     // unbundled (nb2-mcp-server/index.js)
-    path3.join(__dirname, "..", "package.json"),
+    path4.join(__dirname, "..", "package.json"),
     // bundled (nb2-mcp-server/dist/index.mjs)
-    path3.join(PLUGIN_ROOT, "nb2-mcp-server", "package.json")
+    path4.join(PLUGIN_ROOT, "nb2-mcp-server", "package.json")
     // any layout via plugin root
   ];
   for (const p of candidates) {
     try {
-      const v = JSON.parse(fs3.readFileSync(p, "utf8")).version;
+      const v = JSON.parse(fs4.readFileSync(p, "utf8")).version;
       if (v) return v;
     } catch {
     }
@@ -71239,38 +71594,51 @@ function readServerVersion() {
 var SERVER_VERSION = readServerVersion();
 try {
   const { default: dotenv } = await Promise.resolve().then(() => __toESM(require_main(), 1));
-  const userEnv = path3.join(os.homedir(), ".h5g-slot-art-creator", ".env");
-  const pluginEnv = path3.join(PLUGIN_ROOT, ".env");
-  if (fs3.existsSync(userEnv)) {
+  const userEnv = path4.join(os.homedir(), ".h5g-slot-art-creator", ".env");
+  const pluginEnv = path4.join(PLUGIN_ROOT, ".env");
+  if (fs4.existsSync(userEnv)) {
     dotenv.config({ path: userEnv, override: false });
   }
-  if (fs3.existsSync(pluginEnv)) {
+  if (fs4.existsSync(pluginEnv)) {
     dotenv.config({ path: pluginEnv, override: false });
   }
 } catch {
 }
 function resolveOutputDir(rawOut) {
-  if (!rawOut) return path3.join(os.homedir(), "Pictures", "claude_nb2");
-  const expanded = rawOut.startsWith("~") ? path3.join(os.homedir(), rawOut.slice(1)) : rawOut;
-  if (path3.isAbsolute(expanded)) return expanded;
-  return path3.join(os.homedir(), "Pictures", "claude_nb2", rawOut);
+  if (!rawOut) return path4.join(os.homedir(), "Pictures", "claude_nb2");
+  const expanded = rawOut.startsWith("~") ? path4.join(os.homedir(), rawOut.slice(1)) : rawOut;
+  if (path4.isAbsolute(expanded)) return expanded;
+  throw new Error(
+    `output_dir must be absolute. Got: "${rawOut}" (relative).
+\u2192 Inside a /slot-step-* skill, pass:
+    path.join(project_root, "<Category>")
+  where <Category> is one of Key_Art, Symbol_Sheets, Symbol_Art,
+  Backgrounds, Avatars, Bezels, HUD, Paytables, Win_Banners,
+  Bonus_Screens, Multipliers, Logos, Lobby_Tiles, or QA_Reports.
+  See shared/asset_naming.md for the full category list.
+\u2192 For ad-hoc generation outside a project workflow, pass an absolute
+  path like "~/Pictures/claude_nb2" (tilde is expanded) or omit
+  output_dir entirely to fall back to that default.
+\u2192 If you don't have an active project yet, run /slot-step-01 to set
+  one up \u2014 the resulting project_root is the prefix every skill joins.`
+  );
 }
 function ensureDir(dir) {
-  fs3.mkdirSync(dir, { recursive: true });
+  fs4.mkdirSync(dir, { recursive: true });
 }
 function uniqueName(outDir, baseName, ext = ".png") {
   ensureDir(outDir);
-  let candidate = path3.join(outDir, `${baseName}${ext}`);
+  let candidate = path4.join(outDir, `${baseName}${ext}`);
   let i2 = 1;
   while (true) {
     try {
-      const fd = fs3.openSync(candidate, "wx");
-      fs3.closeSync(fd);
+      const fd = fs4.openSync(candidate, "wx");
+      fs4.closeSync(fd);
       return candidate;
     } catch (err) {
       if (err.code !== "EEXIST") throw err;
       i2 += 1;
-      candidate = path3.join(outDir, `${baseName}_${i2}${ext}`);
+      candidate = path4.join(outDir, `${baseName}_${i2}${ext}`);
     }
   }
 }
@@ -71281,7 +71649,7 @@ function isRemoteUrl(value) {
 }
 function sanitizeAssetName(rawName, fallback) {
   const value = (rawName || fallback || "image").trim();
-  if (value.includes("/") || value.includes("\\") || value.includes("..") || path3.basename(value) !== value) {
+  if (value.includes("/") || value.includes("\\") || value.includes("..") || path4.basename(value) !== value) {
     throw new Error("asset_name must be a filename only, without path separators or traversal");
   }
   const slug = value.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^[.-]+|[.-]+$/g, "");
@@ -71483,19 +71851,19 @@ function buildAllowedImageRoots() {
   const add = (p) => {
     if (!p) return;
     try {
-      const real = fs3.realpathSync(p);
+      const real = fs4.realpathSync(p);
       roots.add(real);
     } catch {
-      roots.add(path3.resolve(p));
+      roots.add(path4.resolve(p));
     }
   };
-  add(path3.join(os.homedir(), "Pictures", "claude_nb2"));
-  add(path3.join(os.homedir(), ".h5g-slot-art-creator", "inputs"));
+  add(path4.join(os.homedir(), "Pictures", "claude_nb2"));
+  add(path4.join(os.homedir(), ".h5g-slot-art-creator", "inputs"));
   add(PLUGIN_ROOT);
   try {
-    const pointerPath = path3.join(os.homedir(), ".h5g-slot-active-project.json");
-    if (fs3.existsSync(pointerPath)) {
-      const pointer = JSON.parse(fs3.readFileSync(pointerPath, "utf8"));
+    const pointerPath = path4.join(os.homedir(), ".h5g-slot-active-project.json");
+    if (fs4.existsSync(pointerPath)) {
+      const pointer = JSON.parse(fs4.readFileSync(pointerPath, "utf8"));
       if (pointer.project_root) add(pointer.project_root);
     }
   } catch {
@@ -71509,32 +71877,32 @@ function buildAllowedImageRoots() {
   return Array.from(roots);
 }
 function isWithinAllowedRoot(resolvedPath, roots) {
-  const target = path3.resolve(resolvedPath);
+  const target = path4.resolve(resolvedPath);
   for (const root of roots) {
-    const rootAbs = path3.resolve(root);
-    const rel = path3.relative(rootAbs, target);
-    if (rel === "" || !rel.startsWith("..") && !path3.isAbsolute(rel)) {
+    const rootAbs = path4.resolve(root);
+    const rel = path4.relative(rootAbs, target);
+    if (rel === "" || !rel.startsWith("..") && !path4.isAbsolute(rel)) {
       return true;
     }
   }
   return false;
 }
 function validateLocalImagePath(rawPath) {
-  const expanded = rawPath.startsWith("~") ? path3.join(os.homedir(), rawPath.slice(1)) : rawPath;
-  const resolved = fs3.realpathSync(path3.resolve(expanded));
-  const stat3 = fs3.statSync(resolved);
+  const expanded = rawPath.startsWith("~") ? path4.join(os.homedir(), rawPath.slice(1)) : rawPath;
+  const resolved = fs4.realpathSync(path4.resolve(expanded));
+  const stat3 = fs4.statSync(resolved);
   if (!stat3.isFile()) {
     throw new Error(
       `Image input must be a file (not a directory): ${rawPath}. \u2192 If you meant to point at an image inside this directory, include the filename in the path.`
     );
   }
-  const ext = path3.extname(resolved).toLowerCase();
+  const ext = path4.extname(resolved).toLowerCase();
   if (!ALLOWED_IMAGE_EXTENSIONS.has(ext)) {
     throw new Error(
       `Image input must be .png, .jpg, .jpeg, or .webp (got "${ext || "no extension"}"): ${rawPath}. \u2192 If this is a chat-attached image with a temp extension, call nb2_stage_image first \u2014 it handles the mime-type\u2192extension mapping and stages the file safely.`
     );
   }
-  if (path3.basename(resolved).toLowerCase().startsWith(".env")) {
+  if (path4.basename(resolved).toLowerCase().startsWith(".env")) {
     throw new Error(`Image input cannot be an env file: ${rawPath}. \u2192 Use an actual image file.`);
   }
   const roots = buildAllowedImageRoots();
@@ -71560,7 +71928,7 @@ async function validateImageInputs(rawInputs, label) {
   if (!Array.isArray(rawInputs)) throw new Error(`${label} must be an array of image paths or URLs`);
   return await Promise.all(rawInputs.map((input) => validateImageInput(input, label)));
 }
-var STAGED_INPUTS_DIR = path3.join(os.homedir(), ".h5g-slot-art-creator", "inputs");
+var STAGED_INPUTS_DIR = path4.join(os.homedir(), ".h5g-slot-art-creator", "inputs");
 function mimeToImageExtension(mime) {
   if (!mime) return ".png";
   const m2 = mime.toLowerCase().split(";")[0].trim();
@@ -71585,7 +71953,7 @@ async function stageImage({ source, label }) {
     }
     const ext2 = mimeToImageExtension(mimeType);
     const dest2 = uniqueName(STAGED_INPUTS_DIR, safeLabel, ext2);
-    fs3.writeFileSync(dest2, buffer);
+    fs4.writeFileSync(dest2, buffer);
     const elapsed2 = ((Date.now() - t0) / 1e3).toFixed(1);
     return {
       provider: "stage",
@@ -71596,29 +71964,29 @@ async function stageImage({ source, label }) {
       source_origin: source
     };
   }
-  const expanded = source.startsWith("~") ? path3.join(os.homedir(), source.slice(1)) : source;
+  const expanded = source.startsWith("~") ? path4.join(os.homedir(), source.slice(1)) : source;
   let resolved;
   try {
-    resolved = fs3.realpathSync(path3.resolve(expanded));
+    resolved = fs4.realpathSync(path4.resolve(expanded));
   } catch (e2) {
     throw new Error(`source path not readable: ${source} (${e2.code || e2.message})`);
   }
-  const stat3 = fs3.statSync(resolved);
+  const stat3 = fs4.statSync(resolved);
   if (!stat3.isFile()) {
     throw new Error(`source must be a file: ${source}`);
   }
-  const ext = path3.extname(resolved).toLowerCase();
+  const ext = path4.extname(resolved).toLowerCase();
   if (!ALLOWED_IMAGE_EXTENSIONS.has(ext)) {
     throw new Error(`source must be .png, .jpg, .jpeg, or .webp (got ${ext || "(no ext)"}): ${source}`);
   }
-  if (path3.basename(resolved).toLowerCase().startsWith(".env")) {
+  if (path4.basename(resolved).toLowerCase().startsWith(".env")) {
     throw new Error(`source cannot be an env file: ${source}`);
   }
   if (stat3.size > MAX_REMOTE_IMAGE_BYTES) {
     throw new Error(`source is too large (${stat3.size} bytes; max ${MAX_REMOTE_IMAGE_BYTES})`);
   }
   const dest = uniqueName(STAGED_INPUTS_DIR, safeLabel, ext);
-  fs3.copyFileSync(resolved, dest);
+  fs4.copyFileSync(resolved, dest);
   const elapsed = ((Date.now() - t0) / 1e3).toFixed(1);
   return {
     provider: "stage",
@@ -71629,17 +71997,17 @@ async function stageImage({ source, label }) {
     source_origin: resolved
   };
 }
-function writeSidecar(pngPath, meta2) {
+function writeSidecar2(pngPath, meta2) {
   const sidecarPath = pngPath.replace(/\.png$/i, ".meta.json");
   const payload = {
     schema: "h5g_asset.meta.v1",
-    filename: path3.basename(pngPath),
+    filename: path4.basename(pngPath),
     full_path: pngPath,
     generated_at: (/* @__PURE__ */ new Date()).toISOString(),
     ...meta2
   };
   try {
-    fs3.writeFileSync(sidecarPath, JSON.stringify(payload, null, 2));
+    fs4.writeFileSync(sidecarPath, JSON.stringify(payload, null, 2));
   } catch (e2) {
     console.error(`[sidecar] failed to write ${sidecarPath}: ${e2.message}`);
   }
@@ -71671,8 +72039,8 @@ var FAL_RESOLUTION_MAP = {
   "4K": "4K"
 };
 async function uploadLocalFile(filePath) {
-  const buffer = fs3.readFileSync(filePath);
-  const ext = path3.extname(filePath).toLowerCase();
+  const buffer = fs4.readFileSync(filePath);
+  const ext = path4.extname(filePath).toLowerCase();
   const mime = imageMimeType(ext);
   const blob = new Blob([buffer], { type: mime });
   return await import_client4.fal.storage.upload(blob);
@@ -71703,7 +72071,7 @@ async function downloadImage(url, destPath) {
   const resp = await fetch(url);
   if (!resp.ok) throw new Error(`Download failed: ${resp.status} ${url}`);
   const buf = Buffer.from(await resp.arrayBuffer());
-  fs3.writeFileSync(destPath, buf);
+  fs4.writeFileSync(destPath, buf);
 }
 async function falGenerate({ prompt, outputDir, assetName, imageSize, aspectRatio, references }) {
   const falRes = FAL_RESOLUTION_MAP[imageSize] || "2K";
@@ -71736,7 +72104,7 @@ async function falGenerate({ prompt, outputDir, assetName, imageSize, aspectRati
     const dest = uniqueName(outputDir, `${assetName}${suffix}`);
     await downloadImage(images[i2].url, dest);
     saved.push(dest);
-    writeSidecar(dest, {
+    writeSidecar2(dest, {
       tool: "nb2_generate",
       provider: "fal.ai",
       model: endpoint,
@@ -71779,7 +72147,7 @@ async function falEdit({ prompt, source, outputDir, assetName, imageSize, aspect
     const dest = uniqueName(outputDir, `${assetName}${suffix}`);
     await downloadImage(images[i2].url, dest);
     saved.push(dest);
-    writeSidecar(dest, {
+    writeSidecar2(dest, {
       tool: "nb2_edit",
       provider: "fal.ai",
       model: "fal-ai/nano-banana-2/edit",
@@ -71821,11 +72189,11 @@ async function falSmartResize({ source, outputDir, assetName, targetSizes, promp
   for (let i2 = 0; i2 < images.length; i2++) {
     const requestedSize = sizes[i2] || null;
     const meta2 = perTargetResults[i2] || {};
-    const sizeSuffix = requestedSize ? `_${requestedSize}` : `_${i2 + 1}`;
+    const sizeSuffix = requestedSize ? `_resize_${requestedSize.replace("x", "_")}` : `_resize_${i2 + 1}`;
     const dest = uniqueName(outputDir, `${assetName}${sizeSuffix}`);
     await downloadImage(images[i2].url, dest);
     saved.push(dest);
-    writeSidecar(dest, {
+    writeSidecar2(dest, {
       tool: "nb2_smart_resize",
       provider: "fal.ai",
       model: "fal-ai/smart-resize",
@@ -71847,8 +72215,8 @@ async function falSmartResize({ source, outputDir, assetName, targetSizes, promp
   return { provider: "fal.ai", model: "fal-ai/smart-resize", resolution: sizes.join(", "), elapsed, paths: saved };
 }
 function imagePartFromFile(filePath) {
-  const data = fs3.readFileSync(filePath);
-  const ext = path3.extname(filePath).toLowerCase();
+  const data = fs4.readFileSync(filePath);
+  const ext = path4.extname(filePath).toLowerCase();
   const mime = imageMimeType(ext);
   return {
     inlineData: {
@@ -71899,9 +72267,9 @@ async function geminiGenerate({ prompt, outputDir, assetName, imageSize, aspectR
       if (part.inlineData?.data) {
         const dest = uniqueName(outputDir, assetName);
         const buf = Buffer.from(part.inlineData.data, "base64");
-        fs3.writeFileSync(dest, buf);
+        fs4.writeFileSync(dest, buf);
         saved.push(dest);
-        writeSidecar(dest, {
+        writeSidecar2(dest, {
           tool: "nb2_generate",
           provider: "Gemini",
           model: "gemini-3.1-flash-image-preview",
@@ -71956,7 +72324,7 @@ function pickGeminiResolutionTier(targetW, targetH) {
   return "4K";
 }
 function centerCropPng(srcBuf, targetW, targetH) {
-  const src = import_pngjs.PNG.sync.read(srcBuf);
+  const src = import_pngjs2.PNG.sync.read(srcBuf);
   if (src.width < targetW || src.height < targetH) {
     throw new Error(
       `Gemini returned ${src.width}x${src.height}, smaller than requested ${targetW}x${targetH}. Try a larger target or use fal.ai for this size.`
@@ -71964,9 +72332,9 @@ function centerCropPng(srcBuf, targetW, targetH) {
   }
   const x2 = Math.floor((src.width - targetW) / 2);
   const y = Math.floor((src.height - targetH) / 2);
-  const out = new import_pngjs.PNG({ width: targetW, height: targetH });
-  import_pngjs.PNG.bitblt(src, out, x2, y, targetW, targetH, 0, 0);
-  return import_pngjs.PNG.sync.write(out);
+  const out = new import_pngjs2.PNG({ width: targetW, height: targetH });
+  import_pngjs2.PNG.bitblt(src, out, x2, y, targetW, targetH, 0, 0);
+  return import_pngjs2.PNG.sync.write(out);
 }
 async function geminiSmartResize({ source, outputDir, assetName, targetSizes, prompt }) {
   const client = new GoogleGenAI({ apiKey: GEMINI_KEY });
@@ -72030,10 +72398,10 @@ async function geminiSmartResize({ source, outputDir, assetName, targetSizes, pr
       );
     }
     const croppedBuf = centerCropPng(imageBuf, targetW, targetH);
-    const dest = uniqueName(outputDir, `${assetName}_${size}`);
-    fs3.writeFileSync(dest, croppedBuf);
+    const dest = uniqueName(outputDir, `${assetName}_resize_${size.replace("x", "_")}`);
+    fs4.writeFileSync(dest, croppedBuf);
     saved.push(dest);
-    writeSidecar(dest, {
+    writeSidecar2(dest, {
       tool: "nb2_smart_resize",
       provider: "Gemini",
       model: "gemini-3.1-flash-image-preview",
@@ -72114,7 +72482,7 @@ function saveB64Image(b64Data, outputFormat, outputDir, baseName) {
   const ext = outputFormat === "jpeg" ? ".jpg" : outputFormat === "webp" ? ".webp" : ".png";
   const dest = uniqueName(outputDir, baseName, ext);
   const buf = Buffer.from(b64Data, "base64");
-  fs3.writeFileSync(dest, buf);
+  fs4.writeFileSync(dest, buf);
   return dest;
 }
 async function gpt2ReadImageInput(srcPath) {
@@ -72123,9 +72491,9 @@ async function gpt2ReadImageInput(srcPath) {
     const ext2 = mimeToImageExtension(mimeType).slice(1);
     return await OpenAI.toFile(buffer, `image.${ext2}`, { type: mimeType });
   }
-  const buf = fs3.readFileSync(srcPath);
-  const ext = path3.extname(srcPath).toLowerCase().slice(1) || "png";
-  const mime = imageMimeType(path3.extname(srcPath).toLowerCase());
+  const buf = fs4.readFileSync(srcPath);
+  const ext = path4.extname(srcPath).toLowerCase().slice(1) || "png";
+  const mime = imageMimeType(path4.extname(srcPath).toLowerCase());
   return await OpenAI.toFile(buf, `image.${ext}`, { type: mime });
 }
 async function gpt2Generate({ prompt, outputDir, assetName, imageSize, aspectRatio, quality, n }) {
@@ -72161,7 +72529,7 @@ async function gpt2Generate({ prompt, outputDir, assetName, imageSize, aspectRat
     const suffix = data.length > 1 ? `_${i2 + 1}` : "";
     const dest = saveB64Image(b64, "png", outputDir, `${assetName}${suffix}`);
     saved.push(dest);
-    writeSidecar(dest, {
+    writeSidecar2(dest, {
       tool: "gpt2_generate",
       provider: "OpenAI",
       model: "gpt-image-2",
@@ -72219,7 +72587,7 @@ async function gpt2Edit({ prompt, source, mask, outputDir, assetName, imageSize,
     const suffix = data.length > 1 ? `_${i2 + 1}` : "";
     const dest = saveB64Image(b64, "png", outputDir, `${assetName}${suffix}`);
     saved.push(dest);
-    writeSidecar(dest, {
+    writeSidecar2(dest, {
       tool: "gpt2_edit",
       provider: "OpenAI",
       model: "gpt-image-2",
@@ -72243,7 +72611,7 @@ async function gpt2Edit({ prompt, source, mask, outputDir, assetName, imageSize,
   };
 }
 function formatResult(result, header) {
-  const folder = result.paths.length > 0 ? path3.dirname(result.paths[0]) : "(no output saved)";
+  const folder = result.paths.length > 0 ? path4.dirname(result.paths[0]) : "(no output saved)";
   const fileUri = folder !== "(no output saved)" ? "file:///" + folder.replace(/\\/g, "/") : null;
   const lines = [
     header,
@@ -72264,6 +72632,41 @@ function formatResult(result, header) {
 }
 function formatError2(label, err) {
   return [{ type: "text", text: `ERROR (${label}): ${err.message || err}` }];
+}
+async function maybeAttachMetrics(result, args, label) {
+  if (!args || args.measure !== true) return null;
+  if (!result || !Array.isArray(result.paths) || result.paths.length === 0) return null;
+  const attached = [];
+  for (const p of result.paths) {
+    try {
+      const metrics = await measureImage(p);
+      const sidecar = writeSidecar(p, metrics);
+      attached.push({
+        path: p,
+        sidecar,
+        summary: {
+          dominant_color_oklch: metrics.dominant_color_oklch,
+          fill_pct: metrics.fill_pct,
+          bg_uniformity_score: metrics.bg_uniformity_score,
+          edge_density: metrics.edge_density
+        }
+      });
+    } catch (err) {
+      attached.push({ path: p, error: err.message || String(err) });
+    }
+  }
+  return {
+    type: "text",
+    text: `
+Measurement (opt-in, ${label}):
+` + attached.map(
+      (a) => a.error ? `  - ${a.path}
+      measurement FAILED: ${a.error}` : `  - ${a.path}
+      sidecar: ${a.sidecar}
+      fill_pct: ${a.summary.fill_pct}, bg_uniformity: ${a.summary.bg_uniformity_score}, edge_density: ${a.summary.edge_density}
+      dominant_color_oklch (top ${a.summary.dominant_color_oklch.length}): ` + a.summary.dominant_color_oklch.slice(0, 3).map((c) => `{l:${c.l}, c:${c.c}, h:${c.h}, pct:${c.pct}}`).join(", ")
+    ).join("\n")
+  };
 }
 var TOOLS = [
   {
@@ -72290,6 +72693,11 @@ var TOOLS = [
           type: "array",
           items: { type: "string" },
           description: "Optional list of reference image paths or URLs (style references)."
+        },
+        measure: {
+          type: "boolean",
+          description: "Opt-in: run nb2_measure on each output PNG after generation, write a sidecar <basename>.metrics.json next to it, and append the metrics summary to the response. Default false \u2014 measurement is an explicit choice (adds ~1-2s per output). Used by /slot-step-08 for numeric audit checks.",
+          default: false
         }
       },
       required: ["prompt"]
@@ -72318,6 +72726,11 @@ var TOOLS = [
           type: "array",
           items: { type: "string" },
           description: "Additional reference images (beyond the source) to guide the edit."
+        },
+        measure: {
+          type: "boolean",
+          description: "Opt-in: run nb2_measure on each output PNG after generation, write a sidecar <basename>.metrics.json next to it, and append the metrics summary to the response. Default false. Used by /slot-step-08 for numeric audit checks.",
+          default: false
         }
       },
       required: ["prompt", "source"]
@@ -72337,6 +72750,11 @@ var TOOLS = [
           type: "string",
           enum: ["1K", "2K", "4K"],
           default: "4K"
+        },
+        measure: {
+          type: "boolean",
+          description: "Opt-in: run nb2_measure on each output PNG after upscale, write a sidecar <basename>.metrics.json next to it, and append the metrics summary to the response. Default false. Used by /slot-step-08 to verify the upscale preserved fill % and dominant colors against the source.",
+          default: false
         }
       },
       required: ["prompt", "source"]
@@ -72415,6 +72833,11 @@ var TOOLS = [
           maximum: 10,
           description: "Number of variants to generate in one call. Default: 1.",
           default: 1
+        },
+        measure: {
+          type: "boolean",
+          description: "Opt-in: run nb2_measure on each output PNG after generation, write a sidecar <basename>.metrics.json next to it, and append the metrics summary to the response. Default false. Used by /slot-step-08 for numeric audit checks on text-heavy assets.",
+          default: false
         }
       },
       required: ["prompt"]
@@ -72456,9 +72879,28 @@ var TOOLS = [
           minimum: 1,
           maximum: 10,
           default: 1
+        },
+        measure: {
+          type: "boolean",
+          description: "Opt-in: run nb2_measure on each output PNG after edit, write a sidecar <basename>.metrics.json next to it, and append the metrics summary to the response. Default false. Used by /slot-step-08 to verify the edit preserved the source's structural metrics.",
+          default: false
         }
       },
       required: ["prompt", "source"]
+    }
+  },
+  {
+    name: "nb2_measure",
+    description: "Measure an existing PNG and return OKLCH dominant colors, pixel fill %, background uniformity, edge density, and bounding box. Writes a sidecar <basename>.metrics.json next to the image. Used by /slot-step-08 to drive numeric audit checks (tier-pairwise saturation deltas, LP warmth scan, non-flat-BG detection). Opt-in \u2014 generation tools don't auto-measure unless you pass `measure: true`. Read-only with respect to the image itself (only writes the sidecar JSON).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        source: {
+          type: "string",
+          description: "Absolute path to a PNG. Must be inside an allowed root (run nb2_stage_image first if it's chat-attached)."
+        }
+      },
+      required: ["source"]
     }
   }
 ];
@@ -72481,7 +72923,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         aspectRatio: args.aspect_ratio || null,
         references
       });
-      return { content: formatResult(result, "nb2_generate OK") };
+      const content = formatResult(result, "nb2_generate OK");
+      const metricsBlock = await maybeAttachMetrics(result, args, "nb2_generate");
+      if (metricsBlock) content.push(metricsBlock);
+      return { content };
     }
     if (name === "nb2_edit") {
       const assetName = sanitizeAssetName(args.asset_name, "edit");
@@ -72496,7 +72941,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         aspectRatio: args.aspect_ratio || null,
         extraReferences
       });
-      return { content: formatResult(result, "nb2_edit OK") };
+      const content = formatResult(result, "nb2_edit OK");
+      const metricsBlock = await maybeAttachMetrics(result, args, "nb2_edit");
+      if (metricsBlock) content.push(metricsBlock);
+      return { content };
     }
     if (name === "nb2_upscale") {
       const assetName = sanitizeAssetName(args.asset_name, "upscale");
@@ -72510,7 +72958,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         aspectRatio: null,
         extraReferences: null
       });
-      return { content: formatResult(result, "nb2_upscale OK") };
+      const content = formatResult(result, "nb2_upscale OK");
+      const metricsBlock = await maybeAttachMetrics(result, args, "nb2_upscale");
+      if (metricsBlock) content.push(metricsBlock);
+      return { content };
     }
     if (name === "nb2_smart_resize") {
       const targetSizes = validateTargetSizes(args.target_sizes);
@@ -72568,7 +73019,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         quality: args.quality || "high",
         n: args.n || 1
       });
-      return { content: formatResult(result, "gpt2_generate OK (OpenAI / gpt-image-2)") };
+      const content = formatResult(result, "gpt2_generate OK (OpenAI / gpt-image-2)");
+      const metricsBlock = await maybeAttachMetrics(result, args, "gpt2_generate");
+      if (metricsBlock) content.push(metricsBlock);
+      return { content };
     }
     if (name === "gpt2_edit") {
       const assetName = sanitizeAssetName(args.asset_name, "edit");
@@ -72587,7 +73041,40 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         quality: args.quality || "high",
         n: args.n || 1
       });
-      return { content: formatResult(result, "gpt2_edit OK (OpenAI / gpt-image-2)") };
+      const content = formatResult(result, "gpt2_edit OK (OpenAI / gpt-image-2)");
+      const metricsBlock = await maybeAttachMetrics(result, args, "gpt2_edit");
+      if (metricsBlock) content.push(metricsBlock);
+      return { content };
+    }
+    if (name === "nb2_measure") {
+      const source = await validateImageInput(args.source, "source");
+      const metrics = await measureImage(source);
+      const sidecar = writeSidecar(source, metrics);
+      const lines = [
+        "nb2_measure OK",
+        `  Source: ${source}`,
+        `  Sidecar: ${sidecar}`,
+        `  Dimensions: ${metrics.width}x${metrics.height}`,
+        `  fill_pct: ${metrics.fill_pct}`,
+        `  bg_uniformity_score: ${metrics.bg_uniformity_score}`,
+        `  edge_density: ${metrics.edge_density}`,
+        `  bounding_box: ${metrics.bounding_box ? `${metrics.bounding_box.w}x${metrics.bounding_box.h} at (${metrics.bounding_box.x}, ${metrics.bounding_box.y})` : "(none)"}`,
+        `  dominant_color_oklch (top ${metrics.dominant_color_oklch.length}):`
+      ];
+      for (const c of metrics.dominant_color_oklch) {
+        lines.push(`    - l:${c.l} c:${c.c} h:${c.h}\xB0 (${(c.pct * 100).toFixed(1)}%)`);
+      }
+      lines.push("");
+      lines.push("Summary (the subset embedded into project.json.assets.*.metrics_summary):");
+      lines.push(JSON.stringify({
+        measured_iteration: metrics.measured_iteration,
+        last_measured: metrics.last_measured,
+        dominant_color_oklch: metrics.dominant_color_oklch,
+        fill_pct: metrics.fill_pct,
+        bg_uniformity_score: metrics.bg_uniformity_score,
+        edge_density: metrics.edge_density
+      }, null, 2));
+      return { content: [{ type: "text", text: lines.join("\n") }] };
     }
     throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
   } catch (err) {

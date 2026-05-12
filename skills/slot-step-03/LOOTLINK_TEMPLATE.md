@@ -12,6 +12,46 @@ If a brief lists any of these symbol prefixes, generate using the
 patterns below: `COL`, `ACT`, `HOT_x2`+, `HOT_ADD`, `HOT_COMB`,
 `HOT_COLLAPSE`, `HOT_PERSIST`, `BAG`, `MOJ`.
 
+This template uses the **bracketed-block prompt format** from
+`shared/nb2_prompting.md` §9.2. The game's **Style Anchor** (§9.2.1)
+is prepended to every prompt verbatim — it lives in
+`project.json.style_anchor.text`. The `<style_lock>` / `<reference>`
+placeholders below are substituted with the same text at
+prompt-assembly time.
+
+### Real-world GDDs often use SF / WY / BWY for Loot Link symbols
+
+The prefix vocabulary above (`COL`, `ACT`, `HOT_*`, etc.) is the
+plugin's **canonical** Loot Link taxonomy. Actual GDDs across the
+H5G library don't always follow it. The Symbol Catalog of 26 shipped
+games shows Loot Link mechanics labeled with generic prefixes:
+
+| Game | Loot Link role | Prefix the GDD actually uses |
+|---|---|---|
+| Bankrush Beta | Loot Link trigger | `SF7`–`SF11`, `WY1` |
+| Bankrush Beta | Hotspot modifier (5 types) | `SF2`–`SF6` |
+| Bankrush Beta | Upgradable gold-bar collector | `SF1` |
+| Bankrush Gamma | Hotspot modifier (5 types) | `SF2`–`SF6` |
+| Bankrush Gamma | Upgradable collector | `SF1` |
+| Billionaire's Beta | Immediate-payout collector | `SF1` |
+| Billionaire's Beta | Bonus value collector | `SF2` |
+| Billionaire's Gamma | Loot Link bonus trigger | `SF1` |
+| Chevy family | Loot Link activator | `SF1` |
+| Da Vinci Deluxe Ways 2 | Loot Link trigger | `WYSIWYG` |
+| Majestic Cats | Loot Link feature start | `WYSIWYG` |
+| Tesla | Jackpot Coin (in Loot Link context) | `SF1` |
+
+**Route by the brief's `mechanic` field, not the literal prefix.** A
+symbol with `id: "SF1"` and `mechanic: "hotspot multiplier"` is a
+Loot Link hotspot multiplier — generate using this template's
+`HOT_x<N>` section even though the filename will be `SF1_001.png`
+not `HOT_x2_001.png`. The filename always matches the brief's `id`
+field; the prompt is selected by the `mechanic` field.
+
+This forward-compat principle is documented in
+`shared/symbol_vocabulary.md` → "Routing by manifest role, not
+literal prefix".
+
 ## Contents — jump to the symbol you're generating
 
 - **Universal rules** — apply to every Loot Link symbol

@@ -57,8 +57,8 @@ recessive against the stone surface.
 Bezels are an art problem where naming a specific material direction up
 front beats trying to describe the look from scratch. Pick one (or
 combine 2–3) per game and lock it into the prompt as a constraint. This
-library is condensed from `research/reel_bezel_svg_design_brief.md` —
-every entry has shipped in production.
+library is condensed from internal H5G bezel research, with every
+entry validated against shipped production assets.
 
 ### Stone families
 

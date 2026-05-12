@@ -7,9 +7,15 @@ that matches the symbol in the brief.
 If a symbol type ISN'T listed here and isn't in any other template,
 stop and ask the user to clarify the mechanic before generating.
 
+This template uses the **bracketed-block prompt format** from
+`shared/nb2_prompting.md` §9.2. The game's **Style Anchor** (§9.2.1)
+is prepended to every prompt verbatim — it lives in
+`project.json.style_anchor.text`. The `<style_lock>` placeholder
+below is substituted with the same text at prompt-assembly time.
+
 ---
 
-## Split / Double / Triple symbols
+## Split / Double / Triple symbols (including `DHP` alias)
 
 A family of pay-multiplier symbols where one cell pays as **two or three
 of itself**. Found in Split Dragon (split mechanic), Da Vinci Deluxe
@@ -19,8 +25,15 @@ ID convention:
 - `SPLIT_<base>` — generic split (pays as 2)
 - `D2_<base>` — explicit double (pays as 2)
 - `D3_<base>` — explicit triple (pays as 3)
+- `DHP`, `DHP1`+ — H5G alias form for "Double HP" (Eagles' Flight PB
+  pattern). Treat `DHP1` as functionally equivalent to `D2_HP1` —
+  same visual treatment, just a different naming convention. Filename
+  is `DHP1_001.png` (not `D2_HP1_001.png`) when the brief uses this
+  alias.
 
 Example: `D2_HP1` is "HP1 with the double overlay" and pays as 2× HP1.
+`DHP1` is the same idea expressed in H5G's compact-alias form —
+typically a doubled or split rendering of the game's HP1 character.
 
 ### Split / Double prompt
 

@@ -19,7 +19,7 @@ vision picks up shape silhouette before color.
 
 This template uses the **bracketed-block prompt format** from
 `shared/nb2_prompting.md` §9.2. The game's **Style Anchor** (§9.2.1) is
-prepended to every prompt verbatim — it lives in `project.json.style_anchor`.
+prepended to every prompt verbatim — it lives in `project.json.style_anchor.text`.
 
 ## Tier rules
 
@@ -82,7 +82,7 @@ Substitution guide:
 
 ## Pre-gen quick checks
 
-- [ ] `style_anchor` (from `project.json`) is prepended to the prompt
+- [ ] `style_anchor.text` (from `project.json.style_anchor.text`) is prepended to the prompt verbatim
 - [ ] Wild's silhouette family is DIFFERENT from every pay symbol's silhouette family
 - [ ] Wild's category is DIFFERENT from the rest of the set
 - [ ] Wild's primary color does NOT appear in `palette_leads.primary` or `.accents`

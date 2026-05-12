@@ -111,9 +111,10 @@ readability lock is repeated reliably on every call. (In Gemini terms, this
 is the equivalent of `config.systemInstruction`. fal.ai has no equivalent
 field — for fal calls, the anchor is just prepended to the prompt body.)
 
-**Build it once when the brief is finalized in `slot-step-01`.** Save it to
-`project.json` as `style_anchor` (string). Reuse verbatim on every subsequent
-generation.
+**Build it once when the brief is finalized in `slot-step-01`.** Save the
+60–90-word block to `project.json.style_anchor.text` (string field on the
+`style_anchor` object — see the field contract in `shared/project_memory.md`).
+Reuse verbatim on every subsequent generation.
 
 **Template (fill from brief):**
 
@@ -132,7 +133,7 @@ the entire set.
 **Rules:**
 - Build once per game, reuse verbatim. Do not rewrite per prompt.
 - Keep it 60–90 words. Longer dilutes attention.
-- Lives in `project.json.style_anchor` so every skill can read it.
+- Lives in `project.json.style_anchor.text` so every skill can read it.
 - Prepend to body with a blank line separator.
 
 ### §9.2.2 Reference-image discipline

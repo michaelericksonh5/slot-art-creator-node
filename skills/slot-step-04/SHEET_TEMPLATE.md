@@ -60,12 +60,20 @@ one canvas only, <aspect> aspect ratio.
 
 ## After generating
 
-Write paths to **`project.json`** (canonical state — what SKILL.md Step 6 reads):
-- **Each iteration:** append to `project.json.assets.sheet.iterations[]`
-- **On approval:** set `project.json.assets.sheet.approved` to the approved path
+Append an **iteration record** (object form per
+`shared/project_memory.md` → "Iteration record shape" + "Writing an
+iteration record (checklist for skills)") to
+`project.json.assets.sheet.iterations`. The record's `path` is the
+relative-with-subfolder string (`"Symbol_Sheets/Sheet_NNN.png"`); the
+`prompt`, `references`, `model`, `image_size`, `aspect_ratio`, and
+`timestamp` come from the actual `nb2_generate` call you just made.
 
-Also mirror the approved path to `game_brief.json.symbol_sheet_path` for
-human readability, but the primary write target is `project.json`.
+If the user approves it, set `project.json.assets.sheet.approved` to
+that same relative-with-subfolder path (it matches one of the
+`iterations[].path` values). Downstream skills (`/slot-step-03`,
+`/slot-step-06`) read `project.json.assets.sheet.approved`, resolve
+it against `project_root`, and pass the resulting absolute path to
+NB2 as a reference to anchor symbol-set style.
 
-Pass the approved sheet path as a reference when generating individual
-symbol cells in `/slot-step-03` to anchor the style.
+There is no `game_brief.json.symbol_sheet_path` field — that was the old
+v0 location and is no longer read by any skill.

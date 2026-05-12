@@ -7,7 +7,7 @@ mix families** within one set.
 
 These templates use the **bracketed-block prompt format** from
 `shared/nb2_prompting.md` §9.2. The game's **Style Anchor** (§9.2.1) is
-prepended to every prompt verbatim — it lives in `project.json.style_anchor`.
+prepended to every prompt verbatim — it lives in `project.json.style_anchor.text`.
 
 ## Universal LP rules (all families)
 
@@ -149,7 +149,7 @@ professional slot game art.
 
 ## Pre-gen quick checks
 
-- [ ] `style_anchor` (from `project.json`) is prepended to the prompt
+- [ ] `style_anchor.text` (from `project.json.style_anchor.text`) is prepended to the prompt verbatim
 - [ ] Prompt contains ZERO forbidden words (see list above)
 - [ ] `[RENDER STYLE — LOCKED]` block present with explicit "no HP warmth carry-down" clause
 - [ ] Background is `flat solid white background, no gradients`

@@ -13,8 +13,8 @@ at runtime, so the banner generates with empty space reserved for them.
 ## Tier system — bet-ratio thresholds
 
 Banner tiers are determined by **win ÷ bet ratio**, not by absolute coin
-value. This is the industry-standard threshold table (MASTER_ART_REFERENCE
-§7.5):
+value. This is the industry-standard threshold table (condensed from
+internal H5G win-banner research):
 
 | Tier | Win / Bet ratio | Label |
 |---|---|---|

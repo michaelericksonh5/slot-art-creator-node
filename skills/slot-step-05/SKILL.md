@@ -18,7 +18,15 @@ before sending, anchored to the locked key art and symbol set.
 4. Read the approved symbol sheet (`project.json.assets.sheet.approved`)
    if available — it sets the brightness/saturation ceiling for the
    background (background must always rank below the symbols)
-5. If key art isn't locked, stop and run `/slot-step-02` first
+5. **If no active project**, follow the "no active project — guide
+   through setup" pattern in `shared/project_memory.md`: route to
+   `/slot-step-01` (and `/slot-step-02` for the key art), then resume
+   background generation here in the same conversation.
+6. **If key art isn't locked yet** (`project.json.style_anchor.key_art_path`
+   missing), route to `/slot-step-02` first — every background reads the
+   locked key art as a style reference. After it's locked, return here
+   to generate the background the user originally asked for. Don't make
+   the user re-invoke `/slot-step-05`.
 
 ## Workflow
 
@@ -50,10 +58,7 @@ be dimmer than the dimmest symbol.
 ### Step 3 — Pre-generation validation (Gate 1)
 
 - [ ] `style_anchor` (from `project.json`) is prepended to the prompt
-- [ ] Prompt uses the structured prose format from `PROMPT_TEMPLATES.md`
-      (background prompts use inline prose, not the symbol bracketed-block
-      format — the four hard-rule constraints below serve the same
-      structural function)
+- [ ] Bracketed-block format used: `[RENDER STYLE]`, `[COMPOSITION]`, `[MOOD/PALETTE]`, `[MOBILE CONSTRAINTS]`
 - [ ] `style_lock` in prompt verbatim
 - [ ] No hex / resolution / aspect ratio strings in prompt body
 - [ ] All four hard rules stated explicitly
@@ -71,16 +76,14 @@ be dimmer than the dimmest symbol.
 
 ### Step 4 — Generate
 
-Call `mcp__nb2node__nb2_generate`:
-
 | API arg | Value |
 |---|---|
 | `prompt` | composed prompt |
 | `aspect_ratio` | `"9:16"` portrait (default), `"16:9"` landscape, `"4:3"` tablet |
-| `image_size` | `"2K"` default; `"4K"` for marketing (nb2_generate supports 4K natively — this is NOT gpt-image-2 which caps at 2K) |
-| `output_dir` | `{project_root}` |
-| `asset_name` | `"BG_<variant>"`, e.g. `"BG_base"`, `"BG_freespins"` (the MCP server appends `_NNN.png` and auto-increments) |
-| `references` | absolute paths — resolve `style_anchor.key_art_path` and `assets.sheet.approved` against `project_root` first, then pass the resolved absolutes. |
+| `image_size` | `"2K"` default; `"4K"` for marketing |
+| `output_dir` | `path.join(project_root, "Backgrounds")` — every BG variant lives in this single folder. Folder is created on first write. |
+| `asset_name` | `"BG_<variant>"`, e.g. `"BG_base"`, `"BG_freespins"` (the MCP server appends `_NNN.png` and auto-increments by scanning `Backgrounds/`) |
+| `references` | absolute paths — resolve `style_anchor.key_art_path` and `assets.sheet.approved` against `project_root` first (`path.join(project_root, stored_relative_path)`), then pass the resolved absolutes. Filter null/undefined entries. |
 
 ### Step 5 — Inline QA check (Gate 2)
 
@@ -102,8 +105,16 @@ Read the output:
 
 ### Step 6 — Update state
 
-- Append output filename to `project.json.assets.backgrounds.<variant>.iterations`
+- Append an iteration record to
+  `project.json.assets.backgrounds.<variant>.iterations` per
+  `shared/project_memory.md` → "Writing an iteration record
+  (checklist for skills)". Background specifics:
+  `path` = `"Backgrounds/BG_<variant>_NNN.png"`;
+  `references` = `[<key art path>, <approved sheet path if any>]`;
+  `parent_path` = `null` (backgrounds are always fresh `nb2_generate`);
+  `attempt_index` increments for retries within this variant.
 - If user approves, set `project.json.assets.backgrounds.<variant>.approved`
+  to that same relative path (matches one of `iterations[].path`).
 - Set `current_step: "backgrounds_in_progress"` (or check if all needed
   variants are approved → `"ui_in_progress"` is the next natural state once
   the user moves on)
@@ -118,13 +129,13 @@ in `shared/project_memory.md`: `{iterations, approved, upscaled, resized}`.
 
 ```
 ✓ Step 5 — Background ('base' variant) generated.
-  File: BG_base_001.png
+  File: Backgrounds/BG_base_001.png
   Bottom dark, reel zone dimmed, three-layer depth ✓
-  Folder: <project_root>
-  Open:   file:///<project_root with / separators>
+  Folder: <project_root>/Backgrounds/
+  Open:   file:///<project_root>/Backgrounds/
 
 Next options:
-  - Generate other variants (free-spins, bonus, pick-me, wheel) with /slot-05 again
+  - Generate other variants (free-spins, bonus, pick-me, wheel) with /slot-step-05 again
   - Run `/slot-step-06` to design bezel, HUD, paytable, win banners
   - Run `/slot-step-08` to audit the background suite
 
@@ -148,6 +159,6 @@ Type `/slot-` to see the full numbered workflow.
 ## References
 
 - `shared/qa_preflight.md`, `shared/project_memory.md`, `shared/asset_naming.md`
-- `shared/art_principles.md` §7.2 (background & environment), §1 (core principles)
-- `shared/nb2_prompting.md` §9.2 (master formula, BG skeleton)
+- `shared/art_principles.md` §7 ("Background" bullet — three-layer composition, vignette, ~10–20% brightness drop under the grid), §1 (the ten core principles — especially #1 mobile-first, #6 global light, #7 "the reel is the hero")
+- `shared/nb2_prompting.md` §9.2 (master prompt structure) and its "Background (9:16 portrait)" template (under §9.2.3 "Bracketed-block templates per symbol type")
 - `PROMPT_TEMPLATES.md` (per-variant templates)

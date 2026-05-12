@@ -38,16 +38,20 @@ When an axis fails, here's the prompt patch.
 
 ## When to stop iterating
 
-- **2 retries max** (3 total attempts) for any single asset. If you can't
-  get a passing upscale in 3 tries, the source is the problem (too low-res,
-  too ambiguous, or stylistically incompatible with NB2's upscale mode).
-  Tell the user honestly.
-- **Generate variants on the winning prompt.** Once you have a prompt
-  that passes once, run N parallel `nb2_upscale` calls and pick the best
-  (see SKILL.md Step 4 — N=2 for standard HP/banner, N=3–4 for hero/key
-  art). `nb2_upscale` is an MCP tool call, not a CLI command — there is
-  no `--variants` flag. Issue each variant as a separate MCP call with a
-  distinct `asset_name` suffix (`_v1`, `_v2`, etc.) in the same tool batch.
+- **3 attempts total per asset (initial call + up to 2 retries).** If you
+  can't get a passing upscale in 3 tries, the source is the problem (too
+  low-res, too ambiguous, or stylistically incompatible with NB2's
+  upscale mode). Tell the user honestly. This matches the retry cap in
+  `SKILL.md` → Step 5.
+- **Generate variants on the winning prompt for hero assets.** Once you
+  have a prompt that passes once, the cheapest way to get the best draw
+  on a marquee asset (key art, hero logo, the game's signature symbol)
+  is to issue 3–4 parallel `nb2_upscale` calls in a single tool batch,
+  each with the same `prompt` and `source` but a different `asset_name`
+  suffix (`HP1_002_upscl_x2_v1`, `HP1_002_upscl_x2_v2`, …; the winner
+  is renamed to drop `_v<N>`) — see SKILL.md Step 4
+  "How to run N>1" for the canonical pattern. There is no `--variants`
+  CLI flag; variants come from issuing N MCP calls in parallel.
 - **Human sanity check** for hero assets after the rubric passes. Eye
   placement, letter forms in logos, and very subtle silhouette changes
   can slip past the rubric.

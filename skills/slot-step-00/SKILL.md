@@ -49,11 +49,17 @@ Then ask: **"What's the game name or title of the GDD on Drive?"**
 
 Search the canonical GDD folder
 (`https://drive.google.com/drive/folders/1SfzTV7n6CPlNXjMTR-RfRLtXIaJ-wCtr`)
-using:
+restricting to that folder so unrelated team-wide hits don't pollute results:
 
 ```
-fullText contains '<game name>' and mimeType != 'application/vnd.google-apps.folder'
+'1SfzTV7n6CPlNXjMTR-RfRLtXIaJ-wCtr' in parents
+  and fullText contains '<game name>'
+  and mimeType != 'application/vnd.google-apps.folder'
+  and trashed = false
 ```
+
+Drive CQL uses `'<folder_id>' in parents` (not `parentId = '<folder_id>'`)
+— the latter is invalid and silently returns nothing.
 
 Use the **highest version** if multiple are found. Confirm with the user.
 
@@ -64,10 +70,12 @@ all return clean text. Do not download or convert to PDF.
 
 ### Step 3 — Read reference images (if any)
 
-Search the same folder for image files:
+Search the same folder for image files using the correct CQL form:
 
 ```
-parentId = '<folder_id>' and (mimeType = 'image/png' or mimeType = 'image/jpeg')
+'<folder_id>' in parents
+  and (mimeType = 'image/png' or mimeType = 'image/jpeg')
+  and trashed = false
 ```
 
 Call `read_file_content` on each — Claude sees them visually. Use them to
@@ -75,16 +83,24 @@ sharpen palette, mood, and style decisions before locking the brief.
 
 ### Step 4 — Bootstrap the project folder
 
-Construct the project root using the 3-tier resolution (same logic as every
-other step — see `shared/project_memory.md` for full details):
+Resolve `<PROJECT_BASE>` using the standard order from
+`shared/project_memory.md` → "Resolving `<PROJECT_BASE>` at runtime":
 
-1. **`SLOT_ART_PROJECT_BASE` env var** — if set, use it as the root
-2. **H5G Drive Stream** — if `H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\` exists, use it
-3. **Fallback** — `~/slot-art-projects/`
+1. `SLOT_ART_PROJECT_BASE` env var if set
+2. The H5G shared Drive Stream path
+   (`H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\`
+   on Windows, the equivalent `/Volumes/GoogleDrive/Shared drives/...` on
+   Mac) — only if it exists on this machine
+3. `~/slot-art-projects/` per-user fallback
 
-The project folder is `<PROJECT_BASE>/{GameID}_{username}` where `username`
-is the current OS username at runtime (e.g. from `%USERNAME%` on Windows or
-`os.userInfo().username` in Node.js). Do not hardcode a username.
+`username` comes from `os.userInfo().username` (or `%USERNAME%` on Windows
+/ `$USER` on Mac/Linux as a fallback). Do not hardcode it.
+
+Construct the project root:
+
+```
+<PROJECT_BASE>/{GameID}_{username}
+```
 
 Create the folder if it doesn't exist. Inside it, create:
 
@@ -96,19 +112,71 @@ Set `~/.h5g-slot-active-project.json` to point to this new project.
 ### Step 5 — Extract GDD structure into the brief
 
 Pull the following from the GDD text. Mark fields `null` if absent — never
-fabricate:
+fabricate. The target schema is `skills/slot-step-01/GAME_BRIEF_TEMPLATE.md`
+(the seeded `game_brief.json` will be refined in `/slot-step-01`).
 
-| Field | Where to look |
+| Field in `game_brief.json` | Where to look in the GDD |
 |---|---|
 | `game_name` | Title — use marketing/player-facing name, NEVER internal codenames |
 | `theme_summary` | Overview / concept |
-| `grid` | Math spec ("5x3", "5x4") |
-| `symbol_manifest` | Paytable or art spec table |
-| `mode_list` | Feature list |
+| `grid` | Math spec ("5x3", "5x4", "5x6", "3x5") |
+| `tier_plan.lp_family` | Are LPs card royals (`card_royals`), themed objects (`themed_objects`), gems (`gems`), or suits (`suits`)? Most newer H5G games use themed objects. |
+| `wild.category` and `wild.breaks_theme_via` | Wild symbol section. Capture what the wild IS and what visually breaks the theme. |
+| `scatter.label` and `scatter.shape` | Scatter section. **Note:** many newer games use a `WY` symbol with `mechanic: scatter` instead of a literal `SC` prefix; in that case the scatter info goes on the manifest entry for that `WY<N>`. |
+| `jackpot_tier_names` | If the GDD describes jackpot tiers, build the explicit `{"JP1": "<name>", "JP2": "<name>", ...}` mapping. Modern H5G GDDs typically map `JP1` to **Grand** (Billionaire's series, Chevy family, Tesla, Blazing Stampede), but a few use `JP1 = Mini`. Read the GDD carefully — the wrong ordering ships the wrong metallic finish on the wrong tier. |
+| `symbol_manifest` | Paytable or art spec table. **This is where the GDD-extraction work concentrates** — see Step 5b. |
+| `mode_list` | Feature list (`base`, `free spins`, `bonus pick-me`, `wheel`, `Loot Link`, `Hold-and-Spin`, etc.) |
 | `rtp` | Math spec (record only, not used in art prompts) |
-| `lp_family` | Are LPs cards, suits, gems, or themed objects? |
-| `wild_description` | Wild symbol section |
-| `scatter_description` | Scatter section |
+
+### Step 5b — Mapping GDD symbols to the manifest schema
+
+Real H5G GDDs use prose like "the Phoenix bonus coin pays a random
+value and contributes to the Loot Link feature" — the extraction
+needs to translate that into the structured manifest fields
+`{id, tier, family, subject, role, mechanic, notes}` (the brief
+schema documented in `slot-step-01/GAME_BRIEF_TEMPLATE.md`). The
+`notes` field is optional but useful for GDD prose that doesn't fit
+cleanly into `mechanic` — e.g. "only appears in free spins", "links
+to the bonus reel". The mapping rules:
+
+| GDD says about a symbol... | Pick `family` | Set `mechanic` to |
+|---|---|---|
+| "high-pay character" / "premium pay" / "hero symbol" | `HP` | `standard pay` |
+| "mid-pay object" / "supporting cast" | `MP` | `standard pay` |
+| "low-pay card royal" / "card filler" | `LP` | `standard pay` |
+| "wild" / "substitutes for…" | `Wild` | the variant if specified (sticky, stacked, expanding, walking, multiplier, etc.) — else `standard wild` |
+| "scatter triggers free spins" with `SC` prefix | `Scatter` | `scatter` |
+| "scatter" / "trigger" but the GDD uses a `WY` prefix (Tesla WY1, Bankrush Gamma WY1, Chevy-Lite WY1 pattern) | `WYS` | `scatter` |
+| "hold-and-spin coin" / "cash-on-reels coin" | `WYS` | `hold-and-spin coin` |
+| "WYSIWYG collector" / "collects values during bonus" / "pays a value when…" with WY prefix | `WYS` | `wysiwyg collector` |
+| "random-wilds shooter" / "shoots wilds onto the reels" | `WYS` | `random wilds shooter` |
+| "collector with a multiplier" / "pins and accumulates" | `WYS` | `collector + multiplier` |
+| "adds value to surrounding/above values" | `WYS` (with WY prefix) OR `SF` (with SF prefix) | `adder` |
+| "direct payout symbol" with WY prefix (Billionaire's pattern) | `WYS` | `hp-equivalent direct payout` |
+| "Loot Link trigger" with WY prefix | `WYS` | `loot link trigger` |
+| "mystery transform" / "reveal" / "closed object that reveals" | `SF` | `mystery transform` |
+| "hotspot multiplier" (`HOT_x*` or `SF<N>`) | `SF` (when SF prefix) OR keep `HOT_x*` family | `hotspot multiplier` |
+| "hotspot adder / combiner / collapse / persist" | `SF` | `hotspot adder` / `hotspot combiner` / `hotspot collapse` / `persistent hotspot` |
+| "upgradable collector" / "gold-bar collector that upgrades" | `SF` | `upgradable collector` |
+| "immediate-payout collector" | `SF` | `immediate-payout collector` |
+| "bonus value collector" | `SF` | `bonus value collector` |
+| "transforming collector" / "collector that turns into a WY" | `SF` | `transforming collector` |
+| "path-forming prize" / "Prize Path connection" | `SF` | `path-forming prize` |
+| "lock-and-respin trigger" | `SF` | `lock-and-respin trigger` |
+| "jackpot coin" / "on-grid coin that triggers jackpot mode" (Tesla SF1, Golden Knight pattern) | `SF` (when SF prefix) OR `Jackpot` (when JP1 prefix) | `jackpot coin` (SF role) or `jackpot trigger (matrix)` (JP role) |
+| "bonus-game trigger" with SF or BO prefix | `BO` (when BO prefix) OR `SF` (when SF prefix) | `free spins trigger` / `bonus game trigger` |
+| "jackpot tier — Grand/Major/Minor/Mini" | `Jackpot` | `jackpot tier — <TierName>` (use the GDD's name verbatim) |
+| "blocker" / "obstacle" / "blank filler" | `Blocker` | `blocker` (or describe the mode if multiple blockers exist) |
+| "double / triple / split" with D2_/D3_/SPLIT_ prefix | `SpecialMechanics` | `double pay` / `triple pay` / `split pay` |
+| "Double HP" with DHP prefix (Eagles' Flight pattern) | `SpecialMechanics` | `double pay` |
+| "pachinko ball / peg / bucket" | `Pachinko` | `pachinko ball` / `pachinko peg` / `pachinko bucket` |
+| Compound — symbol does TWO things (bonus + WY payout, wild + jackpot contribution, etc.) | family of the **dominant** role | combined mechanic, e.g. `bonus trigger + coin payout` (for BWY) or `wild + jackpot contribution` (for WJP). Match the canonical `GAME_BRIEF_TEMPLATE.md` worked example wording when in doubt. |
+
+If the GDD uses a prefix not in the documented vocabulary, route by
+the symbol's visual description from the GDD's art spec — match to
+the closest family, set `family` and `mechanic` accordingly, and
+list the prefix under `open_questions` for vocabulary extension
+review later.
 
 Store the GDD source in both `project.json.gdd_source` and `game_brief.json.gdd_source`:
 
@@ -140,14 +208,14 @@ Symbols          : 13 (extracted)
 Modes            : base, free spins, bonus pick-me
 GDD source       : Jungle Kingdom Game Design Document v.0.0.2.docx
 Reference images : 3 (visually analyzed)
-Open questions   : 2 (style_lock, palette — to be locked in /slot-01)
+Open questions   : 2 (style_lock, palette — to be locked in /slot-step-01)
 ```
 
 ### Step 7 — Next step nudge
 
 ```
 ✓ Step 0 — GDD Connect complete.
-  Project active: 4470_<username>
+  Project active: {GameID}_{username}
   Folder: <project_root>
   Open:   file:///<project_root with / separators>
 

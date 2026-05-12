@@ -6,7 +6,7 @@ warmest/most saturated; HP2 is one notch below HP1.
 
 These templates use the **bracketed-block prompt format** from
 `shared/nb2_prompting.md` §9.2. The game's **Style Anchor** (§9.2.1) is
-prepended to every prompt verbatim — it lives in `project.json.style_anchor`.
+prepended to every prompt verbatim — it lives in `project.json.style_anchor.text`.
 
 ## Tier rules
 
@@ -108,7 +108,7 @@ mobile-optimized icon.
 
 ## Pre-gen quick checks
 
-- [ ] `style_anchor` (from `project.json`) is prepended to the prompt
+- [ ] `style_anchor.text` (from `project.json.style_anchor.text`) is prepended to the prompt verbatim
 - [ ] `[RENDER STYLE — LOCKED]` block present with explicit "Inherit ONLY X, ignore Y" clause
 - [ ] Background is `flat solid black background, no gradients`
 - [ ] Warm palette pulled from `palette_leads.primary`
