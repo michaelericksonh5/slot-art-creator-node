@@ -107,8 +107,11 @@ Cowork has a built-in safe key entry UI. Walk them through it:
 2. Switch to the **Cowork** tab
 3. Click **Customize** in the sidebar > **Browse plugins**
 4. Find **slot-art-creator-node** in the listing and click into it
-5. In the plugin's settings, you'll see fields for `GEMINI_API_KEY` and
-   `FAL_KEY`. **Paste your key(s) there — not in this chat.**
+5. In the plugin's settings, you'll see fields for `GEMINI_API_KEY`,
+   `FAL_KEY`, and `OPENAI_API_KEY`. **Paste your key(s) there — not in
+   this chat.** Either Gemini or fal.ai is enough to run the NB2
+   workflow; OpenAI is optional and unlocks the `gpt2_*` tools used
+   for text-heavy surfaces (paytables, logos, wheels, banner copy).
 6. **Restart Claude Desktop once** so the MCP server picks up the new keys.
 7. Come back to chat and say "done" (or "keys are set", or similar) — I'll
    verify everything works.
@@ -153,11 +156,15 @@ permissions, etc.), the user can edit the `.env` file directly:
 > 1. Create or open this file in any text editor:
 >    `~/.h5g-slot-art-creator/.env`
 >    (You may need to create the folder first.)
-> 2. Add one or both lines (no quotes, no spaces around the `=`):
+> 2. Add one, two, or all three lines (no quotes, no spaces around the `=`):
 >    ```
 >    GEMINI_API_KEY=AIza...your-key-here
 >    FAL_KEY=...your-key-here
+>    OPENAI_API_KEY=sk-...your-key-here
 >    ```
+>    Either Gemini or fal.ai is enough to run the NB2 workflow; OpenAI
+>    is optional and only needed if you want the `gpt2_*` tools for
+>    text-heavy surfaces (paytables, logos, wheels, banner copy).
 > 3. Save the file, then come back here.
 
 ### Step 4 — Validate

@@ -287,7 +287,7 @@ Same 5-part pattern:
   Explicitly note: there is **no** `game_brief.json.symbol_sheet_path`
   field — that was the old v0 location and is no longer read by any
   skill. Sheets live in `project.json.assets.sheet`.
-- **DRY:** Show the ideation-mode prompt with all 10 *Sun & Moon
+- **DRY:** Show the ideation-mode prompt with all 13 *Sun & Moon
   Sanctuary* cells described, plus the explanation of how Mode A and
   Mode B differ in their `references` array (ideation passes only
   the key art; assemble passes key art + every approved symbol).

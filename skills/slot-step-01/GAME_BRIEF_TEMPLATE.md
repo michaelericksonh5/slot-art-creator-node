@@ -1,7 +1,23 @@
 # `game_brief.json` — schema and example
 
-The brief is the single source of truth every other slot-art-creator skill
-reads. Keep it small, named-color only, and locked once approved.
+The brief is the **structured definition of the game's design intent**
+— theme, palette, style lock, tier plan, full symbol manifest. It's
+the human-readable counterpart to the runtime canonical state in
+`project.json` (which embeds the same brief under
+`project.json.brief` and adds the asset registry, counters,
+timestamps, and `style_anchor` fields on top).
+
+When art skills generate, they read **`project.json`** as the runtime
+canonical source — that's where `style_anchor.text`,
+`style_anchor.key_art_path`, and the per-symbol asset records live.
+`game_brief.json` mirrors the brief portion for human readability
+(designers can scan it without parsing the full project state) and
+carries optional mirror fields (`style_anchor`, `key_art_path`) for
+the same reason.
+
+Keep this file small, named-color only, and locked once approved.
+Both files should agree on the brief contents at all times; if they
+disagree, `project.json` wins.
 
 ## Schema (JSON)
 

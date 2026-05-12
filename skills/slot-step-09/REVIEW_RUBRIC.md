@@ -38,7 +38,7 @@ When an axis fails, here's the prompt patch.
 
 ## When to stop iterating
 
-- **3 attempts max** per asset (initial call + up to 2 retries). If you
+- **3 attempts total per asset (initial call + up to 2 retries).** If you
   can't get a passing upscale in 3 tries, the source is the problem (too
   low-res, too ambiguous, or stylistically incompatible with NB2's
   upscale mode). Tell the user honestly. This matches the retry cap in
