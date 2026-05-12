@@ -133,12 +133,12 @@ Pick the rubric by what's being compared, not by mode:
 |---|---|
 | Key art iterations | `shared/qa_preflight.md` Gate 1 universal checks + `shared/art_principles.md` §1 (the ten core principles — especially #5/#6/#7/#8) and §7 ("Background" bullet for three-layer composition + vignette) |
 | Symbol iterations | `shared/qa_preflight.md` "Symbol-specific pre-generation checks" + "Quick-grade table" + `shared/art_principles.md` §3 (symbols), §3.5 (cell-fill by tier), §10 ("Per-symbol" checklist) |
-| Full symbol set (tier gradient) | `shared/art_principles.md` §10 ("Per-set" checklist), `shared/qa_preflight.md` "Visual hierarchy awareness" + "Between symbols: hierarchy check", plus the auto-RED escalations from `slot-step-08/SKILL.md` Step 4 |
+| Full symbol set (tier gradient) | `shared/art_principles.md` §10 ("Per-set" checklist), `shared/qa_preflight.md` "Visual hierarchy awareness" + "Between symbols: hierarchy check", plus the auto-RED escalations from `skills/slot-step-08/SKILL.md` Step 4 |
 | Background iterations | `shared/art_principles.md` §7 ("Background" bullet — three-layer composition, vignette), `shared/qa_preflight.md` "Symbol/environment exclusivity", and `slot-step-05`'s Step 5 inline QA check list |
 | UI surface iterations | `shared/art_principles.md` §7 ("UI / HUD" bullet — touch targets, opacity, chrome ranks below symbols), `shared/qa_preflight.md` Gate 1 universal checks + Gate 2 post-generation check |
-| Avatar iterations | `slot-step-08/QA_RUBRIC.md` "Per-avatar rubric" + the avatar discipline rules in `slot-step-06/AVATAR_TEMPLATE.md` |
-| Avatar cast (multi-character consistency) | `slot-step-08/QA_RUBRIC.md` "Per-cast checks" + `slot-step-06/AVATAR_TEMPLATE.md` "Cross-cast consistency check" |
-| Logo trio (hero/standard/compact) | `slot-step-06/LOGO_TEMPLATE.md` — same wordmark, palette family, visible complexity reduction |
+| Avatar iterations | `skills/slot-step-08/QA_RUBRIC.md` "Per-avatar rubric" + the avatar discipline rules in `skills/slot-step-06/AVATAR_TEMPLATE.md` |
+| Avatar cast (multi-character consistency) | `skills/slot-step-08/QA_RUBRIC.md` "Per-cast checks" + `skills/slot-step-06/AVATAR_TEMPLATE.md` "Cross-cast consistency check" |
+| Logo trio (hero/standard/compact) | `skills/slot-step-06/LOGO_TEMPLATE.md` — same wordmark, palette family, visible complexity reduction |
 | Cross-project key art | `shared/art_principles.md` §10 ("Per-prompt") + brand consistency check (palette family, style_lock match) |
 
 For each candidate, produce **one short paragraph** noting:
