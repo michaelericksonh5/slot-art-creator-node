@@ -103,6 +103,79 @@ for an asset you're grading, fall through to `QA_RUBRIC.md`.
 | **Cross-asset** | Everything feels like one cohesive world. No surface competes at wrong hierarchy level. Palette family consistent. |
 | **Symbol/environment exclusivity** | No symbol-set subject is repeated across BG/frame/UI as a recurring decorative motif. See `shared/qa_preflight.md` "Symbol/environment exclusivity" for the rule and why it matters. |
 
+### Step 3.5 — Measurement-backed checks (numeric, deterministic)
+
+The prose grading above relies on Claude's visual judgment — useful
+for subjective calls ("does this feel premium?"), but stochastic and
+inconsistent for the rules that are actually numeric. This step runs
+`nb2_measure` on every approved asset in scope, embeds the results
+into `project.json.assets.*.metrics_summary`, and applies the
+deterministic checks defined in `QA_RUBRIC.md` → "Measurement-backed
+rubric (deterministic numeric checks)".
+
+**1. Measure approved assets.** For each slot in scope, if `approved`
+is non-null and (`metrics_summary` is null OR `metrics_summary.last_measured`
+is older than the approved iteration's `timestamp`):
+
+```
+nb2_measure({ source: path.join(project_root, <approved path>) })
+```
+
+The MCP tool returns the metrics block and writes a sidecar
+`<basename>.metrics.json` next to the PNG. Embed the **summary subset**
+(`dominant_color_oklch`, `fill_pct`, `bg_uniformity_score`,
+`edge_density`, plus `measured_iteration` and `last_measured`) into
+`project.json.assets.<slot>.metrics_summary` per the schema in
+`shared/project_memory.md` → "metrics_summary field".
+
+Batch them: a 13-symbol set is 13 calls. Each call is ~200-400 ms on a
+2K image; the whole set takes 5-10 seconds. If `metrics_summary` is
+already fresh (`last_measured` ≥ approved's `timestamp`), skip the
+measurement — the prior data is still valid.
+
+**2. Apply the deterministic checks** from `QA_RUBRIC.md` →
+"Measurement-backed rubric". These produce RED / YELLOW findings that
+sit alongside (and don't replace) the visual-judgment ones from Step 3:
+
+- **LP warmth scan.** For every LP slot's `metrics_summary.dominant_color_oklch`,
+  flag RED if any cluster has `h ∈ [30°, 90°]` AND `c > 0.05` AND
+  `pct > 0.05` (a meaningful warm-gold/amber region). LP discipline
+  is the most common failure mode and the most testable numerically.
+- **Tier-pairwise saturation step.** For adjacent tiers (HP1↔HP2,
+  HP2↔MP1, MP↔LP), compute the difference in dominant-color OKLCH
+  chroma. Flag YELLOW if the gap is `< 0.04` (≈15 points on the
+  traditional 100-point sat scale); flag RED if `< 0.02` (tiers
+  visually indistinguishable). Sourced from `art_principles.md` §10
+  "Per-set" + `QA_RUBRIC.md` "Per-set rubric → Saturation step".
+- **Tier-pairwise lightness gap.** For adjacent tiers, compute the
+  difference in dominant-color OKLCH lightness. Flag YELLOW if `< 0.10`;
+  flag RED if `< 0.05`. Sourced from `art_principles.md` §10 and the
+  per-set rubric.
+- **Background uniformity.** For every slot whose surface should have
+  a flat BG (HP/MP/LP/Wild/Scatter/Jackpot/avatars/wheels), flag RED
+  if `bg_uniformity_score < 0.85`. Flag YELLOW if `< 0.95`. Catches
+  gradient backgrounds the visual gate sometimes misses.
+- **Fill % by tier.** Compare `fill_pct` to the expected band from
+  `QA_RUBRIC.md` "Fill % by tier". Flag YELLOW if outside the band
+  by more than `±0.05` (5%); flag RED if outside by more than `±0.10`.
+- **Wild palette-break verification.** Compute the OKLCH distance
+  between the Wild's dominant color and the brief's `palette_leads.primary`
+  (after converting the palette swatch to OKLCH). Flag RED if the
+  distance is `< 0.15` — wild's color must actually break the theme,
+  not just feel different.
+
+**3. Inline the numeric findings into the report** alongside the
+visual ones. Each finding should cite both the rule
+(`art_principles.md` §X / `qa_preflight.md` Y) AND the measured
+number (e.g. "LP3 shows warm cluster at h=51°, c=0.082, pct=0.07 —
+RED per `QA_RUBRIC.md` measurement-backed rubric § LP warmth scan").
+
+**When measurement isn't available.** If `nb2_measure` fails (missing
+key, file unreadable, etc.), fall through to visual-only grading from
+Step 3 and note in the report that numeric verification was skipped.
+Don't block the audit — measurement is an additive deterministic
+layer, not a precondition.
+
 ### Step 4 — Auto-RED escalations
 
 Always RED regardless of other grades. `QA_RUBRIC.md` has the full

@@ -145,6 +145,127 @@ section.
 
 ---
 
+## Measurement-backed rubric (deterministic numeric checks)
+
+These checks read `project.json.assets.*.metrics_summary` (populated
+by `/slot-step-08` Step 3.5 via `nb2_measure`) and apply numeric
+thresholds. They are deterministic — the same metrics input always
+produces the same RED/YELLOW finding — and intentionally complement
+the visual-judgment rubrics above. They do not replace them.
+
+If `metrics_summary` is null (the asset hasn't been measured yet),
+these checks are skipped for that asset — fall through to the visual
+rubric only. Step 3.5 of the skill measures every approved asset
+before evaluating these, so a properly-run audit should have full
+coverage.
+
+All checks below reference OKLCH-space metrics: `l` (lightness, 0-1),
+`c` (chroma, 0-~0.4), `h` (hue, 0-360°), `pct` (share of pixels in
+the cluster, 0-1). See `nb2-mcp-server/lib/measurements.js` for the
+exact conversion implementation.
+
+### LP warmth scan (rule source: `art_principles.md` §3.5 LP discipline)
+
+For every LP slot's `dominant_color_oklch`, scan all clusters:
+
+| Condition | Severity |
+|---|---|
+| Any cluster with `h ∈ [30°, 90°]` AND `c > 0.05` AND `pct > 0.05` | **RED** — meaningful warm-gold/amber region; LP discipline broken |
+| Any cluster with `h ∈ [30°, 90°]` AND `c > 0.03` AND `pct > 0.05` (lower chroma threshold) | YELLOW — marginal warm tint; surface for review |
+| No qualifying cluster | GREEN |
+
+The hue band `[30°, 90°]` covers orange through yellow-green in
+OKLCH; warm-gold and amber both sit squarely inside it. Chroma >0.05
+is "visibly saturated" rather than "tonally warm but desaturated".
+The pct >0.05 cutoff ignores tiny stray pixels that don't affect
+visual read.
+
+### Tier-pairwise saturation step (rule source: `art_principles.md` §10 Per-set + `Per-set rubric → Saturation step between tiers`)
+
+For adjacent tier pairs (HP1↔HP2, HP2↔MP1, MP1↔MP2, MP2↔LP1):
+
+| Δchroma between dominant colors | Severity |
+|---|---|
+| `≥ 0.04` (≈15+ traditional sat points) | GREEN |
+| `0.02 ≤ Δchroma < 0.04` | YELLOW — tiers close, may read as same category |
+| `< 0.02` | **RED** — tiers visually indistinguishable; gradient broken |
+
+Compute Δchroma as `|chroma_tier_A - chroma_tier_B|` where each
+tier's chroma is the chroma of its **highest-pct dominant color**
+(the cluster covering the most pixels). For HP↔MP↔LP comparisons,
+warmth should also decrease — if the lower tier has higher chroma,
+that's already covered by the LP warmth scan above.
+
+### Tier-pairwise lightness gap (rule source: `art_principles.md` §10 Per-set + `Per-set rubric → Lightness gap`)
+
+For adjacent tier pairs:
+
+| Δlightness between dominant colors | Severity |
+|---|---|
+| `≥ 0.10` | GREEN |
+| `0.05 ≤ Δlightness < 0.10` | YELLOW — tiers close in luminance |
+| `< 0.05` | **RED** — tiers visually flat against each other |
+
+Computed identically to the saturation step but on the OKLCH
+`l` field.
+
+### Background uniformity (rule source: `art_principles.md` §3 background discipline + `Per-symbol rubric → Outline policy`)
+
+For every slot whose surface contract requires a flat BG (HP, MP, LP,
+Wild, Scatter, Jackpot, avatars, wheels — but NOT backgrounds or UI
+which are intentionally textured):
+
+| `bg_uniformity_score` | Severity |
+|---|---|
+| `≥ 0.95` | GREEN — clearly solid BG |
+| `0.85 ≤ score < 0.95` | YELLOW — minor variation in BG, possibly a slight gradient or near-edge noise |
+| `< 0.85` | **RED** — non-flat BG; gradient or pattern present |
+
+This catches the "export BG has gradient or pattern" auto-RED
+deterministically; the visual gate currently catches obvious cases
+but lets borderline gradients through.
+
+### Fill % by tier (rule source: `QA_RUBRIC.md` "Fill % by tier" table)
+
+For every approved asset:
+
+| Tier | Expected band (from Fill % table) | YELLOW outside | RED outside |
+|---|---|---|---|
+| Jackpot | 0.92–0.98 | by `> 0.05` | by `> 0.10` |
+| Wild | 0.85–0.95 | by `> 0.05` | by `> 0.10` |
+| Scatter | 0.83–0.93 | by `> 0.05` | by `> 0.10` |
+| HP | 0.78–0.88 | by `> 0.05` | by `> 0.10` |
+| MP | 0.68–0.78 | by `> 0.05` | by `> 0.10` |
+| LP | 0.55–0.68 | by `> 0.05` | by `> 0.10` |
+| Avatar | 0.40–0.65 | by `> 0.05` | by `> 0.10` |
+| Bonus wheel | 0.80–0.95 | by `> 0.05` | by `> 0.10` |
+
+The band brackets the prose target in the Fill % table (e.g. HP
+"82–85%" → band 0.78–0.88 with `±0.05` tolerance on each side).
+Tighter bands would flag too many edge-case false positives.
+
+### Wild palette-break verification (rule source: `art_principles.md` §3 Wild rules)
+
+Compute the OKLCH distance between the Wild's `dominant_color_oklch[0]`
+(highest-pct cluster) and the brief's `palette_leads.primary`
+(converted to OKLCH using the same conversion library).
+
+Distance metric: Euclidean in (l, c·cos(h·π/180), c·sin(h·π/180)) —
+the polar OKLCH space, matching how `nb2-mcp-server/lib/measurements.js`
+clusters colors.
+
+| OKLCH distance | Severity |
+|---|---|
+| `≥ 0.20` | GREEN — wild's primary clearly breaks the theme |
+| `0.15 ≤ distance < 0.20` | YELLOW — wild may be too close to the brief palette |
+| `< 0.15` | **RED** — wild fails the "color break" rule; primary matches the theme |
+
+Note: the visual-judgment "wild breaks both category AND palette"
+rule still applies — this metric only verifies the palette break.
+Category break (different subject family) is still graded visually.
+
+---
+
 ## Automatic RED escalations (no human review needed)
 
 Flag RED immediately if:
