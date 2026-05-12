@@ -20,7 +20,7 @@ Recipe:
    verify every letter at the post-gen QA gate.
 
 For the hero lockup specifically (the marketing one), `gpt2_generate`
-at `quality: high` and `image_size: 2K` is the sweet spot. gpt-image-2's
+at `quality: high` and `image_size: "2K"` is the sweet spot. gpt-image-2's
 4K targets are experimental and unreliable for production — if you need
 4K marketing output, generate at 2K with gpt2 and then run `nb2_upscale`
 on the approved result.

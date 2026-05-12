@@ -161,8 +161,8 @@ coverage.
 
 All checks below reference OKLCH-space metrics: `l` (lightness, 0-1),
 `c` (chroma, 0-~0.4), `h` (hue, 0-360°), `pct` (share of pixels in
-the cluster, 0-1). See `nb2-mcp-server/lib/measurements.js` for the
-exact conversion implementation.
+the cluster, 0-1). See `nb2-mcp-server/lib/measurements.js` (path relative
+to plugin root) for the exact conversion implementation.
 
 ### LP warmth scan (rule source: `art_principles.md` §3.5 LP discipline)
 

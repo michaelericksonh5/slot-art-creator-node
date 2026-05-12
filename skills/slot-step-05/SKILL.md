@@ -162,5 +162,5 @@ Type `/slot-` to see the full numbered workflow.
 
 - `shared/qa_preflight.md`, `shared/project_memory.md`, `shared/asset_naming.md`
 - `shared/art_principles.md` §7 ("Background" bullet — three-layer composition, vignette, ~10–20% brightness drop under the grid), §1 (the ten core principles — especially #1 mobile-first, #6 global light, #7 "the reel is the hero")
-- `shared/nb2_prompting.md` §9.2 (master prompt structure) and its "Background (9:16 portrait)" template (under §9.2.3 "Bracketed-block templates per symbol type")
+- `shared/nb2_prompting.md` §9.2 (master prompt structure) — note: §9.2.3 covers bracketed-block templates for *symbols*; background prompts use the prose format in `PROMPT_TEMPLATES.md`, not the symbol bracketed-block format
 - `PROMPT_TEMPLATES.md` (per-variant templates)

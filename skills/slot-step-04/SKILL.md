@@ -122,7 +122,7 @@ Call `mcp__nb2node__nb2_generate`:
 |---|---|
 | `prompt` | composed sheet prompt |
 | `aspect_ratio` | match the grid — typically `"5:4"` for a 5x4 grid display, or `"1:1"` if symbols are arranged in a tight square |
-| `image_size` | `"4K"` (sheets render many cells; need the resolution) |
+| `image_size` | `"4K"` (sheets render many cells; need the resolution — **nb2_generate only**; gpt-image-2 caps at 2K but is never used for sheets) |
 | `output_dir` | `path.join(project_root, "Symbol_Sheets")` — all contact sheets land here. Folder is created on first write. |
 | `asset_name` | `"Sheet"` (the MCP server appends `_NNN.png` and auto-increments by scanning `Symbol_Sheets/`) |
 | `references` | absolute paths — resolve each path in `project.json` against `project_root` first. **Mode A (ideation)**: only the key art is reliably available, so pass `[style_anchor.key_art_path]` plus any GDD reference images you read in earlier. **Mode B (assemble)**: pass `[style_anchor.key_art_path, HP1_approved, MP1_approved, LP1_approved, WD1_approved]` (skip any whose `.approved` is null — never pass a literal "null"). Filter null/undefined paths before the call; `uploadLocalFile` inside the MCP tool will throw ENOENT if you don't. |
