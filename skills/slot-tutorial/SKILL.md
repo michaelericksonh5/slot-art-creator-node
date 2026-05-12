@@ -86,7 +86,18 @@ wild:             "WILD wordmark wrapped in electric cyan phoenix
                    and moons in both shape and color"
 scatter:          "circular badge — SCATTER label inside a radiant
                    gold sun sigil"
+avatars:
+  - Avatar1:      "Sun deity — golden-skinned figure in flowing
+                   crimson robes, radiant halo behind the head,
+                   cheers on day wins"
+  - Avatar2:      "Moon deity — silver-skinned figure in deep indigo
+                   robes, crescent crown, calm presiding presence
+                   over night-themed bonuses"
 ```
+
+(Many real games ship with zero avatars; *Sun & Moon Sanctuary* uses
+two to make the tutorial show off the avatar workflow. Adapt to your
+own brief — if a game has no avatars, skip the avatar walkthrough.)
 
 Carry this through every step of the tour. The user sees a single
 coherent example from brief to delivery instead of a dozen disconnected
@@ -222,9 +233,9 @@ Same 5-part pattern:
   to the user.
 - **State diff (on approval):**
   ```diff
-  + project.json.assets.key.iterations += ["Key_001.png", ...]
-  + project.json.assets.key.approved = "Key_003.png"   (e.g.)
-  + project.json.style_anchor.key_art_path = "Key_003.png"
+  + project.json.assets.key.iterations += ["Key_Art/Key_Art_001.png", ...]
+  + project.json.assets.key.approved = "Key_Art/Key_Art_003.png"   (e.g.)
+  + project.json.style_anchor.key_art_path = "Key_Art/Key_Art_003.png"
   + project.json.style_anchor.locked_at = "<ISO timestamp>"
   + project.json.current_step = "key_art_locked"
   ```
@@ -245,8 +256,8 @@ Same 5-part pattern:
   at thumbnail. Auto-iterates up to 2 retries.
 - **State diff (per symbol approved):**
   ```diff
-  + project.json.assets.symbols.HP1.iterations += ["HP1_001.png", ...]
-  + project.json.assets.symbols.HP1.approved = "HP1_002.png"  (e.g.)
+  + project.json.assets.symbols.HP1.iterations += ["Symbol_Art/HP1_001.png", ...]
+  + project.json.assets.symbols.HP1.approved = "Symbol_Art/HP1_002.png"  (e.g.)
   + project.json.current_step = "symbols_in_progress"
   ```
 - **Family routing:** Pull from the prefix table in
@@ -270,8 +281,8 @@ Same 5-part pattern:
   reads at a glance, no LP gold, wild stands out.
 - **State diff:**
   ```diff
-  + project.json.assets.sheet.iterations += ["Sheet_001.png", ...]
-  + project.json.assets.sheet.approved = "Sheet_002.png"
+  + project.json.assets.sheet.iterations += ["Symbol_Sheets/Sheet_001.png", ...]
+  + project.json.assets.sheet.approved = "Symbol_Sheets/Sheet_002.png"
   + project.json.current_step = "sheet_locked"
   ```
   Explicitly note: there is **no** `game_brief.json.symbol_sheet_path`
@@ -293,8 +304,8 @@ Same 5-part pattern:
   the hero" — `shared/art_principles.md` §1 #7).
 - **State diff:**
   ```diff
-  + project.json.assets.backgrounds.base.iterations += ["BG_base_001.png", ...]
-  + project.json.assets.backgrounds.base.approved = "BG_base_001.png"
+  + project.json.assets.backgrounds.base.iterations += ["Backgrounds/BG_base_001.png", ...]
+  + project.json.assets.backgrounds.base.approved = "Backgrounds/BG_base_001.png"
   + project.json.current_step = "backgrounds_in_progress"
   ```
 - **DRY:** Show the 9:16 portrait prompt with the four hard rules
@@ -302,7 +313,7 @@ Same 5-part pattern:
 - **LIVE:** Generate the base background only (skip free-spins /
   bonus / pick-me / wheel for the tour).
 
-### Step 10 — Walk through /slot-step-06 (UI Surfaces)
+### Step 10 — Walk through /slot-step-06 (UI Surfaces + Avatars)
 
 - **Inputs:** Locked key art, approved sheet, approved background.
 - **Routing:** This is where users first meet the **NB2 vs
@@ -311,20 +322,37 @@ Same 5-part pattern:
   - `paytable` and `logo_<lockup>` prefer `gpt2_generate` when
     `OPENAI_API_KEY` is set — gpt-image-2 renders text correctly,
     NB2 hallucinates letters in stylized fonts.
-  - `bezel`, `hud`, `bonus_screen`, `multiplier_xN`, `lobby_tile`
-    stay on NB2.
+  - `bezel`, `hud`, `bonus_screen`, `multiplier_xN`, `lobby_tile`,
+    `avatar_<id>` stay on NB2.
+- **This step also generates in-game avatars** (the player-facing
+  animated characters that react to wins). For *Sun & Moon Sanctuary*,
+  the brief implies two avatars — a sun deity and a moon deity. Some
+  games have zero avatars; some have up to five. Avatars follow
+  **character-design discipline** (idle pose, neutral, character-zone
+  scale) rather than chrome discipline — see `AVATAR_TEMPLATE.md`.
+- **Per-surface folder routing:** each surface lands in its own
+  category folder (`Bezels/`, `HUD/`, `Paytables/`, `Win_Banners/`,
+  `Bonus_Screens/`, `Multipliers/`, `Logos/`, `Lobby_Tiles/`,
+  `Avatars/`). The skill picks the right `output_dir` from the
+  surface name; the user doesn't have to remember.
 - **Gate:** UI must rank below symbols in brightness; bezel center
   must be transparent (would otherwise cover reels); banner numeral
-  is the focal point.
+  is the focal point; avatars sit between HP and MP intensity.
 - **State diff (per surface approved):**
   ```diff
-  + project.json.assets.ui.bezel.iterations += ["Bezel_001.png", ...]
-  + project.json.assets.ui.bezel.approved = "Bezel_001.png"
+  + project.json.assets.ui.bezel.iterations += ["Bezels/Bezel_001.png", ...]
+  + project.json.assets.ui.bezel.approved = "Bezels/Bezel_001.png"
+  + project.json.assets.avatars.Avatar1.iterations += ["Avatars/Avatar1_001.png", ...]
+  + project.json.assets.avatars.Avatar1.approved = "Avatars/Avatar1_001.png"
   + project.json.current_step = "ui_in_progress"
   ```
 - **DRY:** Show the bezel prompt and (separately) the gpt2_generate
-  paytable prompt so the user sees the contrast.
-- **LIVE:** Generate the bezel only.
+  paytable prompt so the user sees the chrome-vs-text contrast.
+  Optionally show the AVATAR_TEMPLATE idle-pose prompt for the
+  Sun & Moon Sanctuary sun deity so they see character-design
+  discipline.
+- **LIVE:** Generate the bezel only (skip avatars in the tour unless
+  the user opts in — they're a step the brief may not include).
 
 ### Step 11 — Walk through /slot-step-07 (UI Reskin, optional)
 
@@ -375,7 +403,7 @@ Same 5-part pattern:
   `UPSCALE_TEMPLATE.md`. Explain why NB2 wants to regenerate rather
   than upscale and why this prompt structure forces it into
   upscale mode.
-- **LIVE:** Upscale HP1_002 only — cheapest demonstration.
+- **LIVE:** Upscale `Symbol_Art/HP1_002.png` only — cheapest demonstration. Output lands at `Symbol_Art/HP1_002_upscl_x2.png`.
 
 ### Step 14 — Walk through /slot-step-10 (Smart Resize)
 
@@ -392,14 +420,14 @@ Same 5-part pattern:
 - **State diff:**
   ```diff
   + project.json.assets.<slot>.resized += [
-  +   {"aspect": "1:1", "path": "..._resized_1x1.png"},
-  +   {"aspect": "16:9", "path": "..._resized_16x9.png"}
+  +   {"aspect": "1:1",  "dimensions": "2048x2048", "path": "Key_Art/Key_Art_001_resize_2048_2048.png"},
+  +   {"aspect": "16:9", "dimensions": "3840x2160", "path": "Key_Art/Key_Art_001_resize_3840_2160.png"}
   + ]
   + project.json.current_step = "delivery_complete"
   ```
 - **DRY:** Show the recomposition prompt and the three-target
   marketing trio (`1:1`, `16:9`, `9:16`).
-- **LIVE:** Resize Key_001 to the marketing trio.
+- **LIVE:** Resize `Key_Art/Key_Art_001.png` to the marketing trio (1:1, 16:9, 9:16). Three output files land back in `Key_Art/` with `_resize_<W>_<H>` suffixes.
 
 ### Step 15 — Close the tour
 

@@ -1,6 +1,6 @@
 ---
 name: slot-step-10
-description: STEP 10 (final) — Produce pixel-perfect multi-aspect variants of an approved asset (e.g., generate 1:1, 16:9, and 9:16 versions of a hero asset). Either Gemini or fal.ai works fully for this; when both keys are set the plugin routes to fal.ai's purpose-built nano-banana-pro endpoint (single API call) over Gemini's NB2 + center-crop path. For single-aspect upscale use /slot-step-09.
+description: STEP 10 (final) — Produce pixel-perfect multi-aspect variants of an approved asset (e.g., generate 1:1, 16:9, and 9:16 versions of a hero asset). Outputs are named `<source>_resize_<W>_<H>.png` showing the exact target dimensions, and they live in the same category folder as the source. Either Gemini or fal.ai works fully for this; when both keys are set the plugin routes to fal.ai's purpose-built nano-banana-pro endpoint (single API call) over Gemini's NB2 + center-crop path. For single-aspect upscale use /slot-step-09.
 ---
 
 # Step 10 — Smart Resize (final delivery)
@@ -101,12 +101,17 @@ Call `mcp__nb2node__nb2_smart_resize`:
 | API arg | Value |
 |---|---|
 | `prompt` | composed recomposition prompt |
-| `source` | absolute path to the source asset — resolve `style_anchor.key_art_path` (or whichever asset filename) against `project_root` first |
-| `target_sizes` | array of `"WxH"` strings derived from target aspect ratios at the same resolution as source (e.g. `["2048x2048", "3840x2160", "2160x3840"]`) |
-| `output_dir` | `{project_root}` |
+| `source` | absolute path to the source asset — resolve `style_anchor.key_art_path` (or whichever asset relative path) against `project_root` first (`path.join(project_root, stored)`) |
+| `target_sizes` | array of `"WxH"` strings — explicit pixel dimensions for each target, e.g. `["2048x2048", "3840x2160", "2160x3840"]` for a marketing trio. The MCP tool encodes both aspect and resolution into the output filename. |
+| `output_dir` | **the source's category folder** — `path.dirname(absolute_source_path)`. Resized variants live next to their source so `Key_Art/Key_Art_003.png` and `Key_Art/Key_Art_003_resize_2048_2048.png` sit side by side. |
 
 The MCP tool returns one output file per target. Default naming follows
-`{source_label}_resized_{aspect}.png` — e.g. `Key_003_resized_16x9.png`.
+`{source_basename}_resize_<W>_<H>.png` where `<W>_<H>` is the exact
+target dimensions — e.g. for source `Key_Art_003.png` with target
+`"2048x2048"` the output is `Key_Art_003_resize_2048_2048.png`. The
+older `_resized_<aspect>` suffix (e.g. `_resized_16x9`) is **retired** —
+new generations always carry exact pixel dimensions so a designer can
+read the size off the filename without opening the file.
 
 ### Step 5 — Inline review
 
@@ -122,15 +127,16 @@ emphasizing the failure point.
 ### Step 6 — Update state
 
 Append each variant to the appropriate slot's `resized` array as
-`{aspect, path}` entries. Examples:
+`{aspect, dimensions, path}` entries. Paths are project-relative
+including the subfolder. Examples:
 
 ```json
 "assets.key.resized": [
-  {"aspect": "1:1", "path": "Key_003_resized_1x1.png"},
-  {"aspect": "16:9", "path": "Key_003_resized_16x9.png"}
+  {"aspect": "1:1",  "dimensions": "2048x2048", "path": "Key_Art/Key_Art_003_resize_2048_2048.png"},
+  {"aspect": "16:9", "dimensions": "3840x2160", "path": "Key_Art/Key_Art_003_resize_3840_2160.png"}
 ]
 "assets.backgrounds.base.resized": [
-  {"aspect": "16:9", "path": "BG_base_001_resized_16x9.png"}
+  {"aspect": "16:9", "dimensions": "3840x2160", "path": "Backgrounds/BG_base_001_resize_3840_2160.png"}
 ]
 ```
 
@@ -143,16 +149,16 @@ Schema follows the canonical asset record shape.
 
 ```
 ✓ Step 10 — Smart Resize complete.
-  Source : Key_003.png
-  Folder : <project_root>  (e.g. H:\Shared drives\...\Asset_Creation_Suite\{GameID}_{username})
-  Open   : file:///<project_root with / separators>
+  Source : Key_Art/Key_Art_003.png
+  Folder : <project_root>/Key_Art/
+  Open   : file:///<project_root>/Key_Art/
   Variants:
-    - Key_003_resized_1x1.png   (1:1 square — lobby tile)
-    - Key_003_resized_16x9.png  (16:9 wide — web banner)
-    - Key_003_resized_9x16.png  (9:16 tall — mobile loading screen)
+    - Key_Art/Key_Art_003_resize_2048_2048.png   (1:1 square — lobby tile)
+    - Key_Art/Key_Art_003_resize_3840_2160.png   (16:9 wide — web banner)
+    - Key_Art/Key_Art_003_resize_2160_3840.png   (9:16 tall — mobile loading screen)
 
-Project complete. All assets in:
-  H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\{GameID}_{username}\
+Project complete. All assets organized by category under:
+  <project_root>/
 
 To audit final delivery: `/slot-step-08`
 To start a new game: `/slot-step-00` or `/slot-step-01`

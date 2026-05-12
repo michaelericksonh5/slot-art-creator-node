@@ -278,19 +278,24 @@ The art-generation skills route based on the prefix:
 
 ## Naming convention for output files
 
-Asset filenames follow `shared/asset_naming.md`. Each symbol slot uses
-its prefix as the label:
+Every reel symbol — regardless of prefix family — lives in the
+`Symbol_Art/` subfolder of the project root. Each symbol slot uses its
+prefix as the filename label, with a three-digit counter scoped to the
+folder. Examples:
 
 ```
-HP1_001.png, HP1_002.png, ...
-WD1_001.png, WD2_001.png, ...
-WY1_001.png, WY2_001.png, WY3_001.png, ...
-BO_001.png, BO_002.png, ...
-SF_001.png
-BL_001.png
-JP1_001.png, JP2_001.png, JP3_001.png, JP4_001.png
-R1_001.png
+Symbol_Art/HP1_001.png, Symbol_Art/HP1_002.png, ...
+Symbol_Art/WD1_001.png, Symbol_Art/WD2_001.png, ...
+Symbol_Art/WY1_001.png, Symbol_Art/WY2_001.png, Symbol_Art/WY3_001.png, ...
+Symbol_Art/BO_001.png, Symbol_Art/BO_002.png, ...
+Symbol_Art/SF_001.png
+Symbol_Art/BL_001.png
+Symbol_Art/JP1_001.png ... Symbol_Art/JP6_001.png
+Symbol_Art/COL_001.png, Symbol_Art/ACT_001.png, Symbol_Art/HOT_x2_001.png, ...
+Symbol_Art/R1_001.png
 ```
 
-Each PNG is paired with a `.meta.json` sidecar containing its prompt
-and parameters (see `shared/asset_naming.md`).
+Each PNG is paired with a `.meta.json` sidecar in the same folder
+containing its prompt and parameters. See `shared/asset_naming.md` for
+the full label table and `shared/project_memory.md` for the project's
+full folder layout.

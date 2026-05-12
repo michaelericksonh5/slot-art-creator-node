@@ -29,8 +29,11 @@ Stage the image **before** calling `nb2_edit`, `nb2_upscale`, or
 - Is an external screenshot, asset from another tool, or a URL.
 
 You do NOT need to stage when the source is already inside the active
-project folder (e.g. `HP1_001.png` produced by an earlier `slot-step-03`
-generation) or in `~/Pictures/claude_nb2`.
+project folder (e.g. `Symbol_Art/HP1_001.png` produced by an earlier
+`/slot-step-03` generation, or `Key_Art/Key_Art_003.png` from
+`/slot-step-02`) or in `~/Pictures/claude_nb2`. Just resolve the
+stored relative path against `project_root` and pass the resulting
+absolute path directly.
 
 ## How to stage
 

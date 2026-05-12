@@ -48,12 +48,12 @@ Call `mcp__nb2node__nb2_generate`:
 | `prompt` | the composed prompt (no resolution / aspect ratio strings) |
 | `aspect_ratio` | `"1:1"` for the master; `"16:9"` for wide crop; `"9:16"` for tall crop |
 | `image_size` | `"4K"` for the master (key art is the most important asset) |
-| `output_dir` | `{project_root}` (the active project folder, e.g. `H:\...\4470_merickson`) |
-| `asset_name` | filename prefix without extension — pass `nextFilename("Key", "png")` minus extension, so `"Key_001"`, `"Key_002"`, ... The MCP server appends `.png` and dedupes if the file exists. |
-| `references` | user-provided reference paths, if any |
+| `output_dir` | `path.join(project_root, "Key_Art")` — every key art file lives in this subfolder. The folder is created on first write if it doesn't exist. |
+| `asset_name` | filename prefix without extension — pass `nextFilename("Key_Art", "png")` minus extension, so `"Key_Art_001"`, `"Key_Art_002"`, ... The MCP server appends `.png` and dedupes if the file exists. |
+| `references` | user-provided reference paths, if any (absolute paths) |
 
-Compute `nextFilename` per `shared/asset_naming.md` — glob the project
-folder for `Key_*.png`, find max number, increment.
+Compute `nextFilename` per `shared/asset_naming.md` — glob the
+`Key_Art/` subfolder for `Key_Art_*.png`, find max number, increment.
 
 ### Step 4 — Inline QA check (Gate 2)
 
@@ -76,9 +76,9 @@ iterate?"
 ### Step 5 — User approves OR iterates
 
 **On approve:**
-- Append the filename to `project.json.assets.key.iterations`
-- Set `project.json.assets.key.approved` = the approved filename
-- Set `project.json.style_anchor.key_art_path` = the approved filename
+- Append the relative path (`"Key_Art/Key_Art_NNN.png"`) to `project.json.assets.key.iterations`
+- Set `project.json.assets.key.approved` = the approved relative path
+- Set `project.json.style_anchor.key_art_path` = the approved relative path (e.g. `"Key_Art/Key_Art_003.png"`)
 - Set `project.json.style_anchor.locked_at` = now
 - Set `current_step: "key_art_locked"`, `next_step: "/slot-step-03"`
 - Atomic-write `project.json`
@@ -86,7 +86,8 @@ iterate?"
 **On iterate:**
 - User describes the change ("warmer", "different hero pose", etc.)
 - Build a new prompt or call `mcp__nb2node__nb2_edit` referencing the
-  previous Key_NNN.png if the change is small
+  previous `Key_Art_NNN.png` if the change is small (pass the absolute
+  path: `path.join(project_root, "Key_Art", "Key_Art_NNN.png")`)
 - Generate again at the next filename — never overwrite
 
 ### Step 6 — Generate wide and tall crops (optional)
@@ -95,10 +96,10 @@ Once the master is locked, the user may want a wide marketing crop and a
 tall mobile crop. Use the templates in `KEY_ART_TEMPLATE.md` and call
 `nb2_generate` again with the appropriate `aspect_ratio` API arg.
 
-| Crop | `aspect_ratio` | Output filename |
+| Crop | `aspect_ratio` | Output (in `Key_Art/`) |
 |---|---|---|
-| Wide marketing | `"16:9"` | `Key_wide_001.png` |
-| Tall mobile | `"9:16"` | `Key_tall_001.png` |
+| Wide marketing | `"16:9"` | `Key_Art_wide_001.png` |
+| Tall mobile | `"9:16"` | `Key_Art_tall_001.png` |
 
 Do NOT specify aspect ratio in the prompt body — it's an API arg only.
 
@@ -106,11 +107,11 @@ Do NOT specify aspect ratio in the prompt body — it's an API arg only.
 
 ```
 ✓ Step 2 — Key art locked.
-  Approved : Key_003.png
+  Approved : Key_Art/Key_Art_003.png
   Locked at: 2026-05-06T16:00:00Z
   This image is now the style anchor for every later asset.
-  Folder: <project_root>
-  Open:   file:///<project_root with / separators>
+  Folder: <project_root>/Key_Art/
+  Open:   file:///<project_root>/Key_Art/
 
 Next: run `/slot-step-03` to start generating reel symbols.
 Each symbol will use this key art as a visual reference automatically.

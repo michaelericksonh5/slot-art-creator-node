@@ -55,7 +55,7 @@ professional slot game art.
 
 ## After approving the master
 
-Write the approved bare filename (e.g. `Key_003.png`) to
+Write the approved relative path (e.g. `"Key_Art/Key_Art_003.png"`) to
 **`project.json.style_anchor.key_art_path`** — the canonical location
 every downstream skill reads. Also set `style_anchor.locked_at` to the
 current ISO timestamp. See the field contract in

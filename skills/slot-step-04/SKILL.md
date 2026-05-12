@@ -112,9 +112,9 @@ Call `mcp__nb2node__nb2_generate`:
 | `prompt` | composed sheet prompt |
 | `aspect_ratio` | match the grid — typically `"5:4"` for a 5x4 grid display, or `"1:1"` if symbols are arranged in a tight square |
 | `image_size` | `"4K"` (sheets render many cells; need the resolution) |
-| `output_dir` | `{project_root}` |
-| `asset_name` | `"Sheet"` (the MCP server appends `_NNN.png` and auto-increments) |
-| `references` | absolute paths — resolve each filename in `project.json` against `project_root` first. **Mode A (ideation)**: only the key art is reliably available, so pass `[style_anchor.key_art_path]` plus any GDD reference images you read in earlier. **Mode B (assemble)**: pass `[style_anchor.key_art_path, HP1_approved, MP1_approved, LP1_approved, WD1_approved]` (skip any whose `.approved` is null — never pass a literal "null"). Filter null/undefined paths before the call; `uploadLocalFile` inside the MCP tool will throw ENOENT if you don't. |
+| `output_dir` | `path.join(project_root, "Symbol_Sheets")` — all contact sheets land here. Folder is created on first write. |
+| `asset_name` | `"Sheet"` (the MCP server appends `_NNN.png` and auto-increments by scanning `Symbol_Sheets/`) |
+| `references` | absolute paths — resolve each path in `project.json` against `project_root` first. **Mode A (ideation)**: only the key art is reliably available, so pass `[style_anchor.key_art_path]` plus any GDD reference images you read in earlier. **Mode B (assemble)**: pass `[style_anchor.key_art_path, HP1_approved, MP1_approved, LP1_approved, WD1_approved]` (skip any whose `.approved` is null — never pass a literal "null"). Filter null/undefined paths before the call; `uploadLocalFile` inside the MCP tool will throw ENOENT if you don't. |
 
 ### Step 5 — Inline QA check (Gate 2)
 
@@ -135,8 +135,10 @@ Read the output. Check:
 
 ### Step 6 — Update state
 
-- Append output filename to `project.json.assets.sheet.iterations`
-- If user approves, set `project.json.assets.sheet.approved` to that filename
+- Append the relative path (`"Symbol_Sheets/Sheet_NNN.png"`) to
+  `project.json.assets.sheet.iterations`
+- If user approves, set `project.json.assets.sheet.approved` to that
+  same relative path
 - Set `current_step: "sheet_locked"`, `next_step: "/slot-step-05"`
 - Atomic-write `project.json`
 
@@ -148,10 +150,10 @@ Schema for the sheet slot follows the canonical asset record shape:
 In ideation mode:
 ```
 ✓ Step 4 — Ideation sheet generated.
-  File: Sheet_001.png
+  File: Symbol_Sheets/Sheet_001.png
   All 13 symbols proposed at a glance ✓
-  Folder: <project_root>
-  Open:   file:///<project_root with / separators>
+  Folder: <project_root>/Symbol_Sheets/
+  Open:   file:///<project_root>/Symbol_Sheets/
 
 Next options:
   - Iterate on this sheet for a different direction (run /slot-04 again)
@@ -165,10 +167,10 @@ Type `/slot-` to see the full numbered workflow.
 In assemble mode:
 ```
 ✓ Step 4 — Symbol sheet locked.
-  File: Sheet_007.png
+  File: Symbol_Sheets/Sheet_007.png
   All 13 approved symbols composed on one canvas ✓
-  Folder: <project_root>
-  Open:   file:///<project_root with / separators>
+  Folder: <project_root>/Symbol_Sheets/
+  Open:   file:///<project_root>/Symbol_Sheets/
 
 Next: run `/slot-step-05` to generate the game background.
 

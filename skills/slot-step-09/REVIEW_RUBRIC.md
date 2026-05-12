@@ -48,7 +48,8 @@ When an axis fails, here's the prompt patch.
   on a marquee asset (key art, hero logo, the game's signature symbol)
   is to issue 3–4 parallel `nb2_upscale` calls in a single tool batch,
   each with the same `prompt` and `source` but a different `asset_name`
-  suffix (`HP1_002_4K_v1`, `HP1_002_4K_v2`, …) — see SKILL.md Step 4
+  suffix (`HP1_002_upscl_x2_v1`, `HP1_002_upscl_x2_v2`, …; the winner
+  is renamed to drop `_v<N>`) — see SKILL.md Step 4
   "How to run N>1" for the canonical pattern. There is no `--variants`
   CLI flag; variants come from issuing N MCP calls in parallel.
 - **Human sanity check** for hero assets after the rubric passes. Eye

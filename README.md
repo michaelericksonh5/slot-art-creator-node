@@ -282,25 +282,49 @@ and your project picks up where you left off.
 ### Folder layout
 
 ```
-H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\
-└── {GameID}_{username}\                # one folder per game
-    ├── project.json                    # source of truth (brief + asset registry + counters)
-    ├── game_brief.json                 # human-readable mirror of the brief
-    ├── Key_001.png, Key_002.png, ...   # key art iterations
-    ├── HP1_001.png, HP1_002.png, ...   # per-symbol iterations
-    ├── BG_base_001.png, BG_freespins_001.png, ...
-    ├── Bezel_001.png, HUD_001.png, ...
-    ├── Banner_big_001.png, Banner_mega_001.png, ...
-    ├── Logo_hero_001.png, Logo_compact_001.png, ...
-    ├── QA_001.md                       # audit reports
-    └── ...                             # flat structure, no subfolders
+<PROJECT_BASE>/{GameID}_{username}/     # one folder per game
+├── project.json                        # source of truth (brief + asset registry + counters)
+├── game_brief.json                     # human-readable mirror of the brief
+│
+├── Key_Art/                            # master key art + wide/tall crops
+├── Symbol_Sheets/                      # full-set contact sheets
+├── Symbol_Art/                         # every individual reel symbol (HP, MP, LP, WD, SC, WY, JP, ...)
+├── Backgrounds/                        # base, freespins, bonus, pickme, wheel
+├── Avatars/                            # in-game animated characters (0–5 per game)
+├── Bezels/                             # reel frames
+├── HUD/                                # spin button + balance/bet/win chrome
+├── Paytables/                          # paytable layouts
+├── Win_Banners/                        # small / medium / big / mega / epic
+├── Bonus_Screens/                      # free-spins / pick-me / wheel intros
+├── Multipliers/                        # x2, x10, ...
+├── Logos/                              # hero / standard / compact lockups
+├── Lobby_Tiles/                        # marketing thumbnails
+└── QA_Reports/                         # audit .md reports from /slot-step-08
 ```
+
+`<PROJECT_BASE>` resolves in this order: `SLOT_ART_PROJECT_BASE` env
+var → the H5G shared Drive Stream → `~/slot-art-projects/`. Category
+folders are created on first write. See `shared/project_memory.md` for
+the full resolution rules.
 
 ### Asset naming
 
-Every file is `{Label}_{NNN}.png` — three-digit zero-padded counter,
-per-label, monotonically increasing, **never overwritten**. See
-`shared/asset_naming.md` for the full label table.
+Inside each category folder, files follow `{Label}_{NNN}.{ext}` — a
+three-digit zero-padded counter scoped to that folder, per-label,
+monotonically increasing, **never overwritten**. Examples:
+
+- `Key_Art/Key_Art_001.png`, `Key_Art/Key_Art_002.png`
+- `Symbol_Art/HP1_001.png`, `Symbol_Art/HP1_002.png`,
+  `Symbol_Art/LP1_001.png`, `Symbol_Art/WY1_001.png`,
+  `Symbol_Art/JP1_001.png`
+- `Backgrounds/BG_base_001.png`, `Backgrounds/BG_freespins_001.png`
+- `Avatars/Avatar1_001.png`, `Avatars/Avatar2_001.png`
+
+Derived variants live next to their source: an upscaled `HP1_002.png`
+becomes `Symbol_Art/HP1_002_upscl_x2.png`; a resized `Key_Art_003.png`
+becomes `Key_Art/Key_Art_003_resize_2048_2048.png`.
+
+See `shared/asset_naming.md` for the full label table.
 
 ### Active project pointer
 

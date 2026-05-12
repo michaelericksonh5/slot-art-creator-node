@@ -202,27 +202,37 @@ Engineering teams differ in their preferred structure, but a common pattern:
 │   ├── Banner_big.png
 │   ├── Banner_mega.png
 │   └── Banner_epic.png
-├── 05_logos/
+├── 05_avatars/                  ← only if the game has avatars
+│   ├── Avatar1.png
+│   └── Avatar2.png
+├── 06_logos/
 │   ├── Logo_hero.png
 │   └── Logo_compact.png
-├── 06_lobby/
+├── 07_lobby/
 │   └── LobbyTile.png
-├── 07_QA/
-│   ├── QA_FINAL.md             ← the GREEN audit report
+├── 08_QA/
+│   ├── QA_FINAL.md              ← the GREEN audit report
 │   └── ...
-├── 08_source/
-│   ├── project.json            ← full project state for engineering reference
+├── 09_source/
+│   ├── project.json             ← full project state for engineering reference
 │   ├── game_brief.json
-│   └── style_anchor.png        ← the locked key art (4K)
-└── README.md                   ← per-game handoff notes for engineering
+│   └── style_anchor.png         ← the locked key art (4K — copied from Key_Art/)
+└── README.md                    ← per-game handoff notes for engineering
 ```
 
-Engineering can re-pack into their own atlas structure from this layout.
-The numbered folders make scan-and-grep work.
+The handoff structure is **engineering-facing** and intentionally
+differs from the artist-facing working project structure (which uses
+`Key_Art/`, `Symbol_Art/`, `Bezels/`, etc. — see
+`shared/asset_naming.md` for that layout). Engineering wants numbered
+folders for scan-and-grep; artists want named folders for find-by-
+category. The handoff packager bridges the two.
 
 Filenames at handoff drop the `_NNN` iteration counter — only the
-approved version goes through. `HP1_002.png` becomes `HP1.png` in the
-handoff folder.
+approved version goes through. `Symbol_Art/HP1_002.png` becomes
+`01_symbols/HP1.png` in the handoff folder. Upscaled / resized
+variants (`_upscl_x2`, `_resize_<W>_<H>`) are flattened the same way —
+the handoff layer picks the right resolution for the engineering
+target and strips the suffix.
 
 ---
 

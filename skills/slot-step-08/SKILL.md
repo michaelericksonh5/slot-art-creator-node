@@ -81,7 +81,11 @@ Always RED regardless of other grades:
 
 ### Step 5 — Write the report
 
-Save to `{project_root}/{nextFilename("QA", "md")}` — e.g. `QA_001.md`:
+Save to `{project_root}/QA_Reports/QA_NNN.md`. Scan `QA_Reports/`
+(create the folder if it doesn't exist) for existing `QA_*.md`,
+increment past the max. The report file is markdown, not PNG, but
+follows the same naming convention. Example: first audit →
+`QA_Reports/QA_001.md`; re-audit after fixes → `QA_Reports/QA_002.md`.
 
 ```markdown
 # QA Audit — {game_name}
@@ -116,7 +120,8 @@ Overall: RED | YELLOW | GREEN
 
 ### Step 6 — Update state
 
-- Append the QA report path to `project.json.assets.qa_reports`
+- Append the relative path (`"QA_Reports/QA_NNN.md"`) to
+  `project.json.assets.qa_reports`
 - Set `current_step: "audit_complete"`
 - Set `next_step` based on overall grade:
   - GREEN → `/slot-step-09`
@@ -131,10 +136,10 @@ for the full canonical list.
 
 ```
 ✓ Step 8 — Production Audit: GREEN
-  Report: QA_002.md
+  Report: QA_Reports/QA_002.md
   All 13 symbols, 3 BG variants, 5 UI surfaces passed.
-  Folder: <project_root>
-  Open:   file:///<project_root with / separators>
+  Folder: <project_root>/QA_Reports/
+  Open:   file:///<project_root>/QA_Reports/
 
 Next: run `/slot-step-09` to upscale the approved assets to 4K
 for production delivery.

@@ -80,11 +80,11 @@ is the field name for the source.
 | API arg | Value |
 |---|---|
 | `prompt` | composed reskin prompt |
-| `source` | absolute path to the source UI mock — resolve any relative filenames against `project_root` first |
+| `source` | absolute path to the source UI mock — resolve any relative filenames against `project_root` first (`path.join(project_root, stored_relative_path)`) |
 | `aspect_ratio` | match the source image's ratio (omit to inherit, or pass explicitly) |
 | `image_size` | `"2K"` minimum |
-| `output_dir` | `{project_root}` |
-| `asset_name` | `"<SurfaceLabel>_reskin"`, e.g. `"Bezel_reskin"`, `"HUD_reskin"` (the MCP server appends `_NNN.png` and auto-increments) |
+| `output_dir` | **the source's category folder** — `path.join(project_root, "<SourceFolder>")`. Look at the source path: if it lives in `Bezels/`, the reskin lands in `Bezels/`; if it lives in `HUD/`, the reskin lands in `HUD/`. This keeps each surface's iterations together regardless of whether they came from generate or reskin. |
+| `asset_name` | `"<SurfaceLabel>_reskin"`, e.g. `"Bezel_reskin"`, `"HUD_reskin"`, `"Paytable_reskin"`. The MCP server appends `_NNN.png` and auto-increments by scanning the target folder for files with that prefix. |
 | `extra_references` | absolute path — resolve `style_anchor.key_art_path` against `project_root`, then pass `[<absolute>]` to lock the new theme. |
 
 **API args (gpt2 path — text-heavy source UIs):**
@@ -96,7 +96,7 @@ is the field name for the source.
 | `aspect_ratio` | match source |
 | `image_size` | `"2K"` (the stable production ceiling) |
 | `quality` | `"high"` |
-| `output_dir` | `{project_root}` |
+| `output_dir` | same per-surface routing as the NB2 path — the source's category folder |
 | `asset_name` | same convention as NB2 |
 
 ### Step 5 — Inline QA check — 8-axis layout-preservation rubric
@@ -118,8 +118,12 @@ Any FAIL → patch prompt and regenerate (max 2 retries).
 
 ### Step 6 — Update state
 
-Append to `project.json.assets.ui.<surface>.iterations`. If user approves,
-set `project.json.assets.ui.<surface>.approved`.
+Append the relative path (e.g. `"Bezels/Bezel_reskin_001.png"`) to
+`project.json.assets.ui.<surface>.iterations`. If user approves, set
+`project.json.assets.ui.<surface>.approved` to that same relative path.
+The reskin iteration lands in the same `assets.ui.<surface>` slot as
+a from-scratch generation — reskin is just another way to produce a
+bezel/hud/paytable, not a separate asset type.
 
 Set `current_step: "reskin_complete"`, `next_step: "/slot-step-08"`.
 
@@ -130,11 +134,11 @@ Schema follows the canonical asset record shape in
 
 ```
 ✓ Step 7 — UI Reskin complete.
-  Source : <source path>
-  Output : <Output filename>
+  Source : <source relative path, e.g. Bezels/Bezel_001.png>
+  Output : <output relative path, e.g. Bezels/Bezel_reskin_001.png>
   Layout preserved across all 8 axes ✓
-  Folder: <project_root>
-  Open:   file:///<project_root with / separators>
+  Folder: <project_root>/<SourceFolder>/
+  Open:   file:///<project_root>/<SourceFolder>/
 
 Next: run `/slot-step-08` for the final cross-asset audit
 or continue with more reskins.

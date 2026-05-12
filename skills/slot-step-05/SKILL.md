@@ -73,9 +73,9 @@ be dimmer than the dimmest symbol.
 | `prompt` | composed prompt |
 | `aspect_ratio` | `"9:16"` portrait (default), `"16:9"` landscape, `"4:3"` tablet |
 | `image_size` | `"2K"` default; `"4K"` for marketing |
-| `output_dir` | `{project_root}` |
-| `asset_name` | `"BG_<variant>"`, e.g. `"BG_base"`, `"BG_freespins"` (the MCP server appends `_NNN.png` and auto-increments) |
-| `references` | absolute paths — resolve `style_anchor.key_art_path` and `assets.sheet.approved` against `project_root` first, then pass the resolved absolutes. |
+| `output_dir` | `path.join(project_root, "Backgrounds")` — every BG variant lives in this single folder. Folder is created on first write. |
+| `asset_name` | `"BG_<variant>"`, e.g. `"BG_base"`, `"BG_freespins"` (the MCP server appends `_NNN.png` and auto-increments by scanning `Backgrounds/`) |
+| `references` | absolute paths — resolve `style_anchor.key_art_path` and `assets.sheet.approved` against `project_root` first (`path.join(project_root, stored_relative_path)`), then pass the resolved absolutes. Filter null/undefined entries. |
 
 ### Step 5 — Inline QA check (Gate 2)
 
@@ -97,8 +97,10 @@ Read the output:
 
 ### Step 6 — Update state
 
-- Append output filename to `project.json.assets.backgrounds.<variant>.iterations`
+- Append the relative path (`"Backgrounds/BG_<variant>_NNN.png"`) to
+  `project.json.assets.backgrounds.<variant>.iterations`
 - If user approves, set `project.json.assets.backgrounds.<variant>.approved`
+  to that same relative path
 - Set `current_step: "backgrounds_in_progress"` (or check if all needed
   variants are approved → `"ui_in_progress"` is the next natural state once
   the user moves on)
@@ -113,10 +115,10 @@ in `shared/project_memory.md`: `{iterations, approved, upscaled, resized}`.
 
 ```
 ✓ Step 5 — Background ('base' variant) generated.
-  File: BG_base_001.png
+  File: Backgrounds/BG_base_001.png
   Bottom dark, reel zone dimmed, three-layer depth ✓
-  Folder: <project_root>
-  Open:   file:///<project_root with / separators>
+  Folder: <project_root>/Backgrounds/
+  Open:   file:///<project_root>/Backgrounds/
 
 Next options:
   - Generate other variants (free-spins, bonus, pick-me, wheel) with /slot-05 again

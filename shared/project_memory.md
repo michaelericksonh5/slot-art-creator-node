@@ -31,21 +31,49 @@ This document describes the canonical state model. Every skill follows it.
 
 ```
 <PROJECT_BASE>/
-└── {GameID}_{username}/                          ← one project folder per game
-    ├── project.json                              ← THE source of truth
-    ├── game_brief.json                           ← human-readable brief mirror
-    ├── Key_001.png, Key_002.png, ...             ← key art iterations
-    ├── Sheet_001.png                             ← symbol contact sheets
-    ├── HP1_001.png, HP1_002.png, ...             ← per-symbol iterations
-    ├── HP2_001.png, MP1_001.png, LP1_001.png ...
-    ├── BG_base_001.png, BG_freespins_001.png ... ← background variants
-    ├── Bezel_001.png                             ← reel frame
-    ├── HUD_001.png, Paytable_001.png             ← UI surfaces
-    ├── Banner_big_001.png, Banner_mega_001.png   ← win banners by tier
-    ├── Logo_hero_001.png, Logo_compact_001.png   ← logo lockups
-    ├── QA_001.md                                 ← QA audit reports
-    └── (no subfolders — flat structure for fast scanning)
+└── {GameID}_{username}/                ← one project folder per game
+    ├── project.json                    ← THE source of truth
+    ├── game_brief.json                 ← human-readable brief mirror
+    │
+    ├── Key_Art/                        ← master + wide/tall crops
+    │   ├── Key_Art_001.png
+    │   ├── Key_Art_001.meta.json
+    │   ├── Key_Art_wide_001.png
+    │   └── Key_Art_tall_001.png
+    │
+    ├── Symbol_Sheets/                  ← full-set contact sheets
+    │   └── Sheet_001.png
+    │
+    ├── Symbol_Art/                     ← every individual reel symbol
+    │   ├── HP1_001.png, HP1_002.png, ...
+    │   ├── MP1_001.png, LP1_001.png, ...
+    │   ├── WD1_001.png, SC_001.png, BO_001.png, ...
+    │   └── (every prefix from shared/symbol_vocabulary.md)
+    │
+    ├── Backgrounds/                    ← base / freespins / bonus / pickme / wheel
+    │   ├── BG_base_001.png
+    │   ├── BG_freespins_001.png
+    │   └── ...
+    │
+    ├── Avatars/                        ← in-game animated characters (0–5)
+    │   ├── Avatar1_001.png
+    │   └── Avatar2_001.png
+    │
+    ├── Bezels/                         ← reel frames
+    ├── HUD/                            ← spin button, balance, bet, win
+    ├── Paytables/                      ← paytable layouts
+    ├── Win_Banners/                    ← small / medium / big / mega / epic
+    ├── Bonus_Screens/                  ← free-spins / pick-me / wheel intros
+    ├── Multipliers/                    ← x2, x10, ...
+    ├── Logos/                          ← hero / standard / compact lockups
+    ├── Lobby_Tiles/                    ← marketing thumbnails
+    └── QA_Reports/                     ← audit .md reports from /slot-step-08
 ```
+
+Each category folder is created on first write — empty folders are not
+pre-created. `project.json` and `game_brief.json` always stay at the
+project root. See `shared/asset_naming.md` for the full label table
+and filename rules.
 
 ### Resolving `<PROJECT_BASE>` at runtime
 
@@ -116,35 +144,35 @@ skill can find the active project without asking the user every time.
 
   "style_anchor": {
     "text": "You are generating art assets for a mobile slot machine game (\"Phoenix of Ardashir\" — a mystical regal phoenix awakens over ancient gold). Every output must be optimized for small phone screens — every element must be recognizable by silhouette alone when small on a phone. Use bold, clean shapes — no intricate micro-textures, no dense filigree that collapses at thumbnail size. High contrast between foreground and the flat background. Warm saturated colors signal high pay; cool muted colors signal low pay. Gold is reserved for premium and special symbols only. Maintain a consistent stylized semi-realistic slot game art rendering technique across the entire set.",
-    "key_art_path": "Key_003.png",
+    "key_art_path": "Key_Art/Key_Art_003.png",
     "locked_at": "2026-05-06T16:00:00Z",
     "notes": "Approved by user — all downstream art reads this as visual reference"
   },
 
   "assets": {
     "key": {
-      "iterations": ["Key_001.png", "Key_002.png", "Key_003.png"],
-      "approved": "Key_003.png",
+      "iterations": ["Key_Art/Key_Art_001.png", "Key_Art/Key_Art_002.png", "Key_Art/Key_Art_003.png"],
+      "approved": "Key_Art/Key_Art_003.png",
       "upscaled": null,
       "resized": []
     },
     "sheet": {
-      "iterations": ["Sheet_001.png"],
-      "approved": "Sheet_001.png",
+      "iterations": ["Symbol_Sheets/Sheet_001.png"],
+      "approved": "Symbol_Sheets/Sheet_001.png",
       "upscaled": null
     },
     "symbols": {
       "HP1": {
-        "iterations": ["HP1_001.png", "HP1_002.png"],
-        "approved": "HP1_002.png",
-        "upscaled": "HP1_002_4K.png",
+        "iterations": ["Symbol_Art/HP1_001.png", "Symbol_Art/HP1_002.png"],
+        "approved": "Symbol_Art/HP1_002.png",
+        "upscaled": "Symbol_Art/HP1_002_upscl_x2.png",
         "resized": []
       },
       "HP2": { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
       "MP1": { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
       "LP1": { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
-      "WILD":    { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
-      "SCATTER": { "iterations": [], "approved": null, "upscaled": null, "resized": [] }
+      "WD1":    { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "SC":     { "iterations": [], "approved": null, "upscaled": null, "resized": [] }
     },
     "backgrounds": {
       "base":      { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
@@ -152,6 +180,13 @@ skill can find the active project without asking the user every time.
       "bonus":     { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
       "pickme":    { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
       "wheel":     { "iterations": [], "approved": null, "upscaled": null, "resized": [] }
+    },
+    "avatars": {
+      "Avatar1": { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "Avatar2": { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "Avatar3": { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "Avatar4": { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "Avatar5": { "iterations": [], "approved": null, "upscaled": null, "resized": [] }
     },
     "ui": {
       "bezel":      { "iterations": [], "approved": null, "upscaled": null },
@@ -176,7 +211,7 @@ skill can find the active project without asking the user every time.
         "compact":  { "iterations": [], "approved": null }
       }
     },
-    "qa_reports": ["QA_001.md"]
+    "qa_reports": ["QA_Reports/QA_001.md"]
   },
 
   "gdd_source": {
@@ -194,7 +229,7 @@ downstream skill reads from it by name — don't relocate these fields.
 | Field | Type | Written by | Read by |
 |---|---|---|---|
 | `text` | string (60–90 words) | `/slot-step-01` from the §9.2.1 template | every NB2 / gpt-image-2 generation skill — prepended verbatim to every prompt body |
-| `key_art_path` | bare filename (resolve against `project_root`) | `/slot-step-02` on user approval | every skill that passes the key art as a reference image (`/slot-step-03`–`/slot-step-10`) |
+| `key_art_path` | relative path from `project_root` including subfolder (e.g. `"Key_Art/Key_Art_003.png"`) | `/slot-step-02` on user approval | every skill that passes the key art as a reference image (`/slot-step-03`–`/slot-step-10`) |
 | `locked_at` | ISO timestamp | `/slot-step-02` on user approval | `/slot-step-08` (audit), human ops |
 | `notes` | optional string | `/slot-step-02` or user edit | human ops |
 
@@ -205,23 +240,35 @@ target and the canonical read source for downstream skills is always
 
 ### Asset record shape (the universal pattern)
 
-Every asset slot follows this shape:
+Every asset slot follows this shape. All path strings are relative to
+`project_root` and include the asset's category subfolder.
 
 ```json
 {
-  "iterations": ["File_001.png", "File_002.png"],   // every generation, in order
-  "approved": "File_002.png",                       // null until user picks one
-  "upscaled": "File_002_4K.png",                    // null until /slot-09 runs
-  "resized": [                                      // empty until /slot-10 runs
-    {"aspect": "16x9", "path": "File_002_resized_16x9.png"}
+  "iterations": [
+    "Symbol_Art/HP1_001.png",
+    "Symbol_Art/HP1_002.png"
+  ],                                                   // every generation, in order
+  "approved": "Symbol_Art/HP1_002.png",                // null until user picks one
+  "upscaled": "Symbol_Art/HP1_002_upscl_x2.png",       // null until /slot-step-09 runs
+  "resized": [                                         // empty until /slot-step-10 runs
+    {
+      "aspect": "16:9",
+      "dimensions": "3840x2160",
+      "path": "Symbol_Art/HP1_002_resize_3840_2160.png"
+    }
   ]
 }
 ```
 
-- `iterations` — append-only list of every generated filename for this slot. Never overwrite.
-- `approved` — single filename the user picked as canonical for this slot. Null if not yet approved. Defaults to the latest iteration when ambiguous.
-- `upscaled` — null until `/slot-step-09` produces a 4K version of `approved`.
+- `iterations` — append-only list of every generated path for this slot. Never overwrite.
+- `approved` — single path the user picked as canonical for this slot. Null if not yet approved. Defaults to the latest iteration when ambiguous.
+- `upscaled` — null until `/slot-step-09` produces a higher-resolution
+  version of `approved`. The path uses the `_upscl_x<N>` suffix where
+  `<N>` is the linear multiplier (2K→4K is `x2`).
 - `resized` — empty until `/slot-step-10` produces aspect variants.
+  Each entry carries the aspect, the exact `WxH` dimensions, and the
+  path with the `_resize_<W>_<H>` suffix.
 
 For UI banner tiers and multiplier denominations and logo lockups, the
 nested object holds one record per variant, each following the shape above
@@ -302,9 +349,11 @@ Generate, edit, review, etc. — the skill's specific job.
 
 ### Step 5: Save outputs
 
-Save generated images to the project_root with the correct naming
-convention (see `shared/asset_naming.md`). Never overwrite — always
-auto-increment.
+Save generated images to the **correct category subfolder** under
+`project_root` with the correct naming convention (see
+`shared/asset_naming.md`). The skill passes
+`output_dir = path.join(project_root, "<Category_Folder>")` to the MCP
+tool. Never overwrite — always auto-increment.
 
 ### Step 6: Update project.json
 
@@ -351,26 +400,37 @@ A user can switch projects in two ways:
 
 ---
 
-## Path convention — relative in JSON, absolute at use time
+## Path convention — relative-with-subfolder in JSON, absolute at use time
 
-All asset paths recorded in `project.json` are stored as **bare filenames
-relative to `project_root`**. Examples:
+All asset paths recorded in `project.json` are stored as **relative
+paths from `project_root`, including the category subfolder**. Use
+forward slashes — they're valid on every OS, and `path.join` normalizes
+them. Examples:
 
 ```json
-"style_anchor": { "key_art_path": "Key_003.png" }
+"style_anchor": { "key_art_path": "Key_Art/Key_Art_003.png" }
 "assets": {
-  "key": { "iterations": ["Key_001.png", "Key_002.png", "Key_003.png"], "approved": "Key_003.png" },
-  "symbols": { "HP1": { "approved": "HP1_002.png" } }
+  "key":     { "approved": "Key_Art/Key_Art_003.png" },
+  "sheet":   { "approved": "Symbol_Sheets/Sheet_001.png" },
+  "symbols": { "HP1": { "approved": "Symbol_Art/HP1_002.png" } },
+  "ui":      { "bezel": { "approved": "Bezels/Bezel_001.png" } }
 }
 ```
 
-Why relative: the project folder stays portable. If a teammate copies
-`H:\Shared drives\...\4470_merickson\` to a different drive, the
-`project.json` still works — every filename resolves correctly against
-the new `project_root`.
+Why relative-with-subfolder:
+- **Portable.** If a teammate copies the project folder to a different
+  drive, every path still resolves against the new `project_root`.
+- **Self-documenting.** The stored path tells the reader which category
+  the asset belongs to without consulting a side table — `"Symbol_Art/HP1_002.png"`
+  is obviously a symbol; `"Bezels/Bezel_001.png"` is obviously a bezel.
+- **One join, not two.** `path.join(project_root, stored)` produces the
+  absolute path in a single call. The skill never needs to know the
+  category-to-folder mapping at read time — it's encoded in the
+  stored path itself.
 
 **At use time** — whenever you pass an asset path to:
-- An MCP tool (`source`, `references`, `image`, etc. — `uploadLocalFile` does `fs.readFileSync` and needs absolute)
+- An MCP tool (`source`, `references`, `image`, etc. — `uploadLocalFile`
+  does `fs.readFileSync` and needs absolute)
 - A `Read` tool call (Read needs absolute path)
 - A `Write` / save operation
 - A child process that reads the file
@@ -386,9 +446,12 @@ The `project_root` field in `project.json` IS stored as an absolute path
 call. Skills that forget to resolve will silently fail with ENOENT or
 have the MCP tool save to a wrong default folder.
 
-When the MCP tool RETURNS a path, it returns absolute. Skills should
-strip back to bare filename (using `path.basename`) before storing in
-`project.json`, to keep the JSON portable.
+**When writing new assets:** the skill calling the MCP tool is
+responsible for passing the correct subfolder as `output_dir`. After
+the MCP tool returns the absolute output path, the skill strips back
+to a relative-from-project-root path (using `path.relative(project_root, absolute)`)
+before storing in `project.json`. This keeps the JSON portable while
+the MCP tool sees only absolutes.
 
 ## Atomic writes (Drive Stream safety)
 
@@ -444,22 +507,23 @@ When `/slot-step-02` returns a generated image, it asks:
 
 > Approve this as the locked key art, or iterate?
 
-**On approve:** Claude sets `style_anchor.key_art_path = "Key_NNN.png"`,
-records the timestamp, and writes `project.json`. Every later skill
-auto-reads this file as a reference.
+**On approve:** Claude sets
+`style_anchor.key_art_path = "Key_Art/Key_Art_NNN.png"`, records the
+timestamp, and writes `project.json`. Every later skill auto-reads this
+file (resolved against `project_root`) as a reference.
 
 ### 2. Switch the anchor later
 
 The user can change which key art is the locked anchor at any time:
 
 ```
-"Use Key_005 as the new anchor"
-"Lock Key_002 instead — it had better palette"
+"Use Key_Art_005 as the new anchor"
+"Lock Key_Art_002 instead — it had better palette"
 ```
 
 Any skill processes that as a state edit:
-- Confirm `Key_005.png` exists in the project folder
-- Update `style_anchor.key_art_path = "Key_005.png"`
+- Confirm `Key_Art/Key_Art_005.png` exists under the project folder
+- Update `style_anchor.key_art_path = "Key_Art/Key_Art_005.png"`
 - Update `style_anchor.locked_at` to now
 - Write `project.json` atomically
 
@@ -470,20 +534,25 @@ specific symbol against an experimental key art that isn't locked yet),
 pass an explicit reference image:
 
 ```
-"Generate HP1 using Key_007.png as reference instead of the locked anchor"
+"Generate HP1 using Key_Art_007 as reference instead of the locked anchor"
 ```
 
-The skill passes that path to NB2's `reference_images` arg without
-touching `project.json`. The locked anchor stays unchanged.
+The skill resolves `Key_Art/Key_Art_007.png` against `project_root` and
+passes the absolute path to NB2's `references` arg without touching
+`project.json`. The locked anchor stays unchanged.
 
 ### Picking by visual review (any skill, any time)
 
-The user can ask: "Show me Key_001, Key_003, and Key_005 — I want to pick
-one to lock." Claude reads each image, presents them, and the user picks.
+The user can ask: "Show me Key_Art_001, Key_Art_003, and Key_Art_005 —
+I want to pick one to lock." Claude reads each image (using the
+absolute path resolved from `Key_Art/Key_Art_NNN.png`), presents them,
+and the user picks. The dedicated `/slot-compare` skill makes this
+flow first-class.
 
-Filenames are the canonical identifier. Sidecars (`Key_NNN.meta.json`)
-hold the prompt that produced each one — useful for "I liked iteration 3,
-let me try a tweak of that prompt" workflows.
+Filenames are the canonical identifier. Sidecars
+(`Key_Art/Key_Art_NNN.meta.json`) hold the prompt that produced each
+one — useful for "I liked iteration 3, let me try a tweak of that
+prompt" workflows.
 
 ---
 

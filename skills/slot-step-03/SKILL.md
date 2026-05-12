@@ -118,9 +118,9 @@ Call `mcp__nb2node__nb2_generate`:
 | `prompt` | composed prompt (no resolution / aspect ratio strings) |
 | `aspect_ratio` | `"1:1"` (always for symbols) |
 | `image_size` | `"2K"` (default; project minimum) |
-| `output_dir` | `{project_root}` (the active project folder) |
-| `asset_name` | the symbol prefix from the manifest, e.g. `"HP1"`, `"WD1"`, `"WY2"`. The MCP server appends `_NNN.png` and auto-increments if a file already exists. |
-| `references` | absolute paths — resolve `style_anchor.key_art_path` against `project_root` first (e.g. `path.join(project_root, "Key_003.png")`). Plus any prior approved symbols of adjacent tiers, also resolved. **Bare filenames like `"Key_003.png"` will fail with ENOENT inside the MCP tool's `uploadLocalFile`.** |
+| `output_dir` | `path.join(project_root, "Symbol_Art")` — every reel symbol (HP, MP, LP, WD, SC, WY, BO, SF, BL, JP, COL, ACT, HOT_*, BAG, MOJ, D2_, D3_, SPLIT_, MULT_, BALL, PEG, BUCKET, …) lives in this single folder. Folder is created on first write. |
+| `asset_name` | the symbol prefix from the manifest, e.g. `"HP1"`, `"WD1"`, `"WY2"`. The MCP server appends `_NNN.png` and auto-increments by scanning `Symbol_Art/` for existing files with that prefix. |
+| `references` | absolute paths — resolve `style_anchor.key_art_path` against `project_root` first (e.g. `path.join(project_root, "Key_Art/Key_Art_003.png")`). Plus any prior approved symbols of adjacent tiers, resolved the same way (`path.join(project_root, "Symbol_Art/HP1_002.png")`). **Bare filenames will fail with ENOENT inside the MCP tool's `uploadLocalFile`.** |
 
 The reference images lock the style without re-specifying it in text.
 Always pass at least the key art as a reference.
@@ -146,8 +146,10 @@ Read the output image immediately:
 ### Step 6 — Update state
 
 After every generation:
-- Append output filename to `project.json.assets.symbols.<SymbolID>.iterations`
+- Append the relative path (`"Symbol_Art/HP1_NNN.png"`) to
+  `project.json.assets.symbols.<SymbolID>.iterations`
 - If user marked it approved, set `project.json.assets.symbols.<SymbolID>.approved`
+  to that same relative path
 - Set `current_step: "symbols_in_progress"` (or `"sheet_locked"` if you're
   done with all manifest entries — check the manifest)
 - Set `next_step: "/slot-step-03"` (continue) or
@@ -162,9 +164,9 @@ Schema for each symbol slot follows the canonical asset record shape in
 
 ```
 ✓ HP1 [subject] — generated and inline-checked.
-  File   : HP1_001.png
-  Folder : <project_root>  (e.g. H:\Shared drives\...\Asset_Creation_Suite\{GameID}_{username})
-  Open   : file:///<project_root with / separators>
+  File   : Symbol_Art/HP1_001.png
+  Folder : <project_root>/Symbol_Art/
+  Open   : file:///<project_root>/Symbol_Art/
   Tier   : warmest, dominant ✓
   BG     : flat black ✓
   Style  : matches key art ✓

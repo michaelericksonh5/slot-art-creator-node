@@ -1,38 +1,61 @@
 # Asset Naming Convention
 
-Every generated file in a project folder follows the same flat naming
-pattern: `{AssetLabel}_{NNN}.png`. Three-digit zero-padded counter,
-per-label, monotonically increasing, never overwritten.
+Every generated file in a project lives in a **category subfolder** under
+`<project_root>`, named so that anyone opening the folder in File
+Explorer can find what they want without scanning a flat dump.
 
-The goal: any team member can scan a project folder and instantly know
-what each file is and which version they're looking at.
+```
+<project_root>/
+├── project.json
+├── game_brief.json
+├── Key_Art/               ← key art master + crops
+├── Symbol_Sheets/         ← full-set contact sheets
+├── Symbol_Art/            ← every individual reel symbol
+├── Backgrounds/           ← base / freespins / bonus / pickme / wheel
+├── Avatars/               ← in-game animated characters (0–5 per game)
+├── Bezels/                ← reel frames
+├── HUD/                   ← HUD chrome (spin button, balance, bet, win)
+├── Paytables/             ← paytable layouts
+├── Win_Banners/           ← small / medium / big / mega / epic
+├── Bonus_Screens/         ← free-spins / pick-me / wheel intro screens
+├── Multipliers/           ← multiplier badges by denomination
+├── Logos/                 ← hero / standard / compact lockups
+├── Lobby_Tiles/           ← marketing thumbnails
+└── QA_Reports/            ← audit .md reports from /slot-step-08
+```
+
+`project.json` and `game_brief.json` stay at the root — they're
+project-wide state, not assets.
 
 ---
 
 ## Naming rules
 
 1. **Format:** `{Label}_{NNN}.{ext}` — three-digit zero-padded counter
-2. **Per-label counter:** `Key_001`, `Key_002`, `HP1_001`, `HP1_002` —
-   each label has its own counter
-3. **No overwrites, ever:** before saving, scan the folder for files
-   matching `{Label}_*.{ext}`, find the max number, increment by 1
+2. **Per-label counter, scoped to the folder:** `HP1_001`, `HP1_002` —
+   each label has its own counter, computed by scanning the asset's
+   category folder only (not the project root)
+3. **No overwrites, ever:** before saving, scan the asset's folder for
+   files matching `{Label}_*.{ext}`, find the max number, increment by 1
 4. **No metadata in the filename:** no resolution, no aspect ratio, no
-   timestamp, no prompt slug. Just the label and the number.
+   timestamp, no prompt slug. Just the label and the number. (Exception:
+   upscaled/resized variants — see "Derived variants" below.)
 5. **PNG only** for image assets (use `.md` for QA reports, `.json` for
-   manifests)
+   manifests and sidecars)
 6. **Every PNG gets a sidecar.** `HP1_001.png` is paired with
-   `HP1_001.meta.json` containing the prompt, model, provider, references,
-   timestamps. Written automatically by the MCP server. Never deleted.
+   `HP1_001.meta.json` containing the prompt, model, provider,
+   references, timestamps. Lives next to the PNG in the same folder.
+   Written automatically by the MCP server. Never deleted.
 
 ---
 
 ## Sidecar metadata files
 
-Every generated PNG produces a paired `.meta.json`:
+Every generated PNG produces a paired `.meta.json` in the same folder:
 
 ```
-HP1_001.png         ← the image
-HP1_001.meta.json   ← what produced it
+Symbol_Art/HP1_001.png         ← the image
+Symbol_Art/HP1_001.meta.json   ← what produced it
 ```
 
 Schema (`h5g_asset.meta.v1`):
@@ -41,7 +64,7 @@ Schema (`h5g_asset.meta.v1`):
 {
   "schema": "h5g_asset.meta.v1",
   "filename": "HP1_001.png",
-  "full_path": "H:\\...\\4470_merickson\\HP1_001.png",
+  "full_path": "<project_root>/Symbol_Art/HP1_001.png",
   "generated_at": "2026-05-06T16:30:12.345Z",
   "tool": "nb2_generate",
   "provider": "fal.ai",
@@ -49,7 +72,7 @@ Schema (`h5g_asset.meta.v1`):
   "prompt": "Phoenix character bust facing front, wings spread, ...",
   "image_size": "2K",
   "aspect_ratio": "1:1",
-  "reference_images": ["H:\\...\\Key_003.png"],
+  "reference_images": ["<project_root>/Key_Art/Key_Art_003.png"],
   "source_image": null,
   "duration_seconds": 12.4
 }
@@ -65,64 +88,132 @@ Why sidecars matter:
 - **Independent of `project.json`.** If `project.json` is corrupted or
   deleted, the sidecars still tell you what each image is.
 
-The sidecar is written automatically — design skills don't need to do
-anything extra. Failure to write the sidecar never blocks the generation
-result; it's logged and ignored.
+The sidecar is written automatically by the MCP server. Design skills
+don't need to do anything extra. Failure to write the sidecar never
+blocks the generation result; it's logged and ignored.
 
 ---
 
-## Label table
+## Label table — folder × label
 
-| Asset | Label | Examples |
+Every generated asset belongs to exactly one of these category folders.
+The skill responsible for generation passes `output_dir = path.join(project_root, "<Folder>")`
+to the MCP tool so files land in the right place automatically.
+
+### Key art
+
+| Asset | Folder | Label | Examples |
+|---|---|---|---|
+| Master key art | `Key_Art/` | `Key_Art` | `Key_Art_001.png`, `Key_Art_002.png` |
+| Wide crop (16:9) | `Key_Art/` | `Key_Art_wide` | `Key_Art_wide_001.png` |
+| Tall crop (9:16) | `Key_Art/` | `Key_Art_tall` | `Key_Art_tall_001.png` |
+
+### Symbol sheets (contact sheets)
+
+| Asset | Folder | Label | Examples |
+|---|---|---|---|
+| Full-set contact sheet | `Symbol_Sheets/` | `Sheet` | `Sheet_001.png`, `Sheet_002.png` |
+
+### Symbol art (individual reel symbols — every prefix from `shared/symbol_vocabulary.md`)
+
+| Asset | Folder | Label | Examples |
+|---|---|---|---|
+| HP1–HP4 symbols | `Symbol_Art/` | `HP1`–`HP4` | `HP1_001.png`, `HP4_002.png` |
+| MP1–MP3 symbols | `Symbol_Art/` | `MP1`–`MP3` | `MP1_001.png` |
+| LP1–LP6 symbols | `Symbol_Art/` | `LP1`–`LP6` | `LP3_001.png` |
+| Wild — standard | `Symbol_Art/` | `WD` or `WD1` | `WD1_001.png` |
+| Wild — variants | `Symbol_Art/` | `WD2`, `WD3`, ... | `WD2_001.png` |
+| Scatter (classic) | `Symbol_Art/` | `SC` | `SC_001.png` |
+| Scatter-Wild hybrid | `Symbol_Art/` | `SW` | `SW_001.png` |
+| Coin / Hold-and-Spin | `Symbol_Art/` | `WY1`–`WY4` | `WY1_001.png`, `WY2_001.png` |
+| Bonus trigger | `Symbol_Art/` | `BO` | `BO_001.png` |
+| Mystery / Special Feature | `Symbol_Art/` | `SF` | `SF_001.png` |
+| Blocker / Dead | `Symbol_Art/` | `BL` | `BL_001.png` |
+| Jackpot tiers | `Symbol_Art/` | `JP1`–`JP6` | `JP1_001.png`, `JP6_001.png` |
+| Replacement | `Symbol_Art/` | `R1`+ | `R1_001.png` |
+| Money bag scatter | `Symbol_Art/` | `BAG`, `BAG_BO` | `BAG_001.png`, `BAG_BO_001.png` |
+| Money emoji trigger | `Symbol_Art/` | `MOJ` | `MOJ_001.png` |
+| Loot Link Collector | `Symbol_Art/` | `COL` | `COL_001.png` |
+| Loot Link Activator | `Symbol_Art/` | `ACT` | `ACT_001.png` |
+| Hotspot multiplier | `Symbol_Art/` | `HOT_x<N>` | `HOT_x2_001.png`, `HOT_x10_001.png` |
+| Hotspot operators | `Symbol_Art/` | `HOT_ADD`, `HOT_COMB`, `HOT_COLLAPSE`, `HOT_PERSIST` | `HOT_ADD_001.png` |
+| Double / Triple | `Symbol_Art/` | `D2_<base>`, `D3_<base>` | `D2_HP1_001.png` |
+| Split symbol | `Symbol_Art/` | `SPLIT_<base>` | `SPLIT_HP1_001.png` |
+| Non-wild multiplier | `Symbol_Art/` | `MULT_x<N>` | `MULT_x10_001.png` |
+| Pachinko ball | `Symbol_Art/` | `BALL` or `BALL_<tier>` | `BALL_001.png`, `BALL_gold_001.png` |
+| Pachinko peg | `Symbol_Art/` | `PEG` | `PEG_001.png` |
+| Pachinko bucket | `Symbol_Art/` | `BUCKET_x<N>` | `BUCKET_x100_001.png` |
+
+### Backgrounds
+
+| Asset | Folder | Label | Examples |
+|---|---|---|---|
+| Base background | `Backgrounds/` | `BG_base` | `BG_base_001.png` |
+| Free spins | `Backgrounds/` | `BG_freespins` | `BG_freespins_001.png` |
+| Bonus | `Backgrounds/` | `BG_bonus` | `BG_bonus_001.png` |
+| Pick-me | `Backgrounds/` | `BG_pickme` | `BG_pickme_001.png` |
+| Wheel | `Backgrounds/` | `BG_wheel` | `BG_wheel_001.png` |
+
+### Avatars (in-game animated characters)
+
+Up to 5 avatars per game (some games have none). Each avatar is a
+separate slot with its own iterations.
+
+| Asset | Folder | Label | Examples |
+|---|---|---|---|
+| Avatar 1 | `Avatars/` | `Avatar1` | `Avatar1_001.png`, `Avatar1_002.png` |
+| Avatar 2 | `Avatars/` | `Avatar2` | `Avatar2_001.png` |
+| Avatar 3 | `Avatars/` | `Avatar3` | `Avatar3_001.png` |
+| Avatar 4 | `Avatars/` | `Avatar4` | `Avatar4_001.png` |
+| Avatar 5 | `Avatars/` | `Avatar5` | `Avatar5_001.png` |
+
+### UI surfaces
+
+Each surface gets its own folder so a designer reviewing chrome can see
+just what they need without symbol/background noise.
+
+| Asset | Folder | Label | Examples |
+|---|---|---|---|
+| Reel frame / bezel | `Bezels/` | `Bezel` | `Bezel_001.png` |
+| HUD chrome | `HUD/` | `HUD` | `HUD_001.png` |
+| Paytable | `Paytables/` | `Paytable` | `Paytable_001.png` |
+| Win banner — small | `Win_Banners/` | `Banner_small` | `Banner_small_001.png` |
+| Win banner — medium | `Win_Banners/` | `Banner_medium` | `Banner_medium_001.png` |
+| Win banner — big | `Win_Banners/` | `Banner_big` | `Banner_big_001.png` |
+| Win banner — mega | `Win_Banners/` | `Banner_mega` | `Banner_mega_001.png` |
+| Win banner — epic | `Win_Banners/` | `Banner_epic` | `Banner_epic_001.png` |
+| Bonus screen — free spins intro | `Bonus_Screens/` | `BonusScreen_freespins` | `BonusScreen_freespins_001.png` |
+| Bonus screen — pick-me | `Bonus_Screens/` | `BonusScreen_pickme` | `BonusScreen_pickme_001.png` |
+| Bonus screen — wheel | `Bonus_Screens/` | `BonusScreen_wheel` | `BonusScreen_wheel_001.png` |
+| Multiplier badge | `Multipliers/` | `Multiplier_x<N>` | `Multiplier_x2_001.png`, `Multiplier_x10_001.png` |
+| Logo — hero | `Logos/` | `Logo_hero` | `Logo_hero_001.png` |
+| Logo — standard | `Logos/` | `Logo_standard` | `Logo_standard_001.png` |
+| Logo — compact | `Logos/` | `Logo_compact` | `Logo_compact_001.png` |
+| Lobby tile | `Lobby_Tiles/` | `Tile` | `Tile_001.png` |
+
+### QA reports
+
+| Asset | Folder | Label | Examples |
+|---|---|---|---|
+| Audit report | `QA_Reports/` | `QA` | `QA_001.md`, `QA_002.md` |
+
+### Derived variants — upscaled and resized
+
+These two suffixes describe **operations** on an existing approved asset,
+not new asset slots. The derived file lives in the **same folder as the
+source** (so a designer reviewing `Symbol_Art/` sees the 2K HP1 and its
+upscaled 4K sibling side by side).
+
+| Operation | Suffix pattern | Examples |
 |---|---|---|
-| Key art | `Key` | `Key_001.png`, `Key_002.png` |
-| Symbol contact sheet | `Sheet` | `Sheet_001.png` |
-| HP1–HP4 symbols | `HP1`–`HP4` | `HP1_001.png`, `HP4_002.png` |
-| MP1–MP3 symbols | `MP1`–`MP3` | `MP1_001.png` |
-| LP1–LP6 symbols | `LP1`–`LP6` | `LP3_001.png` |
-| Wild — standard | `WD` or `WD1` | `WD1_001.png` |
-| Wild — variants (sticky / stacked / etc.) | `WD2`, `WD3`, ... | `WD2_001.png` |
-| Scatter (classic) | `SC` | `SC_001.png` |
-| Coin / Hold-and-Spin family | `WY1`–`WY4` | `WY1_001.png`, `WY2_001.png` |
-| Bonus trigger | `BO` | `BO_001.png` |
-| Mystery / Special Feature | `SF` | `SF_001.png` |
-| Blocker / Dead | `BL` | `BL_001.png` |
-| Jackpot tiers | `JP1`–`JP4` | `JP1_001.png`, `JP3_001.png` |
-| Replacement | `R1`+ | `R1_001.png` |
-| Scatter-Wild hybrid | `SW` | `SW_001.png` |
-| Money bag scatter | `BAG`, `BAG_BO` | `BAG_001.png`, `BAG_BO_001.png` |
-| Money emoji trigger | `MOJ` | `MOJ_001.png` |
-| Loot Link Collector | `COL` | `COL_001.png` |
-| Loot Link Activator | `ACT` | `ACT_001.png` |
-| Hotspot multiplier | `HOT_x<N>` | `HOT_x2_001.png`, `HOT_x10_001.png` |
-| Hotspot operators | `HOT_ADD`, `HOT_COMB`, `HOT_COLLAPSE`, `HOT_PERSIST` | `HOT_ADD_001.png` |
-| Double / Triple symbols (pay-multiplier overlay) | `D2_<base>`, `D3_<base>` | `D2_HP1_001.png`, `D3_HP1_001.png` |
-| Split symbol | `SPLIT_<base>` | `SPLIT_HP1_001.png` |
-| Non-wild multiplier | `MULT_x<N>` | `MULT_x10_001.png` |
-| Pachinko ball | `BALL` (or tier-named: `BALL_gold`) | `BALL_001.png`, `BALL_gold_001.png` |
-| Pachinko peg | `PEG` | `PEG_001.png` |
-| Pachinko bucket | `BUCKET_x<N>` | `BUCKET_x100_001.png`, `BUCKET_x1000_001.png` |
-| Background — base | `BG_base` | `BG_base_001.png` |
-| Background — free spins | `BG_freespins` | `BG_freespins_001.png` |
-| Background — bonus | `BG_bonus` | `BG_bonus_001.png` |
-| Background — pick-me | `BG_pickme` | `BG_pickme_001.png` |
-| Background — wheel | `BG_wheel` | `BG_wheel_001.png` |
-| Reel frame / bezel | `Bezel` | `Bezel_001.png` |
-| HUD chrome | `HUD` | `HUD_001.png` |
-| Paytable | `Paytable` | `Paytable_001.png` |
-| Win banner — small | `Banner_small` | `Banner_small_001.png` |
-| Win banner — medium | `Banner_medium` | `Banner_medium_001.png` |
-| Win banner — big | `Banner_big` | `Banner_big_001.png` |
-| Win banner — mega | `Banner_mega` | `Banner_mega_001.png` |
-| Win banner — epic | `Banner_epic` | `Banner_epic_001.png` |
-| Multiplier badges | `Multiplier_xN` | `Multiplier_x2_001.png`, `Multiplier_x10_001.png` |
-| Logo — hero | `Logo_hero` | `Logo_hero_001.png` |
-| Logo — standard | `Logo_standard` | `Logo_standard_001.png` |
-| Logo — compact | `Logo_compact` | `Logo_compact_001.png` |
-| Lobby tile | `Tile` | `Tile_001.png` |
-| QA report | `QA` | `QA_001.md` |
-| Upscaled / final | `{OriginalLabel}_4K` | `HP1_001_4K.png` |
-| Smart-resized variant | `{OriginalLabel}_resized` | `BG_base_001_resized.png` |
+| Upscale | `_upscl_x<N>` where `<N>` is the linear multiplier of the upscale (2K→4K is `x2` since dimensions doubled; 1K→4K is `x4`) | `HP1_002.png` → `HP1_002_upscl_x2.png` |
+| Smart-resize | `_resize_<W>_<H>` where `<W>_<H>` is the exact output dimensions in pixels | `Key_Art_003.png` → `Key_Art_003_resize_768_1536.png` |
+| Variant fan-out (hero upscale only) | append `_v<N>` to the upscale suffix before picking the winner | `HP1_002_upscl_x2_v1.png`, `..._v2.png`, `..._v3.png` — after picking, rename winner to drop `_v<N>` |
+
+Both suffixes preserve the source filename verbatim so any team member
+can trace the derived file back to its origin by inspection. The `_4K`
+and `_resized` suffixes used in earlier versions of this plugin are
+**retired** — do not use them in new generations.
 
 ---
 
@@ -131,23 +222,32 @@ result; it's logged and ignored.
 Pseudocode every skill uses:
 
 ```
-function nextFilename(projectRoot, label, ext = "png"):
+function nextFilename(projectRoot, folder, label, ext = "png"):
+    folderPath = path.join(projectRoot, folder)
     pattern = `{label}_*.{ext}`
-    existing = glob(projectRoot, pattern)
-    
+    existing = glob(folderPath, pattern)
+
     if existing is empty:
         return `{label}_001.{ext}`
-    
+
     highest = max number across all matched files
     next = highest + 1
-    
+
     return `{label}_{next:03d}.{ext}`
 ```
 
+Two important details:
+
+- The scan is **scoped to the asset's category folder**, not the
+  project root. `nextFilename` for `HP1` looks in `Symbol_Art/`, not
+  in the project root.
+- The folder is **created on first write** if it doesn't exist. Skills
+  don't pre-create empty folders.
+
 Examples:
-- Folder is empty → `Key_001.png`
-- Folder has `Key_001.png` and `Key_002.png` → next is `Key_003.png`
-- Folder has `HP1_001.png`, `HP1_002.png`, `HP1_005.png` (gap) → next is `HP1_006.png`
+- `Symbol_Art/` is empty → `HP1_001.png`
+- `Symbol_Art/` has `HP1_001.png` and `HP1_002.png` → next is `HP1_003.png`
+- `Symbol_Art/` has `HP1_001.png`, `HP1_002.png`, `HP1_005.png` (gap) → next is `HP1_006.png`
   (we always go past the max, never fill gaps)
 
 ---
@@ -155,22 +255,27 @@ Examples:
 ## What about iterations of the same conceptual asset?
 
 When a user says "iterate on HP1 — make it darker," generate `HP1_002.png`
-without touching `HP1_001.png`. The user reviews both and tells you which
-to mark as approved.
+in `Symbol_Art/` without touching `HP1_001.png`. The user reviews both
+and tells you which to mark as approved.
 
-The approved version is recorded in `project.json.assets.symbols.HP1` as
-the **last entry** by convention, OR explicitly in a separate
-`approved` field if the user picks a non-latest version. Example:
+The approved version is recorded in `project.json.assets.symbols.HP1`.
+Paths stored in `project.json` are **relative to `project_root`,
+including the subfolder**:
 
 ```json
 "symbols": {
   "HP1": {
-    "iterations": ["HP1_001.png", "HP1_002.png", "HP1_003.png"],
-    "approved": "HP1_002.png"
+    "iterations": [
+      "Symbol_Art/HP1_001.png",
+      "Symbol_Art/HP1_002.png",
+      "Symbol_Art/HP1_003.png"
+    ],
+    "approved": "Symbol_Art/HP1_002.png"
   }
 }
 ```
 
+At use time, resolve to absolute by `path.join(project_root, stored)`.
 This means iteration 002 is the one downstream skills should reference,
 even though 003 came later (e.g. user preferred 002 after seeing 003).
 
@@ -179,16 +284,19 @@ even though 003 came later (e.g. user preferred 002 after seeing 003).
 ## What about full-set "approved" snapshots?
 
 After all symbols are individually approved, the symbol-sheet skill
-assembles them into a contact sheet → `Sheet_001.png`. If the set is
-later refined (one symbol replaced), the new sheet is `Sheet_002.png`.
-Old sheets stay on disk for historical reference.
+assembles them into a contact sheet → `Symbol_Sheets/Sheet_001.png`.
+If the set is later refined (one symbol replaced), the new sheet is
+`Symbol_Sheets/Sheet_002.png`. Old sheets stay on disk for historical
+reference.
 
 ---
 
 ## Anti-patterns (do not do these)
 
+- ❌ Writing files to the project root instead of the category subfolder
 - ❌ `HP1_2K.png` — no resolution in the filename
-- ❌ `HP1_v2.png` — use the counter, not "v2"
+- ❌ `HP1_v2.png` — use the counter, not "v2" (exception: `_v<N>` on
+  derived-variant fan-out, dropped after picking a winner)
 - ❌ `HP1_phoenix.png` — no subject in the filename (it's already in
   the brief and project.json)
 - ❌ `HP1_final.png` — "final" gets stale; use the `approved` field in
@@ -201,28 +309,21 @@ Old sheets stay on disk for historical reference.
 - ❌ Spelling out long names like `WILD.png`, `SCATTER.png`, `BONUS.png` —
   use the canonical short prefixes from `shared/symbol_vocabulary.md`
   (`WD1`, `SC`, `BO`)
+- ❌ `HP1_002_4K.png` — the `_4K` suffix is retired; use `_upscl_x2`
+- ❌ `BG_base_001_resized.png` — the bare `_resized` suffix is retired;
+  use `_resize_<W>_<H>` with exact pixel dimensions
 
 ---
 
-## When does the suffix `_4K` apply?
+## Why subfolders, not a flat root?
 
-When `slot-step-09` produces a 4K version of an existing 2K asset,
-the upscaled file gets the suffix `_4K`. Example:
-`HP1_002.png` → upscale → `HP1_002_4K.png`
+A finished game has 40–80 generated PNGs across a dozen asset types.
+A flat root forces every team member to mentally filter the list every
+time they open it. Subfolders make the structure self-documenting:
+"the bezels are in `Bezels/`", "the avatars are in `Avatars/`", "the
+audit reports are in `QA_Reports/`". File Explorer, Drive Stream, and
+any handoff package all show the structure without anyone needing to
+read a README.
 
-The original 2K file stays. Both live side-by-side. The upscaled version
-is referenced in `project.json.assets[...].upscaled` field.
-
----
-
-## When does the suffix `_resized` apply?
-
-When `slot-step-10` produces alternate aspect ratios for a
-deliverable (e.g., a `9:16` portrait BG also needed at `1:1` for a
-lobby tile preview), the resized output uses `_resized` plus a tag:
-
-`BG_base_001.png` → smart-resize to 1:1 → `BG_base_001_resized_1x1.png`
-
-If the user just wants one alternate size, the simpler form
-`BG_base_001_resized.png` works. The MCP tool returns the actual
-output paths regardless of naming choice.
+This is the single rule the plugin enforces about where files live —
+everything else (counters, sidecars, approval tracking) flows from it.

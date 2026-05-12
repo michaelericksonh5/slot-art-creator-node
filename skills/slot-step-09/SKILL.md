@@ -1,6 +1,6 @@
 ---
 name: slot-step-09
-description: STEP 9 — Upscale approved slot art from 2K to 4K with NB2 using the proven Path-A workflow (vision model in the loop). NB2 has a strong bias toward regenerating rather than upscaling; this skill's prompt structure forces it into upscale mode by following the 6-part preservation template and reviewing the output against an 8-axis rubric, iterating on failure. Run after /slot-step-08 passes GREEN.
+description: STEP 9 — Upscale approved slot art to a higher resolution with NB2 using the proven Path-A workflow (vision model in the loop). Typical jumps are 2K→4K (linear x2) or 1K→4K (linear x4); the output file is named with the suffix `_upscl_x<N>` where `<N>` is the linear multiplier, and the file lives in the same category folder as its source so a designer reviewing `Symbol_Art/` sees the 2K HP1 and the 4K HP1 side by side. NB2 has a strong bias toward regenerating rather than upscaling; this skill's prompt structure forces it into upscale mode by following the 6-part preservation template and reviewing the output against an 8-axis rubric, iterating on failure. Run after /slot-step-08 passes GREEN.
 ---
 
 # Step 9 — NB2 Upscaler
@@ -26,10 +26,19 @@ instead.
 
 ### Step 1 — Pick the source asset
 
-The source is usually an approved file in the project folder. Common sources:
-- `HP1_002.png` (the approved iteration of HP1)
-- `BG_base_001.png`
-- `Logo_hero_001.png`
+The source is usually an approved file from one of the project's
+category subfolders. Common sources (paths are project-relative; resolve
+against `project_root` before passing to the MCP tool):
+
+- `Symbol_Art/HP1_002.png` (the approved iteration of HP1)
+- `Backgrounds/BG_base_001.png`
+- `Logos/Logo_hero_001.png`
+- `Key_Art/Key_Art_003.png` (the locked master)
+
+Compute the **linear multiplier** `<N>` from the source size and target
+size — e.g. 2K→4K is x2 (dimensions double), 1K→4K is x4, 1K→2K is x2.
+Read the source's `.meta.json` sidecar to get the source's `image_size`
+field; the target is whatever you're upscaling to.
 
 **If the user pastes / attaches an external asset in chat** that they want
 upscaled, that path lives in a temp location outside the allowed-roots
@@ -87,31 +96,34 @@ marketing surfaces), generate N variants in parallel and pick the best.
 **How to run N>1:**
 
 Issue N parallel `nb2_upscale` calls with the same `prompt` and `source`
-but different `asset_name` suffixes:
+but different `asset_name` suffixes (the `_v<N>` is appended **after**
+the `_upscl_x<N>` suffix):
 
 ```
-nb2_upscale(asset_name="HP1_002_4K_v1", ...)
-nb2_upscale(asset_name="HP1_002_4K_v2", ...)
-nb2_upscale(asset_name="HP1_002_4K_v3", ...)
-nb2_upscale(asset_name="HP1_002_4K_v4", ...)
+nb2_upscale(asset_name="HP1_002_upscl_x2_v1", ...)
+nb2_upscale(asset_name="HP1_002_upscl_x2_v2", ...)
+nb2_upscale(asset_name="HP1_002_upscl_x2_v3", ...)
+nb2_upscale(asset_name="HP1_002_upscl_x2_v4", ...)
 ```
 
 Send them in a single tool batch (parallel MCP calls in one turn). Then
 in Step 5, review all N outputs together against the 8-axis rubric and
-pick the winner. Save the winner as the canonical `<source_basename>_4K`,
-optionally archive the runner-ups (don't delete — they're decent fallbacks
-if the winner has a subtle issue you catch later).
+pick the winner. **Rename the winner to drop the `_v<N>` suffix** so
+the canonical upscaled file is `HP1_002_upscl_x2.png`. Optionally
+archive the runner-ups under their versioned names (don't delete —
+they're decent fallbacks if the winner has a subtle issue you catch
+later).
 
 For a single-call run:
 
 | API arg | Value |
 |---|---|
 | `prompt` | composed preservation prompt |
-| `source` | absolute path to the approved source asset — resolve any relative filenames against `project_root` first |
-| `image_size` | `"4K"` (always — that's the point of this skill) |
+| `source` | absolute path to the approved source asset — resolve the stored relative path against `project_root` first (e.g. `path.join(project_root, "Symbol_Art/HP1_002.png")`) |
+| `image_size` | the target — typically `"4K"`. The linear multiplier `<N>` in the filename is computed from source-size→target-size, not from this arg directly. |
 | `aspect_ratio` | omit; inherit from source |
-| `output_dir` | `{project_root}` |
-| `asset_name` | `"<source_basename>_4K"`, e.g. for source `HP1_002.png` pass `"HP1_002_4K"` (the MCP server appends `.png`) |
+| `output_dir` | **the source's category folder** — `path.dirname(absolute_source_path)`. Upscaled outputs live next to their source so `Symbol_Art/HP1_002.png` and `Symbol_Art/HP1_002_upscl_x2.png` sit side by side. |
+| `asset_name` | `"<source_basename>_upscl_x<N>"` where `<source_basename>` is the source filename without extension and `<N>` is the linear multiplier. Example: source `Symbol_Art/HP1_002.png` upscaled 2K→4K → pass `"HP1_002_upscl_x2"`. The MCP server appends `.png`. |
 
 ### Step 5 — Inline review (Gate 2) — 8-axis rubric
 
@@ -119,7 +131,8 @@ For **N=1**: read source and output, compare against the rubric below.
 
 For **N>1**: read source and ALL N outputs, score each output against
 the rubric, then declare the highest-scoring output the winner. Rename
-the winner to drop the `_v<N>` suffix; keep the runners-up with their
+the winner to drop the `_v<N>` suffix so the canonical upscale name is
+`<source_basename>_upscl_x<N>.png`; keep the runners-up with their
 versioned names. If two outputs tie, prefer the one closer to the
 source's edge structure (most preservation, least redesign).
 
@@ -146,16 +159,19 @@ or stylistically incompatible with NB2's upscale mode). This matches the
 ### Step 6 — Update state
 
 For each upscaled asset, set the `upscaled` field in the canonical asset
-record. Examples:
+record. Paths are project-relative including the subfolder (same as
+every other asset path in `project.json`):
 
 ```json
-"assets.symbols.HP1.upscaled":     "HP1_002_4K.png"
-"assets.backgrounds.base.upscaled": "BG_base_001_4K.png"
-"assets.key.upscaled":              "Key_003_4K.png"
+"assets.symbols.HP1.upscaled":      "Symbol_Art/HP1_002_upscl_x2.png"
+"assets.backgrounds.base.upscaled": "Backgrounds/BG_base_001_upscl_x2.png"
+"assets.key.upscaled":              "Key_Art/Key_Art_003_upscl_x2.png"
+"assets.avatars.Avatar1.upscaled":  "Avatars/Avatar1_002_upscl_x2.png"
 ```
 
-The `iterations` and `approved` fields are NOT touched. The 2K original
-stays in place; the 4K version lives alongside as a sibling field.
+The `iterations` and `approved` fields are NOT touched. The original
+file stays in place; the upscaled version lives in the same folder as
+a sibling and is referenced via the `upscaled` field.
 
 Set `current_step: "upscale_in_progress"`, `next_step: "/slot-step-09"`
 (continue) or `"/slot-step-10"` (move to delivery variants).
@@ -166,12 +182,12 @@ Schema follows the canonical asset record shape in `shared/project_memory.md`:
 ### Step 7 — Next step nudge
 
 ```
-✓ Step 9 — Upscaled to 4K.
-  Source : HP1_002.png
-  Output : HP1_002_4K.png
+✓ Step 9 — Upscaled (linear x2, target 4K).
+  Source : Symbol_Art/HP1_002.png
+  Output : Symbol_Art/HP1_002_upscl_x2.png
   All 8 preservation axes passed ✓
-  Folder: <project_root>
-  Open:   file:///<project_root with / separators>
+  Folder: <project_root>/Symbol_Art/
+  Open:   file:///<project_root>/Symbol_Art/
 
 Next options:
   - Continue upscaling other approved assets with /slot-09 again

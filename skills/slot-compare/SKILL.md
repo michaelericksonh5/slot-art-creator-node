@@ -1,6 +1,6 @@
 ---
 name: slot-compare
-description: Side-by-side visual comparison of slot art assets. Three modes — ITERATION (multiple iterations of the same asset within one project, e.g. Key_001 vs Key_003 vs Key_005, to help pick a winner), ASSET (different assets within one project, e.g. HP1 vs MP1 vs LP1 to verify tier hierarchy reads correctly, or the full approved set in one view), and CROSS-PROJECT (same asset slot across two projects — useful for reskins, sequel consistency, A/B style explorations). Reads images inline via the Read tool, scores them against the rubric, and produces a structured comparison report. Readonly — never writes to project.json. Use this whenever the user asks to compare, evaluate side-by-side, pick a winner between, choose between iterations, verify hierarchy, check consistency across, or audit two versions of any slot art asset — even when they don't explicitly say "compare" (e.g. "which is better", "which key art should I lock", "do these symbols still read as a tier set", "does the reskin still feel like the same game").
+description: Side-by-side visual comparison of slot art assets. Three modes — ITERATION (multiple iterations of the same asset within one project, e.g. Key_Art_001 vs Key_Art_003 vs Key_Art_005, to help pick a winner), ASSET (different assets within one project, e.g. HP1 vs MP1 vs LP1 to verify tier hierarchy reads correctly, or the full approved set in one view), and CROSS-PROJECT (same asset slot across two projects — useful for reskins, sequel consistency, A/B style explorations). Reads images inline via the Read tool, scores them against the rubric, and produces a structured comparison report. Readonly — never writes to project.json. Use this whenever the user asks to compare, evaluate side-by-side, pick a winner between, choose between iterations, verify hierarchy, check consistency across, or audit two versions of any slot art asset — even when they don't explicitly say "compare" (e.g. "which is better", "which key art should I lock", "do these symbols still read as a tier set", "does the reskin still feel like the same game").
 ---
 
 # Slot Compare — Side-by-Side Visual Review
@@ -67,22 +67,28 @@ Based on mode:
   specific HP).
 - Read the `approved` filename from each project's `project.json` for
   that slot. If either is `null`, ask the user to name the iteration
-  explicitly (`Key_002` vs `Key_005`).
+  explicitly (`Key_Art_002` vs `Key_Art_005`).
 
 ### Step 2 — Build absolute paths
 
-Bare filenames in `project.json` are relative to that project's
-`project_root`. Resolve each one to an absolute path before passing it
-to the Read tool:
+Paths in `project.json` are stored as relative-to-project-root strings
+that include the category subfolder (e.g. `"Symbol_Art/HP1_002.png"`,
+`"Key_Art/Key_Art_003.png"`). Resolve each one to an absolute path
+before passing it to the Read tool:
 
 ```
-absolute = path.join(project.project_root, filename)
+absolute = path.join(project.project_root, relative_path)
 ```
 
-For CROSS-PROJECT mode, each project's filenames resolve against *that
-project's* root, not the active one. This matters when a user has the
-Phoenix project active and asks to compare against the Jungle Kingdom
-project — Jungle Kingdom files resolve against the Jungle Kingdom root.
+This is one `path.join` call — the stored string already encodes the
+subfolder, so the comparison skill doesn't need to know the
+category-to-folder mapping. Just resolve and read.
+
+For CROSS-PROJECT mode, each project's stored paths resolve against
+*that project's* root, not the active one. This matters when a user
+has the Phoenix project active and asks to compare against the Jungle
+Kingdom project — Jungle Kingdom files resolve against the Jungle
+Kingdom root.
 
 ### Step 3 — Show the comparison inline
 
@@ -93,7 +99,7 @@ intent:
 
 | Mode | Order |
 |---|---|
-| ITERATION | Chronological by filename index (`Key_001` → `Key_002` → `Key_003`) so the user sees the evolution. Mark the currently-approved one if any. |
+| ITERATION | Chronological by filename index (`Key_Art_001` → `Key_Art_002` → `Key_Art_003`) so the user sees the evolution. Mark the currently-approved one if any. |
 | ASSET — tier check | Tier order, highest value first: Jackpot → Wild → Scatter → HP1 → HP2 → MP1 → MP2 → LP1 → … → LP6 |
 | ASSET — UI surface trio | Hero → Standard → Compact for logos; Bezel → HUD → Paytable for chrome; Small → Medium → Big → Mega → Epic for banner tiers |
 | ASSET — backgrounds | Base → Free-spins → Bonus → Pick-me → Wheel |
@@ -176,8 +182,8 @@ those modes are diagnostic, not selection.}
 
 **Examples of the "Recommended next action" line:**
 
-- ITERATION (key art): `"Lock Key_003 as the style anchor by approving it in /slot-step-02."`
-- ITERATION (symbol): `"Approve HP1_002 — say 'approve HP1_002' to set assets.symbols.HP1.approved."`
+- ITERATION (key art): `"Lock Key_Art/Key_Art_003.png as the style anchor by approving it in /slot-step-02."`
+- ITERATION (symbol): `"Approve Symbol_Art/HP1_002.png — say 'approve HP1_002' to set assets.symbols.HP1.approved."`
 - ASSET (tier check passed): `"Tier gradient is clean — proceed to /slot-step-05 (backgrounds) or /slot-step-08 (audit)."`
 - ASSET (tier check failed): `"Re-run /slot-step-03 for MP1 — its warmth is too close to HP2 and the gradient breaks at the HP→MP boundary."`
 - CROSS-PROJECT (reskin holds): `"Reskin is consistent — same hero silhouette, same value hierarchy, distinct palette. Safe to ship."`
