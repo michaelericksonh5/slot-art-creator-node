@@ -6,7 +6,7 @@ High 5 Games slot machine art generation plugin for Claude Code and Claude Cowor
 **Two model families, your choice per call:**
 
 - **Nano Banana 2** ([fal.ai/models/fal-ai/nano-banana-2](https://fal.ai/models/fal-ai/nano-banana-2)) — 4 tools (`nb2_generate`, `nb2_edit`, `nb2_upscale`, `nb2_smart_resize`). Either Google Gemini OR fal.ai works fully. With both keys set, generate/edit/upscale routes to Gemini (direct API, same NB2 model) and smart-resize routes to fal.ai (purpose-built Nano Banana Pro endpoint).
-- **GPT Image 2** ([OpenAI gpt-image-2](https://developers.openai.com/api/docs/models/gpt-image-2), released April 2026) — 2 tools (`gpt2_generate`, `gpt2_edit`) at 1K or 2K resolution. Best for **accurate in-image text** (paytables, logos, banners with copy), **stable 2K photorealism**, and **compositional multi-image edits**. More expensive per call than NB2 — use selectively for hero and text-heavy assets. For 4K marketing output: generate at 2K with `gpt2_generate`, then run `nb2_upscale`. **No faithful upscale mode** in gpt-image-2 (always regenerates); use `nb2_upscale` for true source-preserving upscales. Multi-aspect resize stays on `nb2_smart_resize` (a gpt-image-2-based equivalent was prototyped but not shipped — output quality wasn't verified against the well-tested fal.ai path).
+- **GPT Image 2** ([OpenAI gpt-image-2](https://developers.openai.com/api/docs/models/gpt-image-2), released April 2026) — 2 tools (`gpt2_generate`, `gpt2_edit`) at 1K or 2K resolution. Best for **accurate in-image text** (paytables, logos, banners with copy), **stable 2K photorealism**, and **compositional multi-image edits**. More expensive per call than NB2 — use selectively for hero and text-heavy assets. For 4K marketing output: generate at 2K with `gpt2_generate`, then run `nb2_upscale` (tested path). **No faithful upscale mode** in gpt-image-2 (always regenerates); use `nb2_upscale` for true source-preserving upscales. **Multi-aspect resize stays on `nb2_smart_resize`** — a gpt2-based smart resize was prototyped but not shipped in v1.5.3 because output quality wasn't verified against the well-tested fal.ai path.
 
 Both families are independent — set whichever keys you need. The NB2
 family powers the bulk of the slot-step-* workflow; the gpt2 family is
@@ -126,7 +126,7 @@ claude plugin list
 ```
 Should show `slot-art-creator-node@h5g-plugins ... Status: √ enabled`.
 
-**Both:** Type `/slot-` in chat. You should see 13 commands: `/slot-help` (workflow tour), `/slot-setup` (API-key configuration), and the 11 numbered steps `slot-step-00` through `slot-step-10`. If they're missing, see [Troubleshooting](#troubleshooting) below.
+**Both:** Type `/slot-` in chat. You should see 15 commands: 4 non-numbered utilities (`/slot-help` workflow tour, `/slot-setup` API-key configuration, `/slot-tutorial` guided end-to-end walkthrough, `/slot-compare` side-by-side review) plus the 11 numbered steps `slot-step-00` through `slot-step-10`. If they're missing, see [Troubleshooting](#troubleshooting) below.
 
 ---
 
@@ -135,7 +135,7 @@ Should show `slot-art-creator-node@h5g-plugins ... Status: √ enabled`.
 **Two key families with independent requirements:**
 
 - **NB2 family** (4 `nb2_*` tools): either `GEMINI_API_KEY` OR `FAL_KEY` is fully sufficient. Both routes each tool to its strongest backend.
-- **GPT Image 2 family** (2 `gpt2_*` tools — `gpt2_generate`, `gpt2_edit`): `OPENAI_API_KEY`. Optional — only needed if you want gpt-image-2 for paytables, logos, banners with required copy, stable-2K photorealism, or compositional multi-image edits.
+- **GPT Image 2 family** (2 `gpt2_*` tools — `gpt2_generate`, `gpt2_edit`): `OPENAI_API_KEY`. Optional — only needed if you want gpt-image-2 for paytables, logos, banners with required copy, stable-2K photorealism, or compositional multi-image edits. For 4K marketing output, generate at 2K with `gpt2_generate` then upscale via `nb2_upscale` (tested path).
 
 | Provider | Get a key | Powers |
 |---|---|---|
@@ -155,11 +155,12 @@ Should show `slot-art-creator-node@h5g-plugins ... Status: √ enabled`.
 | If the asset needs... | Reach for... |
 |---|---|
 | Accurate text rendering in the image (paytables, logos, banners with copy) | `gpt2_generate` / `gpt2_edit` |
-| Photorealistic 2K (marketing hero shots — gpt-image-2's stable ceiling) | `gpt2_generate` (size `2K`, quality `high`) |
-| Genuine 4K marketing output | `gpt2_generate` at `2K` → `nb2_upscale` to 4K (tested path) |
+| Photorealistic 2K (marketing hero shots — gpt-image-2's stable ceiling) | `gpt2_generate` (size `2K`, quality `high`) — for genuine 4K, generate at 2K then run `nb2_upscale` |
 | Compositional editing combining 2-16 reference images | `gpt2_edit` with `extra_references` |
 | Routine slot symbols at thumbnail size | `nb2_generate` (NB2 is purpose-tuned, gpt2 is overkill and pricier) |
-| Multi-aspect resize | `nb2_smart_resize` (fal.ai NB Pro purpose-built endpoint, single call, cheapest) |
+| Multi-aspect resize of any source | `nb2_smart_resize` (fal.ai NB Pro purpose-built endpoint, single call, cheapest; falls back to Gemini + pngjs when only `GEMINI_API_KEY` is set) |
+| Multi-aspect resize where wordmark text must stay readable | Generate the new aspect ratio fresh at 2K with `gpt2_generate` and a recompose prompt — gpt2-based smart resize was prototyped but not shipped (output quality wasn't verified) |
+| Genuine 4K marketing output | `gpt2_generate` at `2K` → `nb2_upscale` to 4K (tested path) |
 | Upscale an approved 2K asset to 4K | `nb2_upscale` (gpt-image-2 doesn't faithfully upscale — it generates fresh) |
 
 See `shared/gpt_image2_prompting.md` for the full gpt2 playbook (size mapping, quality settings, cost rule-of-thumb, per-skill recommendations).
@@ -259,23 +260,41 @@ sessions and conversation compaction (see [Project memory](#project-memory)).
 |---|---|---|---|
 | — | `/slot-help` | Any time | Workflow overview + routes you to the right next step |
 | — | `/slot-setup` | First run or when changing keys | Guided API-key configuration (never accepts keys via chat — points you at the safe launcher script) |
+| — | `/slot-tutorial` | First time on the plugin, or a long gap away | Guided end-to-end walkthrough using a sample game. **DRY mode** by default (zero API credits — explains every step, every gate, every state diff). **LIVE mode** opt-in to actually generate the sample. |
+| — | `/slot-compare` | Picking between iterations, verifying tier hierarchy, or auditing a reskin | Readonly side-by-side review of slot art. Three modes: ITERATION (multiple iterations of one asset), ASSET (different assets in one project), CROSS-PROJECT (same slot across two projects). Scores each against the rubric. Never writes to `project.json`. |
 | 00 | `/slot-step-00` | Optional, before brief | Pulls GDD from Drive, seeds project |
 | 01 | `/slot-step-01` | Foundation | Locks theme, palette, style, manifest into `project.json` |
 | 02 | `/slot-step-02` | After brief | Master key art — becomes the visual style anchor |
-| 03 | `/slot-step-03` | After key art | Individual symbols (HP, MP, LP, Wild, Scatter) |
-| 04 | `/slot-step-04` | After symbols | Full contact sheet for review |
-| 05 | `/slot-step-05` | After symbols | Base, free-spins, bonus, pick-me, wheel BGs |
-| 06 | `/slot-step-06` | After BG | Bezel, HUD, paytable, banners, multipliers, lobby tile, logo |
+| 03 | `/slot-step-03` | After key art | Individual symbols (HP, MP, LP, Wild, Scatter, Coin, Bonus, Mystery, Blocker, Loot Link family, Jackpot tiers, …) |
+| 04 | `/slot-step-04` | After symbols (or after key art for IDEATION mode) | Full contact sheet for review |
+| 05 | `/slot-step-05` | After key art | Base, free-spins, bonus, pick-me, wheel BGs |
+| 06 | `/slot-step-06` | After BG | Bezel, HUD, paytable, banners, multipliers, lobby tile, logo, in-game avatars (animated characters) |
 | 07 | `/slot-step-07` | Optional | Adapt an existing UI mock to a new theme |
 | 08 | `/slot-step-08` | Final review | RED/YELLOW/GREEN audit report |
-| 09 | `/slot-step-09` | Production | Upscale approved 2K to 4K |
-| 10 | `/slot-step-10` | Final delivery | Multi-aspect-ratio variants of approved hero |
+| 09 | `/slot-step-09` | Production | Upscale approved 2K to 4K (output naming: `<source>_upscl_x<N>.png`) |
+| 10 | `/slot-step-10` | Final delivery | Multi-aspect-ratio variants of approved hero (output naming: `<source>_resize_<W>_<H>.png`) |
+
+### Route-and-resume on missing project
+
+Starting with v1.5.5, generation skills (`/slot-step-02` through
+`/slot-step-10`) and the comparison skill (`/slot-compare`) detect
+when there's no active project on this machine and **guide you through
+setup in the same conversation** instead of dead-ending. If you ask
+`/slot-step-03 generate HP1` cold, the skill acknowledges what you
+asked for, runs `/slot-step-01` (and `/slot-step-02` for the key art),
+then resumes the original HP1 generation — without making you re-invoke
+your command. See `shared/project_memory.md` → "The 'no active
+project — guide through setup' pattern" for the full prerequisite chain
+per skill.
 
 ---
 
 ## Project memory
 
-Each game = one project folder on the H: drive. State persists
+Each game = one project folder under `<PROJECT_BASE>` (resolves to the
+H5G shared Drive Stream when mounted, otherwise `~/slot-art-projects/`
+or whatever `SLOT_ART_PROJECT_BASE` points at — see [External users /
+non-H5G installs](#external-users--non-h5g-installs)). State persists
 automatically — restart Claude Code, get compacted, switch machines,
 and your project picks up where you left off.
 
@@ -374,11 +393,20 @@ The bundled `nb2node` MCP server exposes 7 tools across two model families:
 |---|---|---|
 | `nb2_generate` | NB2 | Text-to-image (Gemini/fal.ai routing) |
 | `nb2_edit` | NB2 | Image-to-image edit / reskin |
-| `nb2_upscale` | NB2 | Path-A 4K upscale (the only **faithful** upscale tool — preserves source pixels) |
-| `nb2_smart_resize` | NB2 | Multi-size pixel-perfect resize. Either provider works — see [API keys](#api-keys) for routing details |
-| `gpt2_generate` | gpt-image-2 | Text-to-image at 1K or 2K. Use for paytables, logos, banners with copy, hero photorealism. (For 4K, generate at 2K here then run `nb2_upscale`.) |
-| `gpt2_edit` | gpt-image-2 | Image-to-image edit; accepts an array of up to ~16 reference images for compositional editing |
+| `nb2_upscale` | NB2 | Path-A upscale (the only **faithful** upscale tool — preserves source pixels). Typical 2K→4K is `_upscl_x2`. |
+| `nb2_smart_resize` | NB2 | Multi-size pixel-perfect resize. Either provider works — see [API keys](#api-keys) for routing details. Output naming: `<source>_resize_<W>_<H>.png` (one file per target). |
+| `gpt2_generate` | gpt-image-2 | Text-to-image with gpt-image-2 at 1K or 2K. Use for paytables, logos, banners with copy, hero photorealism. For 4K, generate at 2K here then run `nb2_upscale`. |
+| `gpt2_edit` | gpt-image-2 | Image-to-image edit with optional mask; accepts an array of up to ~16 reference images for compositional editing |
 | `nb2_stage_image` | helper | Copy any external/chat-attached image into the safe inputs folder so it can be passed as `source` or `references` to any of the above |
+
+**`output_dir` contract (v1.5.5+).** Every generation tool requires
+`output_dir` to be an absolute path. Inside a `/slot-step-*` skill, that
+means `path.join(project_root, "<Category>")` where `<Category>` is one
+of the 13 named subfolders (`Key_Art`, `Symbol_Art`, `Avatars`, `Bezels`,
+`Win_Banners`, etc.). Relative paths are rejected with an actionable
+error message that lists every valid category. Omitting `output_dir`
+entirely still falls back to `~/Pictures/claude_nb2` for ad-hoc usage
+outside a project.
 
 ---
 
