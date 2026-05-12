@@ -132,9 +132,8 @@ briefly and summarize:
 
 Confirm to the user that **either** Gemini *or* fal.ai is sufficient
 for the NB2 workflow; OpenAI's gpt-image-2 is an optional second model
-family that wins on text-heavy assets (paytables, logos) and is the
-preferred backend for `gpt2_smart_resize`. Show them which keys are
-present in their actual `.env`.
+family that wins on text-heavy assets (paytables, logos). Show them
+which keys are present in their actual `.env`.
 
 ### Step 3 — Decision point: keep touring DRY, or flip to LIVE
 
@@ -408,13 +407,17 @@ Same 5-part pattern:
 ### Step 14 — Walk through /slot-step-10 (Smart Resize)
 
 - **Inputs:** An approved asset to produce in multiple aspect ratios.
-- **Routing:** Three-way decision:
-  - Source has critical text? → `gpt2_smart_resize` (text stays
-    readable across resizes)
-  - No critical text + `FAL_KEY` set? → `nb2_smart_resize` to
-    fal.ai NB Pro (single API call)
-  - No critical text + Gemini-only? → `nb2_smart_resize` to Gemini
-    with local center-crop fallback
+- **Routing:** Two-way decision based on which key is set:
+  - `FAL_KEY` set? → `nb2_smart_resize` routes to fal.ai NB Pro
+    (single API call to the purpose-built endpoint — preferred)
+  - Gemini-only? → `nb2_smart_resize` routes to Gemini and does a
+    local pngjs center-crop per target (works fully; just more calls)
+- **No gpt-image-2 path for resize.** A `gpt2_smart_resize` tool was
+  prototyped in earlier 1.5.x releases but removed in v1.5.3 — its
+  output quality wasn't verified against the well-tested fal.ai
+  path. For text-heavy sources, either generate the new aspect ratio
+  fresh at 2K with `gpt2_generate`, or accept that text may need to
+  be re-composited at runtime.
 - **Gate:** Per-aspect inline review — subject preserved, palette
   consistent, no awkward crops.
 - **State diff:**
