@@ -41,6 +41,11 @@ tell you if you've skipped a prerequisite.
 
   /slot-setup       First-time API key configuration (run once)
   /slot-help        This orientation (you can always come back here)
+  /slot-tutorial    Guided end-to-end tour using a worked example
+                    (DRY by default — costs nothing; opt into LIVE if you
+                    want it to actually generate the sample game)
+  /slot-compare     Side-by-side review of iterations, asset sets, or
+                    two projects — readonly, helps you pick a winner
 
   /slot-step-00     Pull a Game Design Document from Drive (optional — skip if pitching fresh)
   /slot-step-01     Lock the game brief: theme, palette, style, tier plan, symbol manifest
@@ -55,9 +60,11 @@ tell you if you've skipped a prerequisite.
   /slot-step-10     Multi-aspect variants of an approved asset (1:1, 16:9, 9:16, etc.)
 
 Where to start:
-  - First time on this plugin?  Run /slot-setup (keys) then continue here.
+  - First time on this plugin?  Run /slot-setup (keys), then /slot-tutorial for a guided tour.
   - Have a GDD already?         Run /slot-step-00 to seed the project from it.
   - Pitching a fresh concept?   Run /slot-step-01 to lock the brief.
+  - Multiple iterations to      Run /slot-compare — readonly side-by-side
+    pick between?               with rubric-grounded scoring.
   - Want to use a chat-pasted   The MCP server has nb2_stage_image — I'll
     image as a reference?       handle that automatically when needed.
 
@@ -70,6 +77,9 @@ up where you left off (see shared/project_memory.md).
 
 After showing the welcome, ask the user where they're starting from:
 
+- "Are you brand new to this plugin and want a guided tour first?
+  → run `/slot-tutorial` for an end-to-end walkthrough with a worked
+  example (DRY by default; no API credits unless you opt in)."
 - "Do you have a Game Design Document for an existing game, or are you
   pitching a fresh concept?"
 - "Or did you want to see what one of the steps does in more detail?"

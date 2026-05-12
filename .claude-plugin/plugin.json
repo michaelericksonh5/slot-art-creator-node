@@ -9,6 +9,8 @@
   "skills": [
     "./skills/slot-help",
     "./skills/slot-setup",
+    "./skills/slot-tutorial",
+    "./skills/slot-compare",
     "./skills/slot-step-00",
     "./skills/slot-step-01",
     "./skills/slot-step-02",
