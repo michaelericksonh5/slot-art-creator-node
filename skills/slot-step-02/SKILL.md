@@ -138,14 +138,14 @@ Type `/slot-` to see the full numbered workflow.
 - **Master at 4K.** Key art is the highest-priority asset.
 - **Lock once.** Once `style_anchor.key_art_path` is set, every later skill
   reads that image as a style reference automatically.
-- **Iterate freely until locked.** Generate as many `Key_NNN.png` as needed.
+- **Iterate freely until locked.** Generate as many `Key_Art_NNN.png` as needed.
   Never overwrite. The "approved" pointer in `project.json` is what matters.
 
 ## References
 
-- `shared/project_memory.md` (project state, style_anchor field)
-- `shared/asset_naming.md` (Key_NNN convention)
+- `shared/project_memory.md` (project state, `style_anchor` field contract)
+- `shared/asset_naming.md` (`Key_Art` / `Key_Art_wide` / `Key_Art_tall` labels inside the `Key_Art/` folder)
 - `shared/qa_preflight.md` (validation gates)
-- `shared/nb2_prompting.md` §9.2 (master formula)
-- `shared/art_principles.md` §1, §2 (composition principles)
+- `shared/nb2_prompting.md` §9.2 (master prompt structure)
+- `shared/art_principles.md` §1 (the ten core principles — especially #5 one focal point, #6 global light, #7 reel is the hero, #8 gold is reserved) and §7 ("Background" bullet — three-layer composition, vignette, atmospheric perspective)
 - `KEY_ART_TEMPLATE.md` (master / wide / tall prompt templates)

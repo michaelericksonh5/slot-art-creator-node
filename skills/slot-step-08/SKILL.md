@@ -45,8 +45,11 @@ the "no active project — guide through setup" pattern.
 Ask user:
 - **Symbol set** — all approved per-symbol PNGs + the contact sheet
 - **Background suite** — all variants
+- **Avatar cast** — every approved in-game animated character
+  (`assets.avatars.Avatar1`–`Avatar5`). Games with zero avatars skip
+  this scope.
 - **UI collection** — all UI surfaces
-- **Full cross-asset review** — symbols + background + UI together
+- **Full cross-asset review** — symbols + background + avatars + UI together
 - **Final sign-off** — everything in the project, with a written report
 
 ### Step 2 — Read all assets in scope
@@ -56,6 +59,11 @@ filename — actually look at each one.
 
 For symbol sets, read in tier order: Jackpot → Wild → Scatter → HP1 → HP2 →
 MP1 → MP2 → LP1 → ... → LP6.
+
+For avatars (when present), read all of `Avatar1` through `Avatar5` in
+numeric order — this is the order `/slot-step-06` generates them, and
+it usually matches role hierarchy (lead → sidekick → supporting cast),
+which is the most useful read order for cross-cast consistency grading.
 
 ### Step 3 — Grade
 
@@ -73,6 +81,7 @@ for an asset you're grading, fall through to `QA_RUBRIC.md`.
 | **Symbol set — style** | All symbols share `style_lock`. Light direction consistent (upper-left ~10 o'clock). |
 | **Symbol set — readability** | Clear silhouette at thumbnail size on every symbol. |
 | **Backgrounds** | Bottom 30% dark on all variants. Reel zone dimmed. Three-layer depth. Free-spins more saturated/warm than base. Bonus has more drama. BG palette recedes behind symbol palette. |
+| **Avatars** (when present) | All on flat solid black, neutral idle pose, 1:1 aspect. Same `style_lock` and palette family as the symbol set — no photoreal avatars in a stylized game. Cast brightness/saturation sits between HP and MP intensity (not louder than the reel set). Multi-avatar games: same key light direction, same rendering technique, palette family shared but each avatar uses a different accent. Avatars must NOT replicate any symbol-set subject (symbol/environment exclusivity also applies here). |
 | **UI** | Chrome ranks below symbols in brightness and visual weight. Bezel has transparent/open center. Banner tiers distinguishable across ≥2 axes (see BANNERS_TEMPLATE.md). Touch targets visually generous. Logo readable at thumbnail. |
 | **Lobby tile — competitor-grid check** | Has the lobby tile been reviewed inside a 3×4 or 4×5 mockup of competitor tiles at thumbnail size (~200 px)? If not, this is an automatic YELLOW. See `slot-step-06/LOBBY_TILE_TEMPLATE.md` "Competitor-grid mockup discipline" for the procedure. The tile must draw the eye within 500 ms, look categorically different from neighbors, and have a readable title wordmark at thumbnail size. |
 | **Production handoff readiness** | If the audit is for the final production sign-off (not a mid-project check), the production-handoff checklist in `shared/production_handoff.md` should be reviewable — atlas-friendly padding, pngquant/oxipng optimization, sRGB color space confirmed, banding check on gradients. These are technical-delivery prerequisites, not creative ones. |

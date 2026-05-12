@@ -197,4 +197,5 @@ Type `/slot-` to see the full numbered workflow.
 
 - `shared/project_memory.md`, `shared/asset_naming.md`
 - `shared/nb2_prompting.md` §9.6 (edit/recompose operations)
+- `shared/chat_image_staging.md` (required pre-step when the source asset is chat-attached or otherwise outside the active project / `~/Pictures/claude_nb2` envelope)
 - nb2-mcp-server `nb2_smart_resize` tool definition

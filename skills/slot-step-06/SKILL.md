@@ -206,8 +206,8 @@ shape in `shared/project_memory.md`.
   Open:   file:///<project_root>/Bezels/
 
 Next options:
-  - Generate other UI surfaces (HUD, paytable, banners, logos) with /slot-06 again
-  - Generate in-game avatars with /slot-06 (avatar_1, avatar_2, ...)
+  - Generate other UI surfaces (HUD, paytable, banners, logos) with /slot-step-06 again
+  - Generate in-game avatars with /slot-step-06 (avatar_1, avatar_2, ...)
   - Run `/slot-step-07` if reskinning an existing UI mock
   - Run `/slot-step-08` for full set audit
 
@@ -224,8 +224,9 @@ Type `/slot-` to see the full numbered workflow.
 ## References
 
 - `shared/qa_preflight.md`, `shared/project_memory.md`, `shared/asset_naming.md`
-- `shared/art_principles.md` §6 (typography), §7 (surfaces), §8 (contrast)
+- `shared/art_principles.md` §6 (typography), §7 (surfaces — bezel / HUD / background / paytable / win presentation / lobby tile), §8 (CVD + contrast)
 - `shared/nb2_prompting.md` §9.2 (formula), §9.6 (UI / edit ops)
+- `shared/gpt_image2_prompting.md` (full gpt2 playbook — when to prefer gpt-image-2 for paytables, logos, banners with copy; size mapping, quality, per-skill recommendations)
 
 ### Per-surface templates (read on demand)
 

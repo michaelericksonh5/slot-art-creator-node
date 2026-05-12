@@ -80,8 +80,11 @@ preserves layout better with NB2. Decision rule:
 | no (pure chrome — bezel, panel, decorative banner) | either | `mcp__nb2node__nb2_edit` |
 
 See `shared/gpt_image2_prompting.md` — its routing table lists this
-skill explicitly. Both tools use the same arg shape; the only difference
-is the field name for the source.
+skill explicitly. Both tools take the source UI mock in the same
+`source` arg; the only difference is that `gpt2_edit` accepts a
+compositional `extra_references` array (used here to pass the key art
+as a style anchor), while `nb2_edit` accepts a single
+`extra_references` path for the same purpose.
 
 **API args (NB2 path — pure chrome reskins):**
 
@@ -99,8 +102,9 @@ is the field name for the source.
 
 | API arg | Value |
 |---|---|
-| `prompt` | same composed reskin prompt; gpt-image-2 honours the layout-preservation discipline as long as the source is the first reference |
-| `extra_references` | `[<absolute source path>, <absolute key art path>]` — gpt2_edit treats the array as compositional inputs, so source goes first |
+| `prompt` | same composed reskin prompt; gpt-image-2 honours the layout-preservation discipline when the source UI mock is passed as `source` (primary input) and the key art rides along as a style reference |
+| `source` | absolute path to the source UI mock — same as the NB2 path. This is the **primary input** the edit operates on. Resolve any relative filename against `project_root` first; stage chat-attached paths via `nb2_stage_image` before passing them here. |
+| `extra_references` | `[<absolute key art path>]` — gpt-image-2 composes the `source` plus every entry in `extra_references` together, so use this slot for **style anchors only** (the locked key art is the typical entry). Don't put the source UI mock here too — it goes in `source`. |
 | `aspect_ratio` | match source |
 | `image_size` | `"2K"` (the stable production ceiling) |
 | `quality` | `"high"` |
@@ -165,5 +169,7 @@ Type `/slot-` to see the full numbered workflow.
 ## References
 
 - `shared/qa_preflight.md`, `shared/project_memory.md`, `shared/asset_naming.md`
-- `shared/nb2_prompting.md` §9.6 (edit ops)
+- `shared/nb2_prompting.md` §9.6 (edit ops — in-place / isolate / recreate / style-transfer / UI reskin / component separation)
+- `shared/gpt_image2_prompting.md` (when to prefer `gpt2_edit` over `nb2_edit` — text-heavy source UIs; this skill's routing table is sourced from there)
+- `shared/chat_image_staging.md` (required pre-step when the source UI mock is chat-attached — staging copies it into the allowed-roots envelope)
 - `RESKIN_TEMPLATE.md` (5-part reskin template, 8-axis rubric)

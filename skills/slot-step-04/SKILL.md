@@ -81,13 +81,18 @@ contact sheet for review/handoff.
   (read each from the project root)
 - Key art for style continuity reference (`style_anchor.key_art_path`)
 
-**Approach:** call `mcp__nb2node__nb2_edit` with all approved symbols as
-references and a layout-focused prompt that says "compose these symbols on
+**Approach:** call `mcp__nb2node__nb2_generate` (same tool as Mode A —
+see Step 4 below) with all approved symbols passed in the `references`
+array and a layout-focused prompt that says "compose these symbols on
 one canvas in a grid, preserve each one's exact appearance, add only
 spacing and a unified backdrop."
 
-This is closer to a layout op than a generation. The individual symbols
-are already locked; the sheet just stages them.
+Conceptually this is closer to a layout op than a generation — the
+individual symbols are already locked, the sheet just stages them — but
+the API call is `nb2_generate` with multiple references, not
+`nb2_edit`. `nb2_edit` requires a single `source` image; an
+ideation/assemble contact sheet has multiple approved symbols and no
+single source.
 
 ### Choose mode (or override)
 
@@ -162,7 +167,7 @@ In ideation mode:
   Open:   file:///<project_root>/Symbol_Sheets/
 
 Next options:
-  - Iterate on this sheet for a different direction (run /slot-04 again)
+  - Iterate on this sheet for a different direction (run /slot-step-04 again)
   - Refine the strongest symbols at high fidelity in `/slot-step-03`
     (each symbol will use Sheet_001.png as a reference)
   - Generate the background in `/slot-step-05`

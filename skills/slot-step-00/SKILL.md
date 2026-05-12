@@ -156,7 +156,7 @@ Symbols          : 13 (extracted)
 Modes            : base, free spins, bonus pick-me
 GDD source       : Jungle Kingdom Game Design Document v.0.0.2.docx
 Reference images : 3 (visually analyzed)
-Open questions   : 2 (style_lock, palette — to be locked in /slot-01)
+Open questions   : 2 (style_lock, palette — to be locked in /slot-step-01)
 ```
 
 ### Step 7 — Next step nudge

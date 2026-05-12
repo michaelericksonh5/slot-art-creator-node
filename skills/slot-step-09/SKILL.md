@@ -201,7 +201,7 @@ Schema follows the canonical asset record shape in `shared/project_memory.md`:
   Open:   file:///<project_root>/Symbol_Art/
 
 Next options:
-  - Continue upscaling other approved assets with /slot-09 again
+  - Continue upscaling other approved assets with /slot-step-09 again
   - Run `/slot-step-10` for multi-aspect deliverables
   - Run `/slot-step-08` to confirm the upscale didn't break anything
 

@@ -53,7 +53,8 @@ tell you if you've skipped a prerequisite.
   /slot-step-03     Generate individual reel symbols (HP, MP, LP, Wild, Scatter, ...)
   /slot-step-04     Full symbol contact sheet (IDEATION before /slot-step-03 or ASSEMBLE after)
   /slot-step-05     Background scenes — base, free-spins, bonus, pick-me, wheel
-  /slot-step-06     UI surfaces — bezel, HUD, paytable, banners, buttons, lobby tile, logo
+  /slot-step-06     UI surfaces + in-game avatars — bezel, HUD, paytable, banners, buttons,
+                    lobby tile, logo, plus animated character avatars (0–5 per game)
   /slot-step-07     UI reskin (optional — adapt an existing layout to a new theme)
   /slot-step-08     Final cross-asset audit — RED/YELLOW/GREEN sign-off report
   /slot-step-09     Upscale approved 2K assets to 4K for production
