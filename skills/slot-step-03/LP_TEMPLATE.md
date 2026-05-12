@@ -149,7 +149,7 @@ professional slot game art.
 
 ## Pre-gen quick checks
 
-- [ ] `style_anchor` (from `project.json`) is prepended to the prompt
+- [ ] `style_anchor.text` (from `project.json.style_anchor.text`) is prepended to the prompt verbatim
 - [ ] Prompt contains ZERO forbidden words (see list above)
 - [ ] `[RENDER STYLE — LOCKED]` block present with explicit "no HP warmth carry-down" clause
 - [ ] Background is `flat solid white background, no gradients`

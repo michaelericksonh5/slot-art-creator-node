@@ -1,8 +1,22 @@
-# Scatter Symbol Template
+# Scatter Symbol Template (`SC` prefix — legacy scatter)
 
 The scatter is the bonus trigger. It's instantly recognizable as a
 **circular badge with a label and radiant burst**. Players need to spot it
 on a busy reel grid in under a second.
+
+This template covers the **legacy `SC` / `SC1+` prefix**. Modern H5G
+games typically use the **WYS family** (a `WY` symbol with
+`mechanic: scatter`) for the same role — Tesla `WY1`, Bankrush Gamma
+`WY1`, Chevy-Lite `WY1` all play the scatter role under the WYS
+prefix. When the brief's manifest puts a `WY<N>` with
+`mechanic: scatter`, route to `COIN_TEMPLATE.md` (the WYS Family
+Template) and apply the scatter role overlay from there — not this
+template. This template is for the literal `SC` prefix only.
+
+These templates use the **bracketed-block prompt format** from
+`shared/nb2_prompting.md` §9.2. The game's **Style Anchor** (§9.2.1)
+is prepended to every prompt verbatim — it lives in
+`project.json.style_anchor.text`.
 
 ## Tier rules
 
@@ -30,6 +44,7 @@ Substitution:
 
 ## Pre-gen quick checks
 
+- [ ] `style_anchor` (from `project.json.style_anchor.text`) is prepended verbatim
 - [ ] Shape is "circular badge" stated explicitly
 - [ ] Label text is part of the prompt
 - [ ] Background is `flat solid black background, no gradients`

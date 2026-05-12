@@ -57,7 +57,7 @@ mobile-optimized icon, only one symbol in the frame.
 
 ## Pre-gen quick checks
 
-- [ ] `style_anchor` (from `project.json`) is prepended to the prompt
+- [ ] `style_anchor.text` (from `project.json.style_anchor.text`) is prepended to the prompt verbatim
 - [ ] `[RENDER STYLE — LOCKED]` block present with explicit "Inherit ONLY X, ignore Y" clause
 - [ ] Background is `flat solid black background, no gradients`
 - [ ] Palette is moderate — explicitly cooler/less saturated than HP

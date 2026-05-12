@@ -211,9 +211,93 @@ Quick checks:
 
 ---
 
-## Pre-gen quick checks (all variants)
+## Compound prefixes that route here
 
+Several compound prefixes combine the Wild family with another role.
+They follow the universal wild rules above plus a secondary overlay
+from the named family. All of them use the same `<PREFIX>_NNN.png`
+naming pattern as primitive prefixes and live in `Symbol_Art/`.
+
+### `WJP`, `WJP1`+ — Wild + Jackpot contribution
+
+A wild that also contributes to the jackpot pool when it participates
+in a winning line (Billionaire's Gamma pattern). Base = wild
+variants from this template; overlay = jackpot-contribution cues
+pulled from `JACKPOT_TEMPLATE.md`.
+
+```
+[Wild base — pick the closest sibling variant from this template,
+or generate from the standard wild grammar]
++
+[Jackpot overlay]: metallic edge tint matching the brief's highest
+jackpot tier finish (typically gold for Grand). Subtle tier sigil
+(crown, star) integrated near the wild label without overpowering
+it. Soft warm-gold halo at the edges.
+```
+
+The wild label and category break still dominate — the jackpot
+overlay is a tier-mark, not a takeover. A WJP should still read as
+"a wild" at a glance, with "and it counts toward the jackpot" as a
+secondary cue.
+
+### `WDWY`, `WDWY1`+ — Wild + WYS (scatter-wild hybrid for WYS family)
+
+A wild for the WYS family symbols that often also acts as a scatter
+(Chevy family pattern). Base = scatter-wild hybrid section above;
+overlay = WYS coin/portal silhouette behind the wild label.
+
+```
+[Scatter-wild hybrid base from the "Scatter-Wild Hybrid (`SW`)"
+section above]
++
+[WYS overlay]: behind the WILD label, a coin/portal disc silhouette
+echoing the WYS family. The disc carries the wild's break color, not
+the family's standard hue — this is a WILD that happens to live in
+WYS family territory, not a coin with a wild label.
+```
+
+The composition keeps the wild's category break and electric palette
+dominant; the disc/portal silhouette is the WYS visual hook that
+ties it to the family in the player's mind.
+
+### `WDSF`, `WDSF1`+ — Wild + SF (wild SF created by duplication)
+
+A wild SF created by a duplication mechanic (Chevy-Alt pattern). Base
+= wild variants from this template; overlay = SF family
+sphere/portal silhouette behind the wild label, pulled from
+`MYSTERY_TEMPLATE.md` (the SF Family Template).
+
+### `MUWD`, `MUWD1`+ — Multiplier Wild
+
+Same as the Multiplier Wild variant above. The `MUWD` prefix is the
+H5G compound alias for the same mechanic — use the
+[Multiplier Wild](#multiplier-wild) section's prompt as-is. Filename
+will be `MUWD1_001.png` etc.
+
+### `MUWDBO`, `MUWDBO1`+ — Multiplier Wild + Bonus framing
+
+Same as the Multiplier Wild above, with an added bonus-trigger
+overlay layered on. Pull the warm-radial-burst cue from
+`BONUS_TRIGGER_TEMPLATE.md`. The result reads as "a multiplier
+wild that ALSO triggers the bonus when N land" — common in Honda's
+combo-bonus mechanic.
+
+```
+[Multiplier Wild base from this template]
++
+[Bonus overlay]: warm radial burst rays behind the wild label, plus
+an optional small "BONUS" or themed tag at the bottom of the symbol.
+The multiplier `×N` slot still dominates; the bonus cue is a
+secondary signal.
+```
+
+---
+
+## Pre-gen quick checks (all variants and compounds)
+
+- [ ] `style_anchor.text` (from `project.json.style_anchor.text`) is prepended to the prompt verbatim
 - [ ] Variant-specific visual cue is in the prompt (chain for sticky, motion blur for walking, etc.)
+- [ ] For compounds: secondary-overlay cues from the partner family are present (jackpot tier mark for WJP, WYS portal silhouette for WDWY, SF sphere silhouette for WDSF, bonus burst for MUWDBO)
 - [ ] Color is NOT in `palette_leads.primary` or `.accents`
 - [ ] Category breaks the rest of the set
 - [ ] "Barely contained" / fill phrase present
