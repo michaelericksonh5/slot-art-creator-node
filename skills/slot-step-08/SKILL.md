@@ -48,8 +48,15 @@ Ask user:
 - **Avatar cast** — every approved in-game animated character
   (`assets.avatars.Avatar1`–`Avatar5`). Games with zero avatars skip
   this scope.
-- **UI collection** — all UI surfaces
-- **Full cross-asset review** — symbols + background + avatars + UI together
+- **UI collection** — all UI surfaces, including any approved bonus
+  wheels in `assets.ui.wheels.*` (jackpot / bonus / multiplier /
+  pickem). Wheels grade against their own rubric — see Step 3 and
+  `QA_RUBRIC.md` "Per-wheel rubric".
+- **Wheel collection** — only the bonus wheels, when the user wants a
+  focused wheel sign-off (e.g. after iterating jackpot + bonus +
+  multiplier wheels together). Games with no wheels skip this scope.
+- **Full cross-asset review** — symbols + background + avatars + UI
+  (including wheels) together
 - **Final sign-off** — everything in the project, with a written report
 
 ### Step 2 — Read all assets in scope
@@ -64,6 +71,13 @@ For avatars (when present), read all of `Avatar1` through `Avatar5` in
 numeric order — this is the order `/slot-step-06` generates them, and
 it usually matches role hierarchy (lead → sidekick → supporting cast),
 which is the most useful read order for cross-cast consistency grading.
+
+For bonus wheels (when present), read them in this order: jackpot →
+bonus → multiplier → pickem. Wheels are full single-graphic
+deliverables (outer frame · slices · hub · pointer), so each one is a
+single PNG in `Wheels/`. Read `brief.jackpot_tier_names` BEFORE
+opening the jackpot wheel so you can grade whether the slice labels
+match the brief's tier ordering (`JP1` is not always `Grand`).
 
 ### Step 3 — Grade
 
@@ -82,7 +96,8 @@ for an asset you're grading, fall through to `QA_RUBRIC.md`.
 | **Symbol set — readability** | Clear silhouette at thumbnail size on every symbol. |
 | **Backgrounds** | Bottom 30% dark on all variants. Reel zone dimmed. Three-layer depth. Free-spins more saturated/warm than base. Bonus has more drama. BG palette recedes behind symbol palette. |
 | **Avatars** (when present) | All on flat solid black, neutral idle pose, 1:1 aspect. Same `style_lock` and palette family as the symbol set — no photoreal avatars in a stylized game. Cast brightness/saturation sits between HP and MP intensity (not louder than the reel set). Multi-avatar games: same key light direction, same rendering technique, palette family shared but each avatar uses a different accent. Avatars must NOT replicate any symbol-set subject (symbol/environment exclusivity also applies here). |
-| **UI** | Chrome ranks below symbols in brightness and visual weight. Bezel has transparent/open center. Banner tiers distinguishable across ≥2 axes (see BANNERS_TEMPLATE.md). Touch targets visually generous. Logo readable at thumbnail. |
+| **UI** | Chrome ranks below symbols in brightness and visual weight. Bezel has transparent/open center. Banner tiers distinguishable across ≥2 axes (see `slot-step-06/BANNERS_TEMPLATE.md`). Touch targets visually generous. Logo readable at thumbnail. |
+| **Wheels** (when present) | Single graphic per variant (outer frame + slices + hub + pointer in one PNG, NOT per-slice files). Flat solid black background. Slice color gradient follows the pay spectrum: cool slate/teal for low, transitional sage/amber for mid, ember/crimson for high, gold for jackpot/max — jackpot slice clearly dominates peripheral vision. Jackpot wheel's tier labels match `brief.jackpot_tier_names` exactly (a `Grand` label on a `JP1` slice when the brief maps `JP1` differently is a RED). Center hub recedes; slice values are readable at the wheel's expected on-screen size. See `QA_RUBRIC.md` "Per-wheel rubric". |
 | **Lobby tile — competitor-grid check** | Has the lobby tile been reviewed inside a 3×4 or 4×5 mockup of competitor tiles at thumbnail size (~200 px)? If not, this is an automatic YELLOW. See `slot-step-06/LOBBY_TILE_TEMPLATE.md` "Competitor-grid mockup discipline" for the procedure. The tile must draw the eye within 500 ms, look categorically different from neighbors, and have a readable title wordmark at thumbnail size. |
 | **Production handoff readiness** | If the audit is for the final production sign-off (not a mid-project check), the production-handoff checklist in `shared/production_handoff.md` should be reviewable — atlas-friendly padding, pngquant/oxipng optimization, sRGB color space confirmed, banding check on gradients. These are technical-delivery prerequisites, not creative ones. |
 | **Cross-asset** | Everything feels like one cohesive world. No surface competes at wrong hierarchy level. Palette family consistent. |
@@ -90,7 +105,11 @@ for an asset you're grading, fall through to `QA_RUBRIC.md`.
 
 ### Step 4 — Auto-RED escalations
 
-Always RED regardless of other grades:
+Always RED regardless of other grades. `QA_RUBRIC.md` has the full
+canonical list (items 1–13); the most common production blockers,
+grouped by surface, are:
+
+**Symbol set:**
 - Any LP shows gold/amber/warm trim
 - HP uses same warmth/saturation as an LP
 - Export background has gradient or pattern instead of flat solid
@@ -98,6 +117,21 @@ Always RED regardless of other grades:
 - Any symbol unrecognizable at 64px thumbnail
 - Style varies between two symbols in the same set
 - LP family is mixed within one set
+
+**Avatars (when in scope):**
+- An avatar has visible baked-in text (nameplate / label / speech bubble)
+- An avatar's background is anything other than flat solid black
+- An avatar replicates a reel-symbol subject (breaks symbol/environment
+  exclusivity — e.g. the HP1 phoenix also appearing as Avatar1)
+
+**Wheels (when in scope):**
+- Wheel slice tier ordering inverts the pay spectrum (e.g. jackpot
+  slice is cool slate while a low-value slice is warm gold)
+- Wheel background is anything other than flat solid black
+- Per-slice files exist instead of a single complete wheel graphic
+- Jackpot wheel labels contradict `brief.jackpot_tier_names` (e.g.
+  the slice for `JP1` says `Grand` when the brief maps `JP1 = Mini`,
+  or vice versa)
 
 ### Step 5 — Write the report
 

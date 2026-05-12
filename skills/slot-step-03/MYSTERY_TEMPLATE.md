@@ -2,11 +2,12 @@
 
 The SF family is H5G's "Special Feature symbol" — a generic
 feature-family bucket used across the production library for at
-least **11 distinct mechanics**: hotspot modifier (multiplier / adder
-/ combiner / collapse / persist), upgradable collector, immediate-
-payout collector, bonus value collector, transforming collector,
-path-forming prize, lock-and-respin, jackpot coin, bonus-game
-trigger, mystery transform.
+least **14 distinct mechanics**: mystery transform, hotspot
+multiplier, hotspot adder, hotspot combiner, hotspot collapse,
+persistent hotspot, upgradable collector, immediate-payout collector,
+bonus value collector, transforming collector, path-forming prize,
+lock-and-respin trigger, jackpot coin (SF role), bonus-game trigger
+(SF role). The full mapping lives in the role-overlay table below.
 
 **Family rule: visual identity is stable, role comes from the brief.**
 Every SF member renders as a feature-token in the WYS-adjacent

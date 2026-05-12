@@ -81,10 +81,13 @@ preserves layout better with NB2. Decision rule:
 
 See `shared/gpt_image2_prompting.md` — its routing table lists this
 skill explicitly. Both tools take the source UI mock in the same
-`source` arg; the only difference is that `gpt2_edit` accepts a
-compositional `extra_references` array (used here to pass the key art
-as a style anchor), while `nb2_edit` accepts a single
-`extra_references` path for the same purpose.
+`source` arg, and both take `extra_references` as an **array of
+absolute paths** (server schema: `array<string>`). The typical usage
+here is a single-element array carrying the locked key art as a style
+anchor; pass `[<absolute key art path>]` to either tool. The
+difference is compositional behavior: `gpt2_edit` composes the
+`source` plus every entry in `extra_references` into the output,
+while `nb2_edit` treats the array as style references only.
 
 **API args (NB2 path — pure chrome reskins):**
 

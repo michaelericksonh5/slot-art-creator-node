@@ -267,7 +267,7 @@ Same 5-part pattern:
   more than just "HP/MP/LP".
 - **DRY:** Show the HP1 prompt for *Sun & Moon Sanctuary* assembled
   from `HP_TEMPLATE.md`. Don't generate.
-- **LIVE:** Generate HP1 and LP1 only (not the full 10-symbol set) —
+- **LIVE:** Generate HP1 and LP1 only (not the full 13-symbol set) —
   that's enough to teach the gate behavior without blowing the budget.
 
 ### Step 8 — Walk through /slot-step-04 (Symbol Sheet)
@@ -331,9 +331,19 @@ Same 5-part pattern:
   scale) rather than chrome discipline — see `AVATAR_TEMPLATE.md`.
 - **Per-surface folder routing:** each surface lands in its own
   category folder (`Bezels/`, `HUD/`, `Paytables/`, `Win_Banners/`,
-  `Bonus_Screens/`, `Multipliers/`, `Logos/`, `Lobby_Tiles/`,
-  `Avatars/`). The skill picks the right `output_dir` from the
-  surface name; the user doesn't have to remember.
+  `Bonus_Screens/`, `Wheels/`, `Multipliers/`, `Logos/`,
+  `Lobby_Tiles/`, `Avatars/`). The skill picks the right `output_dir`
+  from the surface name; the user doesn't have to remember.
+- **Bonus wheels (when the brief has a wheel mechanic):** route
+  `wheel_<variant>` (jackpot / bonus / multiplier / pickem) to
+  `WHEEL_TEMPLATE.md`. Output is a complete single graphic — outer
+  frame + slices + hub + pointer in one PNG — landing in `Wheels/`,
+  not per-slice files. Slice tier colors follow the same pay
+  spectrum as symbols (cool lows → warm highs → gold jackpot); the
+  jackpot wheel's slice labels must match `brief.jackpot_tier_names`
+  exactly. `Sun & Moon Sanctuary` has no jackpot tiers so this
+  surface stays empty in the tutorial; mention it as the path a
+  jackpot-style game would take.
 - **Gate:** UI must rank below symbols in brightness; bezel center
   must be transparent (would otherwise cover reels); banner numeral
   is the focal point; avatars sit between HP and MP intensity.
