@@ -60,5 +60,12 @@ one canvas only, <aspect> aspect ratio.
 
 ## After generating
 
-Write the approved sheet path to `game_brief.json` → `symbol_sheet_path`.
-Pass it as a reference when generating individual cells to anchor the style.
+Write paths to **`project.json`** (canonical state — what SKILL.md Step 6 reads):
+- **Each iteration:** append to `project.json.assets.sheet.iterations[]`
+- **On approval:** set `project.json.assets.sheet.approved` to the approved path
+
+Also mirror the approved path to `game_brief.json.symbol_sheet_path` for
+human readability, but the primary write target is `project.json`.
+
+Pass the approved sheet path as a reference when generating individual
+symbol cells in `/slot-step-03` to anchor the style.

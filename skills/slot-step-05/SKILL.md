@@ -50,7 +50,10 @@ be dimmer than the dimmest symbol.
 ### Step 3 — Pre-generation validation (Gate 1)
 
 - [ ] `style_anchor` (from `project.json`) is prepended to the prompt
-- [ ] Bracketed-block format used: `[RENDER STYLE]`, `[COMPOSITION]`, `[MOOD/PALETTE]`, `[MOBILE CONSTRAINTS]`
+- [ ] Prompt uses the structured prose format from `PROMPT_TEMPLATES.md`
+      (background prompts use inline prose, not the symbol bracketed-block
+      format — the four hard-rule constraints below serve the same
+      structural function)
 - [ ] `style_lock` in prompt verbatim
 - [ ] No hex / resolution / aspect ratio strings in prompt body
 - [ ] All four hard rules stated explicitly
@@ -68,11 +71,13 @@ be dimmer than the dimmest symbol.
 
 ### Step 4 — Generate
 
+Call `mcp__nb2node__nb2_generate`:
+
 | API arg | Value |
 |---|---|
 | `prompt` | composed prompt |
 | `aspect_ratio` | `"9:16"` portrait (default), `"16:9"` landscape, `"4:3"` tablet |
-| `image_size` | `"2K"` default; `"4K"` for marketing |
+| `image_size` | `"2K"` default; `"4K"` for marketing (nb2_generate supports 4K natively — this is NOT gpt-image-2 which caps at 2K) |
 | `output_dir` | `{project_root}` |
 | `asset_name` | `"BG_<variant>"`, e.g. `"BG_base"`, `"BG_freespins"` (the MCP server appends `_NNN.png` and auto-increments) |
 | `references` | absolute paths — resolve `style_anchor.key_art_path` and `assets.sheet.approved` against `project_root` first, then pass the resolved absolutes. |

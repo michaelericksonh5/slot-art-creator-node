@@ -55,7 +55,14 @@ professional slot game art.
 
 ## After approving the master
 
-Write the approved file path back to `game_brief.json` → `key_art_path`.
-Every downstream skill (slot-step-03, slot-step-05,
-slot-step-06) reads `style_anchor.key_art_path` from `project.json`
-and passes the image to NB2 as a reference to lock the visual identity.
+Write the approved file path to **`project.json.style_anchor.key_art_path`**
+(absolute path). Also mirror it to `game_brief.json.key_art_path` for
+human readability.
+
+Every downstream skill (slot-step-03, slot-step-05, slot-step-06, slot-step-07)
+reads `style_anchor.key_art_path` from `project.json` and passes the image
+to NB2 as a reference to lock the visual identity.
+
+Do NOT write only to `game_brief.json` — downstream skills read from
+`project.json`, and the key_art_path will be silently unset if you skip
+the `project.json` write.

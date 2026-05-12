@@ -17,8 +17,10 @@ Follow the standard startup from `shared/project_memory.md`:
 1. **Resolve project.** Did the user pass a GameID arg? Use it. Otherwise
    read `~/.h5g-slot-active-project.json`. If neither exists, ask the user
    for a GameID and create the project folder.
-2. **Construct project root.**
-   `H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\{GameID}_{username}\`
+2. **Construct project root.** Resolve via the 3-tier logic in
+   `shared/project_memory.md` (`SLOT_ART_PROJECT_BASE` env var → H5G Drive
+   Stream → `~/slot-art-projects/`). Append `{GameID}_{username}` where
+   `username` is the runtime OS username — never hardcode it.
 3. **Load existing state.** If `project.json` exists, this is an iteration —
    show the user what's locked and ask what to change. If not, create from
    scratch (or seeded from `/slot-step-00` output).
@@ -66,9 +68,14 @@ special symbols only. Maintain a consistent <style_lock> rendering
 technique across the entire set.
 ```
 
-Save the filled-in string as `style_anchor` in both `game_brief.json`
-and the `brief` field of `project.json`. Every downstream skill reads
-this field and prepends it verbatim to every prompt.
+Save the filled-in string as:
+- **`project.json.style_anchor`** — top-level key, NOT nested under `brief`.
+  Every downstream skill (03, 05, 06, 07, 09) reads this exact path.
+- **`game_brief.json.style_anchor`** — human-readable mirror only.
+
+This distinction matters: `project.json.brief` is the brief fields object;
+`project.json.style_anchor` is the prompt-ready string that lives alongside
+it at the root level.
 
 ### Step 4 — Confirm with user
 
@@ -78,8 +85,10 @@ Show the brief AND the style anchor, ask for sign-off. Get explicit
 ### Step 5 — Persist
 
 Atomic-write to BOTH:
-- `{project_root}/game_brief.json` — human-readable mirror
-- `{project_root}/project.json` (`brief` field) — embedded in the master state
+- `{project_root}/game_brief.json` — human-readable mirror (all brief fields + style_anchor)
+- `{project_root}/project.json`:
+  - `brief` object — all brief fields (game_name, theme_summary, etc.)
+  - `style_anchor` — top-level string (the 60–90-word anchor block from Step 3)
 
 Update `project.json`:
 - `current_step: "brief_locked"`

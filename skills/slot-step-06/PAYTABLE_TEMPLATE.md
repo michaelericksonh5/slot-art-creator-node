@@ -24,9 +24,15 @@ gpt2_generate tool) outperforms NB2:
 
 When you call this skill, if `OPENAI_API_KEY` is set:
 - For the layout-only paytable (placeholder slots): use **`gpt2_generate`**
-  with structural prompt.
+  with structural prompt and **`image_size: "2K"`** (default is 1K, which
+  is too small for paytable text legibility).
 - For composing the real symbols into the paytable: use **`gpt2_edit`**
-  with the approved symbol PNGs as `extra_references`.
+  with the approved symbol PNGs as `extra_references` and
+  **`image_size: "2K"`**.
+
+Always specify `image_size: "2K"` explicitly — gpt-image-2 defaults to 1K
+if the parameter is omitted, and 1K paytable text will be unreadable at
+production resolutions.
 
 If `OPENAI_API_KEY` is NOT set, fall back to `nb2_generate` and treat the
 text as approximate — it'll need to be re-composited at runtime by

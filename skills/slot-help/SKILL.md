@@ -41,6 +41,8 @@ tell you if you've skipped a prerequisite.
 
   /slot-setup       First-time API key configuration (run once)
   /slot-help        This orientation (you can always come back here)
+  /slot-tutorial    Hands-on walkthrough — generate a real asset from scratch
+  /slot-compare     Side-by-side NB2 vs gpt-image-2 comparison on the same prompt
 
   /slot-step-00     Pull a Game Design Document from Drive (optional — skip if pitching fresh)
   /slot-step-01     Lock the game brief: theme, palette, style, tier plan, symbol manifest
@@ -55,9 +57,10 @@ tell you if you've skipped a prerequisite.
   /slot-step-10     Multi-aspect variants of an approved asset (1:1, 16:9, 9:16, etc.)
 
 Where to start:
-  - First time on this plugin?  Run /slot-setup (keys) then continue here.
+  - First time on this plugin?  Run /slot-setup (keys) then /slot-tutorial.
   - Have a GDD already?         Run /slot-step-00 to seed the project from it.
   - Pitching a fresh concept?   Run /slot-step-01 to lock the brief.
+  - Not sure which model to use? Run /slot-compare to test NB2 vs gpt-image-2.
   - Want to use a chat-pasted   The MCP server has nb2_stage_image — I'll
     image as a reference?       handle that automatically when needed.
 

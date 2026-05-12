@@ -60,17 +60,40 @@ Fill the template's placeholders from the brief's `theme_summary`,
 
 ### Step 4 — Generate (edit operation)
 
-Call `mcp__nb2node__nb2_edit`:
+**Choose the right tool first** — inspect the source image for text density:
+
+- **Art-dominant (buttons, bezels, backgrounds with minimal text):** use
+  `nb2_edit`. NB2 is strong at visual reskins and handles palette + material
+  changes reliably.
+- **Text-heavy (HUD balance displays, paytable screens, lobby tiles with
+  readable labels, bet-panel copy):** use `gpt2_edit` instead.
+  `nb2_edit` cannot accurately reproduce text — it will scramble or drop
+  button labels and numerals. `gpt2_edit` renders text faithfully.
+  Requires `OPENAI_API_KEY`. If not set, fall back to `nb2_edit` and flag
+  to the user that text may need manual correction.
+
+**nb2_edit call (art-dominant):**
 
 | API arg | Value |
 |---|---|
 | `prompt` | composed reskin prompt |
-| `source` | absolute path to the source UI mock — resolve any relative filenames against `project_root` first |
-| `aspect_ratio` | match the source image's ratio (omit to inherit, or pass explicitly) |
+| `source` | absolute path to the source UI mock |
+| `aspect_ratio` | match the source image's ratio (omit to inherit) |
 | `image_size` | `"2K"` minimum |
 | `output_dir` | `{project_root}` |
-| `asset_name` | `"<SurfaceLabel>_reskin"`, e.g. `"Bezel_reskin"`, `"HUD_reskin"` (the MCP server appends `_NNN.png` and auto-increments) |
-| `extra_references` | absolute path — resolve `style_anchor.key_art_path` against `project_root`, then pass `[<absolute>]` to lock the new theme. |
+| `asset_name` | `"<SurfaceLabel>_reskin"` (server appends `_NNN.png`) |
+| `extra_references` | `[<absolute path to style_anchor.key_art_path>]` |
+
+**gpt2_edit call (text-heavy):**
+
+| API arg | Value |
+|---|---|
+| `prompt` | composed reskin prompt (same template, same structure) |
+| `source` | absolute path to the source UI mock |
+| `image_size` | `"2K"` (gpt-image-2's stable ceiling — always specify explicitly) |
+| `output_dir` | `{project_root}` |
+| `asset_name` | `"<SurfaceLabel>_reskin"` |
+| `extra_references` | `[<absolute path to style_anchor.key_art_path>]` |
 
 ### Step 5 — Inline QA check — 8-axis layout-preservation rubric
 

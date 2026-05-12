@@ -75,13 +75,16 @@ sharpen palette, mood, and style decisions before locking the brief.
 
 ### Step 4 — Bootstrap the project folder
 
-Construct the project root:
+Construct the project root using the 3-tier resolution (same logic as every
+other step — see `shared/project_memory.md` for full details):
 
-```
-H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\{GameID}_{username}
-```
+1. **`SLOT_ART_PROJECT_BASE` env var** — if set, use it as the root
+2. **H5G Drive Stream** — if `H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\` exists, use it
+3. **Fallback** — `~/slot-art-projects/`
 
-Where `username` = current OS username (`merickson`).
+The project folder is `<PROJECT_BASE>/{GameID}_{username}` where `username`
+is the current OS username at runtime (e.g. from `%USERNAME%` on Windows or
+`os.userInfo().username` in Node.js). Do not hardcode a username.
 
 Create the folder if it doesn't exist. Inside it, create:
 
@@ -130,7 +133,7 @@ Show a summary table:
 
 ```
 GameID           : 4470
-Project root     : H:\...\4470_merickson
+Project root     : <resolved PROJECT_BASE>/4470_<username>
 Game name        : Jungle Kingdom
 Grid             : 5x4
 Symbols          : 13 (extracted)
@@ -144,7 +147,7 @@ Open questions   : 2 (style_lock, palette — to be locked in /slot-01)
 
 ```
 ✓ Step 0 — GDD Connect complete.
-  Project active: 4470_merickson
+  Project active: 4470_<username>
   Folder: <project_root>
   Open:   file:///<project_root with / separators>
 

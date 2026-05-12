@@ -38,14 +38,16 @@ When an axis fails, here's the prompt patch.
 
 ## When to stop iterating
 
-- **3 iterations max** for any single asset. If you can't get a passing
-  upscale in 3 tries, the source is the problem (too low-res, too
-  ambiguous, or stylistically incompatible with NB2's upscale mode). Tell
-  the user honestly.
+- **2 retries max** (3 total attempts) for any single asset. If you can't
+  get a passing upscale in 3 tries, the source is the problem (too low-res,
+  too ambiguous, or stylistically incompatible with NB2's upscale mode).
+  Tell the user honestly.
 - **Generate variants on the winning prompt.** Once you have a prompt
-  that passes once, run `--variants 4` and pick the best. NB2 is
-  stochastic; the rubric stays the same; the variance is across the
-  noise floor of the model.
+  that passes once, run N parallel `nb2_upscale` calls and pick the best
+  (see SKILL.md Step 4 — N=2 for standard HP/banner, N=3–4 for hero/key
+  art). `nb2_upscale` is an MCP tool call, not a CLI command — there is
+  no `--variants` flag. Issue each variant as a separate MCP call with a
+  distinct `asset_name` suffix (`_v1`, `_v2`, etc.) in the same tool batch.
 - **Human sanity check** for hero assets after the rubric passes. Eye
   placement, letter forms in logos, and very subtle silhouette changes
   can slip past the rubric.

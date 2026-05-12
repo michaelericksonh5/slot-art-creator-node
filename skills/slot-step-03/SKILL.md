@@ -201,7 +201,7 @@ When the user asks for "all symbols":
 - `shared/project_memory.md` (state schema)
 - `shared/asset_naming.md` (per-symbol counter)
 - `shared/nb2_prompting.md` §9.2 (master formula), §9.5 (export BG), §9.7 (anti-patterns)
-- `shared/art_principles.md` §3 (symbols), §3.5 (cell-fill table)
+- `shared/art_principles.md` §3 (symbols, including the cell-fill-by-tier section)
 - `shared/chat_image_staging.md` — required when the user pastes/attaches
   a reference image in chat (e.g. "use this image as a style reference
   for HP1"). Chat-attached paths are outside the allowed-roots envelope
