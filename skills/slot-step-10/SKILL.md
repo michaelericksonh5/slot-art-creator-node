@@ -104,16 +104,20 @@ Call `mcp__nb2node__nb2_smart_resize`:
 |---|---|
 | `prompt` | composed recomposition prompt |
 | `source` | absolute path to the source asset — resolve `style_anchor.key_art_path` (or whichever asset relative path) against `project_root` first (`path.join(project_root, stored)`) |
-| `target_sizes` | array of `"WxH"` strings — explicit pixel dimensions for each target, e.g. `["2048x2048", "3840x2160", "2160x3840"]` for a marketing trio. The MCP tool encodes both aspect and resolution into the output filename. |
+| `target_sizes` | array of `"WxH"` strings — explicit pixel dimensions for each target, e.g. `["2048x2048", "3840x2160", "2160x3840"]` for a marketing trio. The MCP tool appends each `WxH` to the output filename in the `_resize_<W>_<H>` form. |
 | `output_dir` | **the source's category folder** — `path.dirname(absolute_source_path)`. Resized variants live next to their source so `Key_Art/Key_Art_003.png` and `Key_Art/Key_Art_003_resize_2048_2048.png` sit side by side. |
+| `asset_name` | **the source basename without extension** — for source `Key_Art_003.png` pass `"Key_Art_003"`. The MCP server adds the `_resize_<W>_<H>` suffix per target. Do NOT include the suffix yourself; the server adds it. Do NOT pass the full filename with `.png` — `sanitizeAssetName` strips it. |
 
-The MCP tool returns one output file per target. Default naming follows
-`{source_basename}_resize_<W>_<H>.png` where `<W>_<H>` is the exact
-target dimensions — e.g. for source `Key_Art_003.png` with target
-`"2048x2048"` the output is `Key_Art_003_resize_2048_2048.png`. The
-older `_resized_<aspect>` suffix (e.g. `_resized_16x9`) is **retired** —
-new generations always carry exact pixel dimensions so a designer can
-read the size off the filename without opening the file.
+The MCP tool returns one output file per target. Naming pattern is
+`{asset_name}_resize_<W>_<H>.png` where `<W>_<H>` is the exact target
+dimensions in pixels — e.g. for `asset_name = "Key_Art_003"` with
+target `"2048x2048"` the output is `Key_Art_003_resize_2048_2048.png`.
+The older `_<W>x<H>` and `_resized_<aspect>` suffix forms are
+**retired** in v1.5.4 — new generations always carry the `_resize_`
+prefix plus exact pixel dimensions so a designer can read the size
+off the filename without opening the file, and so the `x` in
+upscale-multiplier suffixes (`_upscl_x2`) can't be confused with the
+`x` in old resize-dimensions suffixes.
 
 ### Step 5 — Inline review
 

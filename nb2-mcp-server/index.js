@@ -988,7 +988,13 @@ async function falSmartResize({ source, outputDir, assetName, targetSizes, promp
   for (let i = 0; i < images.length; i++) {
     const requestedSize = sizes[i] || null;
     const meta = perTargetResults[i] || {};
-    const sizeSuffix = requestedSize ? `_${requestedSize}` : `_${i + 1}`;
+    // Suffix format: `_resize_<W>_<H>` so the file name carries exact pixel
+    // dimensions (per shared/asset_naming.md "Derived variants"). The older
+    // `_<W>x<H>` form is retired — the `x` collides with the upscale-suffix
+    // multiplier convention (`_upscl_x2`) when a reader scans filenames.
+    const sizeSuffix = requestedSize
+      ? `_resize_${requestedSize.replace("x", "_")}`
+      : `_resize_${i + 1}`;
     const dest = uniqueName(outputDir, `${assetName}${sizeSuffix}`);
     await downloadImage(images[i].url, dest);
     saved.push(dest);
@@ -1284,8 +1290,10 @@ async function geminiSmartResize({ source, outputDir, assetName, targetSizes, pr
     }
     const croppedBuf = centerCropPng(imageBuf, targetW, targetH);
 
-    // Save
-    const dest = uniqueName(outputDir, `${assetName}_${size}`);
+    // Save — suffix format `_resize_<W>_<H>` matches shared/asset_naming.md
+    // "Derived variants". Stays parallel with the fal.ai path so a project
+    // folder can mix outputs from both backends without naming drift.
+    const dest = uniqueName(outputDir, `${assetName}_resize_${size.replace("x", "_")}`);
     fs.writeFileSync(dest, croppedBuf);
     saved.push(dest);
     writeSidecar(dest, {

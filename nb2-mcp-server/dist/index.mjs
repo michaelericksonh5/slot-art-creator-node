@@ -71821,7 +71821,7 @@ async function falSmartResize({ source, outputDir, assetName, targetSizes, promp
   for (let i2 = 0; i2 < images.length; i2++) {
     const requestedSize = sizes[i2] || null;
     const meta2 = perTargetResults[i2] || {};
-    const sizeSuffix = requestedSize ? `_${requestedSize}` : `_${i2 + 1}`;
+    const sizeSuffix = requestedSize ? `_resize_${requestedSize.replace("x", "_")}` : `_resize_${i2 + 1}`;
     const dest = uniqueName(outputDir, `${assetName}${sizeSuffix}`);
     await downloadImage(images[i2].url, dest);
     saved.push(dest);
@@ -72030,7 +72030,7 @@ async function geminiSmartResize({ source, outputDir, assetName, targetSizes, pr
       );
     }
     const croppedBuf = centerCropPng(imageBuf, targetW, targetH);
-    const dest = uniqueName(outputDir, `${assetName}_${size}`);
+    const dest = uniqueName(outputDir, `${assetName}_resize_${size.replace("x", "_")}`);
     fs3.writeFileSync(dest, croppedBuf);
     saved.push(dest);
     writeSidecar(dest, {
