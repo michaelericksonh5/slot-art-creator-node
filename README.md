@@ -38,7 +38,11 @@ You don't need to clone this repo or run anything locally. The marketplace ships
 
 #### A1. Claude Code
 
-Inside Claude Code, run these three commands in order:
+> **These commands run in the Claude Code CLI — a terminal application, not Claude.ai or Claude Desktop.**
+> Open a terminal (PowerShell, Terminal.app, etc.) and run `claude` to start a Claude Code session. The `/plugin` commands below are Claude Code CLI slash commands and will return "/plugin isn't available in this environment" if you try them anywhere else.
+> Don't have Claude Code CLI? Install it: https://docs.anthropic.com/en/docs/claude-code/getting-started
+
+Inside a Claude Code terminal session, run these three commands in order:
 
 ```
 /plugin marketplace add michaelericksonh5/claude-plugins
