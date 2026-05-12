@@ -163,10 +163,46 @@ skill can find the active project without asking the user every time.
     },
     "symbols": {
       "HP1": {
-        "iterations": ["Symbol_Art/HP1_001.png", "Symbol_Art/HP1_002.png"],
+        "iterations": [
+          {
+            "path": "Symbol_Art/HP1_001.png",
+            "prompt": "[full rendered prompt with style_anchor + palette + tier phrase substituted]",
+            "references": ["Key_Art/Key_Art_003.png"],
+            "model": "gemini-3.1-flash-image-preview",
+            "image_size": "2K",
+            "aspect_ratio": "1:1",
+            "attempt_index": 1,
+            "parent_path": null,
+            "timestamp": "2026-05-06T16:32:11Z"
+          },
+          {
+            "path": "Symbol_Art/HP1_002.png",
+            "prompt": "[revised rendered prompt after first attempt FLAG]",
+            "references": ["Key_Art/Key_Art_003.png"],
+            "model": "gemini-3.1-flash-image-preview",
+            "image_size": "2K",
+            "aspect_ratio": "1:1",
+            "attempt_index": 2,
+            "parent_path": null,
+            "timestamp": "2026-05-06T16:38:47Z"
+          }
+        ],
         "approved": "Symbol_Art/HP1_002.png",
         "upscaled": "Symbol_Art/HP1_002_upscl_x2.png",
-        "resized": []
+        "resized": [],
+        "metrics_summary": {
+          "measured_iteration": "Symbol_Art/HP1_002.png",
+          "last_measured": "2026-05-06T17:05:00Z",
+          "dominant_color_oklch": [
+            { "l": 0.72, "c": 0.18, "h": 47, "pct": 0.34 },
+            { "l": 0.18, "c": 0.02, "h": 0,  "pct": 0.41 },
+            { "l": 0.55, "c": 0.14, "h": 28, "pct": 0.15 }
+          ],
+          "fill_pct": 0.83,
+          "bg_uniformity_score": 0.97,
+          "edge_density": 0.21
+        },
+        "modes": null
       },
       "HP2":  { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
       "MP1":  { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
@@ -258,9 +294,18 @@ Every asset slot follows this shape. All path strings are relative to
 ```json
 {
   "iterations": [
-    "Symbol_Art/HP1_001.png",
-    "Symbol_Art/HP1_002.png"
-  ],                                                   // every generation, in order
+    {
+      "path": "Symbol_Art/HP1_001.png",
+      "prompt": "<full rendered prompt as sent to the model>",
+      "references": ["Key_Art/Key_Art_003.png"],
+      "model": "gemini-3.1-flash-image-preview",
+      "image_size": "2K",
+      "aspect_ratio": "1:1",
+      "attempt_index": 1,
+      "parent_path": null,
+      "timestamp": "2026-05-06T16:32:11Z"
+    }
+  ],                                                   // append-only, never overwrite
   "approved": "Symbol_Art/HP1_002.png",                // null until user picks one
   "upscaled": "Symbol_Art/HP1_002_upscl_x2.png",       // null until /slot-step-09 runs
   "resized": [                                         // empty until /slot-step-10 runs
@@ -269,22 +314,123 @@ Every asset slot follows this shape. All path strings are relative to
       "dimensions": "3840x2160",
       "path": "Symbol_Art/HP1_002_resize_3840_2160.png"
     }
-  ]
+  ],
+  "metrics_summary": null,                             // optional, populated by /slot-step-08
+  "modes": null                                        // optional, populated by /slot-step-03 mode:<x>
 }
 ```
 
-- `iterations` — append-only list of every generated path for this slot. Never overwrite.
-- `approved` — single path the user picked as canonical for this slot. Null if not yet approved. Defaults to the latest iteration when ambiguous.
+- `iterations` — append-only list of every generated **iteration record** for this slot. Never overwrite, never re-order, never delete. See "Iteration record shape" below.
+- `approved` — single path the user picked as canonical for this slot. Null if not yet approved. Always a string path that matches one of the `iterations[].path` values. Defaults to the latest iteration when ambiguous.
 - `upscaled` — null until `/slot-step-09` produces a higher-resolution
   version of `approved`. The path uses the `_upscl_x<N>` suffix where
   `<N>` is the linear multiplier (2K→4K is `x2`).
 - `resized` — empty until `/slot-step-10` produces aspect variants.
   Each entry carries the aspect, the exact `WxH` dimensions, and the
   path with the `_resize_<W>_<H>` suffix.
+- `metrics_summary` — null until `/slot-step-08` runs `nb2_measure` on the approved iteration and writes back. See "metrics_summary field" below.
+- `modes` — null unless the user has generated mode-specific variants (e.g. free-spins palette shifts). See "modes slot" below.
 
 For UI banner tiers and multiplier denominations and logo lockups, the
 nested object holds one record per variant, each following the shape above
 (with `upscaled`/`resized` optional since banners rarely need them).
+
+### Iteration record shape
+
+Every entry in `iterations[]` is an **object** (not a bare path string).
+The fields are:
+
+| Field | Type | Required | Meaning |
+|---|---|---|---|
+| `path` | string | yes | Relative-with-subfolder path, e.g. `"Symbol_Art/HP1_001.png"` |
+| `prompt` | string | yes (may be `null` for legacy records) | The **fully rendered prompt** as sent to the model — every `<style_lock>`, `<palette_leads.primary>`, `<theme>`, etc. substituted with the actual locked text. Template-form prompts live in git, not here. |
+| `references` | string[] | yes | Reference image paths passed alongside the prompt (relative-with-subfolder). Empty array if none. |
+| `model` | string | yes | Model identifier returned by the MCP tool, e.g. `"gemini-3.1-flash-image-preview"`, `"fal-ai/nano-banana-2"`, `"gpt-image-2"`. |
+| `image_size` | string | yes | The `image_size` arg, e.g. `"2K"`, `"4K"`, `"1K"`. |
+| `aspect_ratio` | string | yes | The `aspect_ratio` arg, e.g. `"1:1"`, `"9:16"`. |
+| `attempt_index` | integer | yes | 1-based index within this iteration's retry budget (e.g. inline-QA failed once → `attempt_index: 2`). Resets to `1` for a fresh generate, not a retry. |
+| `parent_path` | string | yes (may be `null`) | If this iteration was produced by `nb2_edit` (or `gpt2_edit`) using a previous approved asset as `source`, the relative-with-subfolder path of that source. `null` for fresh generations. Lineage tracking. |
+| `timestamp` | ISO string | yes | When the MCP tool returned this iteration. |
+
+**Legacy migration shim.** Older `project.json` files may have flat string `iterations` arrays. When reading, accept both forms — treat a bare string as `{path: <string>, prompt: null, references: [], model: "unknown", image_size: "unknown", aspect_ratio: "unknown", attempt_index: 1, parent_path: null, timestamp: null}`. **Don't auto-rewrite** legacy files on read — the next write naturally upgrades them. New iterations always use the object form.
+
+**Why we record the rendered prompt, not the template form.** Template files (`HP_TEMPLATE.md`, `JACKPOT_TEMPLATE.md`, etc.) are version-controlled in git, so their state at any point is recoverable. The **rendered** prompt — with style_anchor, palette, theme substituted — is what NB2 actually saw, and it's what you need to debug "why did this one come out wrong" or A/B-test "what changed between attempt 1 and attempt 2". The substituted form is the actually-useful artifact.
+
+### `metrics_summary` field
+
+`/slot-step-08` runs `nb2_measure` on each approved asset during audit and writes a compact summary into the asset record. The full per-image metrics live in a sidecar file next to the image (`<asset>.metrics.json`) — the summary in `project.json` is the subset that fits in-memory for cross-asset queries (tier-pairwise deltas, LP warmth scan, etc.).
+
+```json
+"metrics_summary": {
+  "measured_iteration": "Symbol_Art/HP1_002.png",
+  "last_measured": "2026-05-06T17:05:00Z",
+  "dominant_color_oklch": [
+    { "l": 0.72, "c": 0.18, "h": 47, "pct": 0.34 },
+    { "l": 0.18, "c": 0.02, "h": 0,  "pct": 0.41 },
+    { "l": 0.55, "c": 0.14, "h": 28, "pct": 0.15 }
+  ],
+  "fill_pct": 0.83,
+  "bg_uniformity_score": 0.97,
+  "edge_density": 0.21
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `measured_iteration` | Which `iterations[].path` was measured. Usually equals `approved`. |
+| `last_measured` | ISO timestamp. If `approved` changes, this becomes stale and `/slot-step-08` re-measures on next run. |
+| `dominant_color_oklch` | Top N dominant colors (k-means on a downsampled image), each as `{l, c, h, pct}`. `l` is OKLCH lightness (0–1), `c` is chroma (0–~0.4), `h` is hue (0–360°), `pct` is the share of pixels in that cluster. |
+| `fill_pct` | Pixel fill % of the subject — alpha-aware or BG-color-aware. Useful for tier-fill discipline (HP1 should be ~80–85%, LP ~58–65%). |
+| `bg_uniformity_score` | 0–1 score: how flat the background is. 1.0 = pure solid color, <0.85 = visible gradient or pattern. Used by `/slot-step-08` to auto-RED non-flat export BGs. |
+| `edge_density` | 0–1 Sobel-style edge density. Useful for "this LP is too busy" detection. |
+
+`metrics_summary` is **null** if `/slot-step-08` hasn't been run yet OR if measurement was explicitly opted out (`nb2_measure` is opt-in per the v1.5.6+ contract — see `nb2-mcp-server` docs). Skills that read metrics must handle the null case gracefully.
+
+### `modes` slot for mode-variant assets
+
+Some games re-render specific symbols across modes (base / free-spins / bonus / pickme / wheel). When that happens, the variant doesn't replace the base — it sits in a parallel `modes.<mode>` sub-record:
+
+```json
+"WD1": {
+  "iterations": [ ... base-mode iteration records ... ],
+  "approved": "Symbol_Art/WD1_002.png",
+  "upscaled": null,
+  "resized": [],
+  "metrics_summary": { ... },
+  "modes": {
+    "freespins": {
+      "iterations": [
+        {
+          "path": "Symbol_Art/WD1_freespins_001.png",
+          "prompt": "<rendered prompt with free-spins palette shift>",
+          "references": ["Key_Art/Key_Art_003.png", "Symbol_Art/WD1_002.png"],
+          "model": "gemini-3.1-flash-image-preview",
+          "image_size": "2K",
+          "aspect_ratio": "1:1",
+          "attempt_index": 1,
+          "parent_path": "Symbol_Art/WD1_002.png",
+          "timestamp": "2026-05-06T17:30:00Z"
+        }
+      ],
+      "approved": "Symbol_Art/WD1_freespins_001.png",
+      "upscaled": null,
+      "resized": [],
+      "metrics_summary": null
+    },
+    "bonus": null
+  }
+}
+```
+
+- The top-level `iterations` / `approved` represents **base mode** — the default rendering.
+- Each `modes.<mode>` sub-record follows the same asset-record shape (iterations + approved + upscaled + resized + metrics_summary).
+- Mode names are stable: `freespins`, `bonus`, `pickme`, `wheel`. Defined in `shared/mode_variants.md`.
+- `parent_path` in a mode variant's iteration record points at the base-mode approved asset — captures the lineage when `/slot-step-03 mode:<x>` uses `nb2_edit` on the base.
+- Filenames carry the mode token: `WD1_freespins_NNN.png`, `JP1_bonus_NNN.png`. Skipping the mode token (e.g. `WD1_NNN.png`) implies base mode.
+
+`modes` is **null** for symbols with no mode variants (the common case). `/slot-step-08` audits each populated mode against `shared/mode_variants.md` doctrine — e.g. LP symbols should never have `modes` populated (LP shouldn't recolor across modes).
+
+See `shared/mode_variants.md` for the design doctrine (which tiers can have mode variants, glow/palette delta limits, recolor budget).
 
 ### `current_step` and `next_step` vocabulary
 
