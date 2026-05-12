@@ -1,7 +1,7 @@
 /**
  * slot-art-creator-node — MCP server (Node.js)
  *
- * Exposes seven MCP tools across two model families:
+ * Exposes eight MCP tools across two model families plus a QA helper:
  *
  *   Nano Banana 2 family (Gemini / fal.ai routing):
  *     nb2_generate       — text-to-image
@@ -16,11 +16,19 @@
  *     gpt2_edit          — image-to-image edit with optional mask; accepts
  *                          MULTIPLE reference images for compositional editing.
  *
- *   Cross-family helper:
+ *   Cross-family helpers:
  *     nb2_stage_image    — copy an external/chat-pasted image into the safe inputs
  *                          folder so it can be used as a source for any of the
  *                          above (gpt2_edit / nb2_edit / nb2_upscale /
  *                          nb2_smart_resize)
+ *     nb2_measure        — opt-in measurement on an existing PNG. Returns OKLCH
+ *                          dominant colors, fill %, BG uniformity, edge density,
+ *                          and bounding box; writes a sidecar <basename>.metrics.json
+ *                          next to the image. Generation tools accept `measure: true`
+ *                          to auto-run this on each output. Used by /slot-step-08
+ *                          to drive numeric audit checks (tier-pairwise saturation
+ *                          deltas, LP warmth scan, non-flat-BG detection) instead
+ *                          of relying on Claude's eyeball judgment alone.
  *
  *   IMPORTANT:
  *   - gpt-image-2 has NO faithful upscale mode. It always regenerates at the
@@ -83,6 +91,7 @@ import * as http from "http";
 import * as https from "https";
 import { lookup } from "dns/promises";
 import { fileURLToPath } from "url";
+import { measureImage, writeSidecar as writeMetricsSidecar } from "./lib/measurements.js";
 
 // ---------------------------------------------------------------------------
 // Bootstrap — load .env from plugin root
@@ -1667,6 +1676,51 @@ function formatError(label, err) {
   return [{ type: "text", text: `ERROR (${label}): ${err.message || err}` }];
 }
 
+// Optional measurement attachment. When a generation tool is called with
+// `measure: true`, run nb2_measure on every output path, write a sidecar
+// .metrics.json next to each, and append a metrics block to the response.
+// Failures here are non-fatal: measurement is opt-in QA, not a precondition.
+async function maybeAttachMetrics(result, args, label) {
+  if (!args || args.measure !== true) return null;
+  if (!result || !Array.isArray(result.paths) || result.paths.length === 0) return null;
+
+  const attached = [];
+  for (const p of result.paths) {
+    try {
+      const metrics = await measureImage(p);
+      const sidecar = writeMetricsSidecar(p, metrics);
+      attached.push({
+        path: p,
+        sidecar,
+        summary: {
+          dominant_color_oklch: metrics.dominant_color_oklch,
+          fill_pct: metrics.fill_pct,
+          bg_uniformity_score: metrics.bg_uniformity_score,
+          edge_density: metrics.edge_density,
+        },
+      });
+    } catch (err) {
+      attached.push({ path: p, error: err.message || String(err) });
+    }
+  }
+  return {
+    type: "text",
+    text:
+      `\nMeasurement (opt-in, ${label}):\n` +
+      attached
+        .map((a) =>
+          a.error
+            ? `  - ${a.path}\n      measurement FAILED: ${a.error}`
+            : `  - ${a.path}\n      sidecar: ${a.sidecar}\n      fill_pct: ${a.summary.fill_pct}, bg_uniformity: ${a.summary.bg_uniformity_score}, edge_density: ${a.summary.edge_density}\n      dominant_color_oklch (top ${a.summary.dominant_color_oklch.length}): ` +
+              a.summary.dominant_color_oklch
+                .slice(0, 3)
+                .map((c) => `{l:${c.l}, c:${c.c}, h:${c.h}, pct:${c.pct}}`)
+                .join(", "),
+        )
+        .join("\n"),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Tool definitions
 // ---------------------------------------------------------------------------
@@ -1701,6 +1755,12 @@ const TOOLS = [
           items: { type: "string" },
           description: "Optional list of reference image paths or URLs (style references).",
         },
+        measure: {
+          type: "boolean",
+          description:
+            "Opt-in: run nb2_measure on each output PNG after generation, write a sidecar <basename>.metrics.json next to it, and append the metrics summary to the response. Default false — measurement is an explicit choice (adds ~1-2s per output). Used by /slot-step-08 for numeric audit checks.",
+          default: false,
+        },
       },
       required: ["prompt"],
     },
@@ -1733,6 +1793,12 @@ const TOOLS = [
           items: { type: "string" },
           description: "Additional reference images (beyond the source) to guide the edit.",
         },
+        measure: {
+          type: "boolean",
+          description:
+            "Opt-in: run nb2_measure on each output PNG after generation, write a sidecar <basename>.metrics.json next to it, and append the metrics summary to the response. Default false. Used by /slot-step-08 for numeric audit checks.",
+          default: false,
+        },
       },
       required: ["prompt", "source"],
     },
@@ -1754,6 +1820,12 @@ const TOOLS = [
           type: "string",
           enum: ["1K", "2K", "4K"],
           default: "4K",
+        },
+        measure: {
+          type: "boolean",
+          description:
+            "Opt-in: run nb2_measure on each output PNG after upscale, write a sidecar <basename>.metrics.json next to it, and append the metrics summary to the response. Default false. Used by /slot-step-08 to verify the upscale preserved fill % and dominant colors against the source.",
+          default: false,
         },
       },
       required: ["prompt", "source"],
@@ -1850,6 +1922,12 @@ const TOOLS = [
           description: "Number of variants to generate in one call. Default: 1.",
           default: 1,
         },
+        measure: {
+          type: "boolean",
+          description:
+            "Opt-in: run nb2_measure on each output PNG after generation, write a sidecar <basename>.metrics.json next to it, and append the metrics summary to the response. Default false. Used by /slot-step-08 for numeric audit checks on text-heavy assets.",
+          default: false,
+        },
       },
       required: ["prompt"],
     },
@@ -1900,8 +1978,36 @@ const TOOLS = [
           maximum: 10,
           default: 1,
         },
+        measure: {
+          type: "boolean",
+          description:
+            "Opt-in: run nb2_measure on each output PNG after edit, write a sidecar <basename>.metrics.json next to it, and append the metrics summary to the response. Default false. Used by /slot-step-08 to verify the edit preserved the source's structural metrics.",
+          default: false,
+        },
       },
       required: ["prompt", "source"],
+    },
+  },
+  {
+    name: "nb2_measure",
+    description:
+      "Measure an existing PNG and return OKLCH dominant colors, pixel fill %, " +
+      "background uniformity, edge density, and bounding box. Writes a sidecar " +
+      "<basename>.metrics.json next to the image. Used by /slot-step-08 to drive " +
+      "numeric audit checks (tier-pairwise saturation deltas, LP warmth scan, " +
+      "non-flat-BG detection). Opt-in — generation tools don't auto-measure " +
+      "unless you pass `measure: true`. Read-only with respect to the image " +
+      "itself (only writes the sidecar JSON).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        source: {
+          type: "string",
+          description:
+            "Absolute path to a PNG. Must be inside an allowed root (run nb2_stage_image first if it's chat-attached).",
+        },
+      },
+      required: ["source"],
     },
   },
 ];
@@ -1932,7 +2038,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         aspectRatio: args.aspect_ratio || null,
         references,
       });
-      return { content: formatResult(result, "nb2_generate OK") };
+      const content = formatResult(result, "nb2_generate OK");
+      const metricsBlock = await maybeAttachMetrics(result, args, "nb2_generate");
+      if (metricsBlock) content.push(metricsBlock);
+      return { content };
     }
 
     if (name === "nb2_edit") {
@@ -1948,7 +2057,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         aspectRatio: args.aspect_ratio || null,
         extraReferences,
       });
-      return { content: formatResult(result, "nb2_edit OK") };
+      const content = formatResult(result, "nb2_edit OK");
+      const metricsBlock = await maybeAttachMetrics(result, args, "nb2_edit");
+      if (metricsBlock) content.push(metricsBlock);
+      return { content };
     }
 
     if (name === "nb2_upscale") {
@@ -1963,7 +2075,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         aspectRatio: null,
         extraReferences: null,
       });
-      return { content: formatResult(result, "nb2_upscale OK") };
+      const content = formatResult(result, "nb2_upscale OK");
+      const metricsBlock = await maybeAttachMetrics(result, args, "nb2_upscale");
+      if (metricsBlock) content.push(metricsBlock);
+      return { content };
     }
 
     if (name === "nb2_smart_resize") {
@@ -2037,7 +2152,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         quality: args.quality || "high",
         n: args.n || 1,
       });
-      return { content: formatResult(result, "gpt2_generate OK (OpenAI / gpt-image-2)") };
+      const content = formatResult(result, "gpt2_generate OK (OpenAI / gpt-image-2)");
+      const metricsBlock = await maybeAttachMetrics(result, args, "gpt2_generate");
+      if (metricsBlock) content.push(metricsBlock);
+      return { content };
     }
 
     if (name === "gpt2_edit") {
@@ -2057,7 +2175,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         quality: args.quality || "high",
         n: args.n || 1,
       });
-      return { content: formatResult(result, "gpt2_edit OK (OpenAI / gpt-image-2)") };
+      const content = formatResult(result, "gpt2_edit OK (OpenAI / gpt-image-2)");
+      const metricsBlock = await maybeAttachMetrics(result, args, "gpt2_edit");
+      if (metricsBlock) content.push(metricsBlock);
+      return { content };
+    }
+
+    if (name === "nb2_measure") {
+      const source = await validateImageInput(args.source, "source");
+      const metrics = await measureImage(source);
+      const sidecar = writeMetricsSidecar(source, metrics);
+      const lines = [
+        "nb2_measure OK",
+        `  Source: ${source}`,
+        `  Sidecar: ${sidecar}`,
+        `  Dimensions: ${metrics.width}x${metrics.height}`,
+        `  fill_pct: ${metrics.fill_pct}`,
+        `  bg_uniformity_score: ${metrics.bg_uniformity_score}`,
+        `  edge_density: ${metrics.edge_density}`,
+        `  bounding_box: ${metrics.bounding_box ? `${metrics.bounding_box.w}x${metrics.bounding_box.h} at (${metrics.bounding_box.x}, ${metrics.bounding_box.y})` : "(none)"}`,
+        `  dominant_color_oklch (top ${metrics.dominant_color_oklch.length}):`,
+      ];
+      for (const c of metrics.dominant_color_oklch) {
+        lines.push(`    - l:${c.l} c:${c.c} h:${c.h}° (${(c.pct * 100).toFixed(1)}%)`);
+      }
+      lines.push("");
+      lines.push("Summary (the subset embedded into project.json.assets.*.metrics_summary):");
+      lines.push(JSON.stringify({
+        measured_iteration: metrics.measured_iteration,
+        last_measured: metrics.last_measured,
+        dominant_color_oklch: metrics.dominant_color_oklch,
+        fill_pct: metrics.fill_pct,
+        bg_uniformity_score: metrics.bg_uniformity_score,
+        edge_density: metrics.edge_density,
+      }, null, 2));
+      return { content: [{ type: "text", text: lines.join("\n") }] };
     }
 
     throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
