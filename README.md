@@ -268,7 +268,7 @@ sessions and conversation compaction (see [Project memory](#project-memory)).
 | 03 | `/slot-step-03` | After key art | Individual symbols (HP, MP, LP, Wild, Scatter, Coin, Bonus, Mystery, Blocker, Loot Link family, Jackpot tiers, …) |
 | 04 | `/slot-step-04` | After symbols (or after key art for IDEATION mode) | Full contact sheet for review |
 | 05 | `/slot-step-05` | After key art | Base, free-spins, bonus, pick-me, wheel BGs |
-| 06 | `/slot-step-06` | After BG | Bezel, HUD, paytable, banners, multipliers, lobby tile, logo, in-game avatars (animated characters) |
+| 06 | `/slot-step-06` | After BG | Bezel, HUD, paytable, banners, multipliers, lobby tile, logo, in-game avatars (animated characters), and bonus wheels (jackpot / bonus / multiplier / pick-em — generated as full single-graphic wheels with every slice laid out) |
 | 07 | `/slot-step-07` | Optional | Adapt an existing UI mock to a new theme |
 | 08 | `/slot-step-08` | Final review | RED/YELLOW/GREEN audit report |
 | 09 | `/slot-step-09` | Production | Upscale approved 2K to 4K (output naming: `<source>_upscl_x<N>.png`) |
@@ -314,7 +314,8 @@ and your project picks up where you left off.
 ├── HUD/                                # spin button + balance/bet/win chrome
 ├── Paytables/                          # paytable layouts
 ├── Win_Banners/                        # small / medium / big / mega / epic
-├── Bonus_Screens/                      # free-spins / pick-me / wheel intros
+├── Bonus_Screens/                      # intro screens for free-spins / pick-me / wheel bonuses
+├── Wheels/                             # full bonus-wheel graphics (jackpot / bonus / multiplier / pick-em)
 ├── Multipliers/                        # x2, x10, ...
 ├── Logos/                              # hero / standard / compact lockups
 ├── Lobby_Tiles/                        # marketing thumbnails
@@ -338,6 +339,7 @@ monotonically increasing, **never overwritten**. Examples:
   `Symbol_Art/JP1_001.png`
 - `Backgrounds/BG_base_001.png`, `Backgrounds/BG_freespins_001.png`
 - `Avatars/Avatar1_001.png`, `Avatars/Avatar2_001.png`
+- `Wheels/Wheel_jackpot_001.png`, `Wheels/Wheel_multiplier_001.png`
 
 Derived variants live next to their source: an upscaled `HP1_002.png`
 becomes `Symbol_Art/HP1_002_upscl_x2.png`; a resized `Key_Art_003.png`

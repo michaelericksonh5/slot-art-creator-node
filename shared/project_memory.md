@@ -215,6 +215,12 @@ skill can find the active project without asking the user every time.
         "hero":     { "iterations": [], "approved": null },
         "standard": { "iterations": [], "approved": null },
         "compact":  { "iterations": [], "approved": null }
+      },
+      "wheels": {
+        "jackpot":    { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+        "bonus":      { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+        "multiplier": { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+        "pickem":     { "iterations": [], "approved": null, "upscaled": null, "resized": [] }
       }
     },
     "qa_reports": ["QA_Reports/QA_001.md"]

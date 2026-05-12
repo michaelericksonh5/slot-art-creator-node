@@ -1,6 +1,6 @@
 ---
 name: slot-step-06
-description: STEP 6 — Generate slot machine UI surfaces and in-game characters — reel frames/bezels, HUD chrome, paytable, win banners (small/medium/big/mega/epic), bonus screens (free-spins/pick-me/wheel intros), multiplier badges, lobby tiles, logos (hero/standard/compact lockups), spin/bet buttons, control panels, and in-game animated avatars (the player-facing characters that react to wins — 0 to 5 per game). Reads the locked key art, symbol sheet, and background as references so every surface and character lives in the same world. UI must always rank below symbols in visual hierarchy; avatars sit alongside the reels and follow character-design discipline. Run after /slot-step-05. Use this skill whenever the user asks to generate any chrome surface OR an in-game avatar / mascot / animated character.
+description: STEP 6 — Generate slot machine UI surfaces, bonus wheels, and in-game characters — reel frames/bezels, HUD chrome, paytable, win banners (small/medium/big/mega/epic), bonus screens (free-spins/pick-me/wheel intros), bonus wheels (jackpot/bonus/multiplier/pick-em — generated as full single-graphic wheels with every slice laid out, not individual slice files), multiplier badges, lobby tiles, logos (hero/standard/compact lockups), spin/bet buttons, control panels, and in-game animated avatars (the player-facing characters that react to wins — 0 to 5 per game). Reads the locked key art, symbol sheet, and background as references so every surface and character lives in the same world. UI must always rank below symbols in visual hierarchy; avatars sit alongside the reels and follow character-design discipline; wheels are bonus-feature chrome with their own readability discipline (slice labels must read during the spin animation). Run after /slot-step-05. Use this skill whenever the user asks to generate any chrome surface, a bonus wheel of any kind, OR an in-game avatar / mascot / animated character.
 ---
 
 # Step 6 — UI Designer
@@ -44,6 +44,7 @@ banners — a designer reviewing one surface type opens one folder.
 | `paytable` | `Paytables/` | `Paytable_NNN.png` |
 | `banner_<tier>` (win banners by tier) | `Win_Banners/` | `Banner_small_NNN.png`, `Banner_big_NNN.png`, etc. |
 | `bonus_screen` (free spins / pick-me / wheel intro) | `Bonus_Screens/` | `BonusScreen_<variant>_NNN.png` |
+| `wheel_<variant>` (full bonus wheel graphic) | `Wheels/` | `Wheel_jackpot_NNN.png`, `Wheel_bonus_NNN.png`, `Wheel_multiplier_NNN.png`, `Wheel_pickem_NNN.png` |
 | `multiplier_xN` | `Multipliers/` | `Multiplier_x2_NNN.png`, `Multiplier_x10_NNN.png` |
 | `lobby_tile` | `Lobby_Tiles/` | `Tile_NNN.png` |
 | `logo_<lockup>` | `Logos/` | `Logo_hero_NNN.png`, `Logo_standard_NNN.png`, `Logo_compact_NNN.png` |
@@ -60,7 +61,8 @@ surface you're generating. Don't read all of them.
 | `bezel` (reel frame) | `BEZEL_TEMPLATE.md` |
 | `hud` | `HUD_TEMPLATE.md` |
 | `banner_<tier>` (any tier — small/big/mega/epic) | `BANNERS_TEMPLATE.md` |
-| `bonus_screen` (free-spins / pick-me / wheel) | `BONUS_SCREEN_TEMPLATE.md` |
+| `bonus_screen` (free-spins / pick-me / wheel intro) | `BONUS_SCREEN_TEMPLATE.md` |
+| `wheel_<variant>` (full wheel graphic — jackpot / bonus / multiplier / pick-em) | `WHEEL_TEMPLATE.md` |
 | `multiplier_xN` | `MULTIPLIER_TEMPLATE.md` |
 | `lobby_tile` | `LOBBY_TILE_TEMPLATE.md` |
 | `logo_<lockup>` (hero / standard / compact) | `LOGO_TEMPLATE.md` |
@@ -116,6 +118,7 @@ output lands in. Both are surface-determined:
 | `bezel` | `Bezels/` | no | `nb2_generate` | `nb2_generate` |
 | `hud` | `HUD/` | no | `nb2_generate` | `nb2_generate` |
 | `bonus_screen` | `Bonus_Screens/` | no | `nb2_generate` | `nb2_generate` |
+| `wheel_<variant>` | `Wheels/` | yes (every slice carries a label: `GRAND` / `×10` / `FREE SPINS` / etc.) | `gpt2_generate` | `nb2_generate` (be ready for 2–4 attempts to keep labels legible; verify every slice label at the QA gate) |
 | `multiplier_xN` | `Multipliers/` | no | `nb2_generate` | `nb2_generate` |
 | `lobby_tile` | `Lobby_Tiles/` | no (title appears at runtime) | `nb2_generate` | `nb2_generate` |
 | `avatar_<id>` | `Avatars/` | no | `nb2_generate` | `nb2_generate` |
@@ -190,6 +193,16 @@ For **avatars** (the in-game character family):
   has zero avatars — slots stay at `{iterations: [], approved: null}`
   until something lands
 
+For **wheels** (`wheel_jackpot`, `wheel_bonus`, `wheel_multiplier`,
+`wheel_pickem`):
+- Append the relative path to `project.json.assets.ui.wheels.<variant>.iterations`
+  where `<variant>` is `jackpot` / `bonus` / `multiplier` / `pickem`
+- If user approves, set `project.json.assets.ui.wheels.<variant>.approved`
+  to that same relative path
+- Each wheel variant is its own slot — a game with both a jackpot
+  wheel AND a multiplier wheel has both slots populated; a game with
+  no wheels at all leaves them at `{iterations: [], approved: null}`
+
 Set `current_step: "ui_in_progress"`, `next_step: "/slot-step-06"`
 (continue) or `"/slot-step-08"` (move to audit).
 
@@ -233,7 +246,11 @@ Type `/slot-` to see the full numbered workflow.
 - `BEZEL_TEMPLATE.md` — reel frame / bezel + thickness vocabulary
 - `HUD_TEMPLATE.md` — bottom HUD strip (spin button + balance/bet/win)
 - `BANNERS_TEMPLATE.md` — win celebration overlays (BIG / MEGA / EPIC)
-- `BONUS_SCREEN_TEMPLATE.md` — free-spins intro, pick-me, wheel
+- `BONUS_SCREEN_TEMPLATE.md` — intro screens for free-spins / pick-me
+  / wheel-bonus modes (the announce screen, NOT the wheel itself)
+- `WHEEL_TEMPLATE.md` — full bonus-wheel graphic (jackpot wheel,
+  bonus wheel, multiplier wheel, pick-em wheel) — single-graphic
+  output with all slices laid out, NOT individual slice files
 - `MULTIPLIER_TEMPLATE.md` — multiplier badges by denomination
 - `LOBBY_TILE_TEMPLATE.md` — lobby thumbnail
 - `LOGO_TEMPLATE.md` — game logo (hero / standard / compact lockups)

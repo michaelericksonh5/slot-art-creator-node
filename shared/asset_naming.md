@@ -17,7 +17,8 @@ Explorer can find what they want without scanning a flat dump.
 ├── HUD/                   ← HUD chrome (spin button, balance, bet, win)
 ├── Paytables/             ← paytable layouts
 ├── Win_Banners/           ← small / medium / big / mega / epic
-├── Bonus_Screens/         ← free-spins / pick-me / wheel intro screens
+├── Bonus_Screens/         ← intro screens for free-spins / pick-me / wheel bonuses
+├── Wheels/                ← full bonus-wheel graphics (jackpot / bonus / multiplier / pick-em)
 ├── Multipliers/           ← multiplier badges by denomination
 ├── Logos/                 ← hero / standard / compact lockups
 ├── Lobby_Tiles/           ← marketing thumbnails
@@ -193,7 +194,11 @@ just what they need without symbol/background noise.
 | Win banner — epic | `Win_Banners/` | `Banner_epic` | `Banner_epic_001.png` |
 | Bonus screen — free spins intro | `Bonus_Screens/` | `BonusScreen_freespins` | `BonusScreen_freespins_001.png` |
 | Bonus screen — pick-me | `Bonus_Screens/` | `BonusScreen_pickme` | `BonusScreen_pickme_001.png` |
-| Bonus screen — wheel | `Bonus_Screens/` | `BonusScreen_wheel` | `BonusScreen_wheel_001.png` |
+| Bonus screen — wheel intro | `Bonus_Screens/` | `BonusScreen_wheel` | `BonusScreen_wheel_001.png` |
+| Wheel — jackpot | `Wheels/` | `Wheel_jackpot` | `Wheel_jackpot_001.png` |
+| Wheel — bonus | `Wheels/` | `Wheel_bonus` | `Wheel_bonus_001.png` |
+| Wheel — multiplier | `Wheels/` | `Wheel_multiplier` | `Wheel_multiplier_001.png` |
+| Wheel — pick-em | `Wheels/` | `Wheel_pickem` | `Wheel_pickem_001.png` |
 | Multiplier badge | `Multipliers/` | `Multiplier_x<N>` | `Multiplier_x2_001.png`, `Multiplier_x10_001.png` |
 | Logo — hero | `Logos/` | `Logo_hero` | `Logo_hero_001.png` |
 | Logo — standard | `Logos/` | `Logo_standard` | `Logo_standard_001.png` |
