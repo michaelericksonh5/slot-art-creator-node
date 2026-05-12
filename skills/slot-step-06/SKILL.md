@@ -18,7 +18,16 @@ approved symbols, and the approved background.
    - `style_anchor.key_art_path` (required)
    - Approved symbol sheet (if available)
    - Approved base background (if available)
-4. If key art isn't locked, stop and tell user to run `/slot-step-02` first
+4. **If no active project**, follow the "no active project — guide
+   through setup" pattern in `shared/project_memory.md`: route to
+   `/slot-step-01` (and `/slot-step-02` for the key art), then resume
+   the user's original UI / avatar request in the same conversation.
+5. **If key art isn't locked yet** (`project.json.style_anchor.key_art_path`
+   missing), route to `/slot-step-02` first — every UI surface and
+   avatar reads the locked key art so chrome and characters live in the
+   same visual world. After it's locked, return here to generate the
+   surface the user originally asked for. Don't make the user re-invoke
+   `/slot-step-06`.
 
 ## Workflow
 

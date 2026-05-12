@@ -11,9 +11,21 @@ backgrounds, UI) reads as a reference. Lock it carefully.
 
 ## Startup protocol
 
-1. Resolve active project from `~/.h5g-slot-active-project.json` or arg
-2. Load `project.json` and `game_brief.json` from project root
-3. If brief isn't locked yet, stop and tell user to run `/slot-step-01` first
+Follow the standard protocol from `shared/project_memory.md` →
+"Skill startup protocol":
+
+1. Resolve active project from `~/.h5g-slot-active-project.json` or
+   GameID arg. **If no active project exists**, follow the "no active
+   project — guide through setup" pattern: acknowledge the user's
+   original ask (generating key art), run `/slot-step-01` to lock the
+   brief first, then resume key-art generation in the same
+   conversation — don't make the user re-invoke `/slot-step-02`.
+2. Load `project.json` and `game_brief.json` from project root.
+3. **If brief isn't locked yet** (no `project.json.brief` or it's
+   incomplete), same pattern: run `/slot-step-01` first, then resume
+   key-art generation here. The brief carries the style_lock,
+   palette_leads, theme_summary, and game_name that this step needs
+   to compose a coherent prompt.
 
 ## Workflow
 

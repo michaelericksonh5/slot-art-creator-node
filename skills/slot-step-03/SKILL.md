@@ -12,11 +12,24 @@ time, anchored to the locked key art.
 
 ## Startup protocol
 
-1. Resolve active project from `~/.h5g-slot-active-project.json` or arg
-2. Load `project.json` and `game_brief.json`
-3. **Read the locked key art image** — `project.json.style_anchor.key_art_path`.
-   This image is the visual ground truth for every symbol. If it's not set,
-   stop and tell the user to run `/slot-step-02` first.
+Follow the standard protocol from `shared/project_memory.md` →
+"Skill startup protocol", including the "no active project — guide
+through setup" pattern. Symbol generation has a two-link prerequisite
+chain: a locked brief AND a locked key art.
+
+1. Resolve active project from `~/.h5g-slot-active-project.json` or
+   GameID arg. **If no active project**, route to `/slot-step-01`
+   → `/slot-step-02` → resume symbol generation in the same
+   conversation. Don't ask the user to re-invoke `/slot-step-03`
+   after setup.
+2. Load `project.json` and `game_brief.json`. **If the brief isn't
+   locked yet** (`project.json.brief` missing or incomplete), route
+   to `/slot-step-01` first, then continue here.
+3. **Read the locked key art image** —
+   `project.json.style_anchor.key_art_path`. This image is the visual
+   ground truth for every symbol. **If it's not set**, route to
+   `/slot-step-02` to generate and lock it, then return here to
+   generate the symbol the user originally asked for.
 4. **Read the latest symbol sheet if present** —
    `project.json.assets.sheet[last]`. If `/slot-step-04` ran in
    ideation mode and proposed a set, that sheet is the strongest reference

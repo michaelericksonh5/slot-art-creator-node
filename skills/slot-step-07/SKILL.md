@@ -12,12 +12,20 @@ For from-scratch UI design, use `/slot-step-06` instead.
 
 ## Startup protocol
 
-1. Resolve active project
-2. Load `project.json`, `game_brief.json`
-3. Read `style_anchor.key_art_path` — the new theme's visual anchor
-4. **Required source image**: the UI mock to reskin. User provides the path.
+Follow `shared/project_memory.md` → "Skill startup protocol", including
+the "no active project — guide through setup" pattern.
 
-If no source image, stop. This skill does nothing without one.
+1. Resolve active project. **If none exists**, route to `/slot-step-01`
+   → `/slot-step-02` → resume the reskin here in the same conversation.
+2. Load `project.json`, `game_brief.json`.
+3. Read `style_anchor.key_art_path` — the new theme's visual anchor.
+   **If not locked**, route to `/slot-step-02` first; the new theme
+   needs an anchor to reskin against.
+4. **Required source image**: the UI mock to reskin. User provides the
+   path. Without a source image, this skill has nothing to operate on —
+   ask the user to attach or path-to one before continuing. (This is
+   distinct from the prerequisite-chain pattern above; it's a per-call
+   input the user controls, not a project setup state.)
 
 ### If the user pastes / attaches the UI mock in chat
 

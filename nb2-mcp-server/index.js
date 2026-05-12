@@ -33,6 +33,12 @@
  *     NB Pro purpose-built endpoint, or Gemini fallback). A gpt2-based smart
  *     resize was prototyped but not shipped — output quality wasn't verified
  *     against the well-tested fal.ai path.
+ *   - output_dir on every tool MUST be an absolute path. The pre-1.5.5
+ *     behavior of silently joining a relative path to ~/Pictures/claude_nb2
+ *     produced orphaned files when a skill meant to write to a project
+ *     subfolder. Skills inside /slot-step-* always pass
+ *     path.join(project_root, "<Category>"); ad-hoc callers can omit
+ *     output_dir to fall back to ~/Pictures/claude_nb2.
  *
  * EITHER KEY ALONE is fully sufficient for all four tools — both providers have
  * a complete implementation of every tool. With both keys set, the plugin routes
@@ -145,8 +151,26 @@ try {
 }
 
 // ---------------------------------------------------------------------------
-// Resolve output directory — defaults to ~/Pictures/claude_nb2 when not given.
-// Project-aware skills override this with the active project root.
+// Resolve output directory.
+//
+// Contract (v1.5.5+): callers MUST pass an absolute path. Relative paths
+// are rejected — the pre-1.5.5 behavior of silently joining a relative
+// path to ~/Pictures/claude_nb2 had two real failure modes:
+//   1. A skill that meant to write to <project_root>/Symbol_Art/ but passed
+//      just "Symbol_Art" would silently land files in
+//      ~/Pictures/claude_nb2/Symbol_Art/ — the skill would then record
+//      "Symbol_Art/HP1_001.png" in project.json, and every downstream
+//      skill would try to read it from the project folder and ENOENT.
+//   2. The error mode was silent: the file was created, the path was
+//      recorded, the failure surfaced hours later when an upscale or
+//      audit tried to read the orphaned record.
+//
+// Empty `rawOut` still falls back to ~/Pictures/claude_nb2 — that's the
+// ad-hoc / no-project use case (someone testing the MCP tools directly
+// outside a /slot-step-* skill, or generating a one-off image for
+// inspiration). Skills inside the /slot-step-* workflow always pass an
+// absolute path joined from the active project root, so this default
+// never fires for them.
 // ---------------------------------------------------------------------------
 
 function resolveOutputDir(rawOut) {
@@ -155,7 +179,20 @@ function resolveOutputDir(rawOut) {
     ? path.join(os.homedir(), rawOut.slice(1))
     : rawOut;
   if (path.isAbsolute(expanded)) return expanded;
-  return path.join(os.homedir(), "Pictures", "claude_nb2", rawOut);
+  throw new Error(
+    `output_dir must be absolute. Got: "${rawOut}" (relative).\n` +
+    `→ Inside a /slot-step-* skill, pass:\n` +
+    `    path.join(project_root, "<Category>")\n` +
+    `  where <Category> is one of Key_Art, Symbol_Sheets, Symbol_Art,\n` +
+    `  Backgrounds, Avatars, Bezels, HUD, Paytables, Win_Banners,\n` +
+    `  Bonus_Screens, Multipliers, Logos, Lobby_Tiles, or QA_Reports.\n` +
+    `  See shared/asset_naming.md for the full category list.\n` +
+    `→ For ad-hoc generation outside a project workflow, pass an absolute\n` +
+    `  path like "~/Pictures/claude_nb2" (tilde is expanded) or omit\n` +
+    `  output_dir entirely to fall back to that default.\n` +
+    `→ If you don't have an active project yet, run /slot-step-01 to set\n` +
+    `  one up — the resulting project_root is the prefix every skill joins.`
+  );
 }
 
 function ensureDir(dir) {

@@ -20,10 +20,16 @@ mode for the final sheet.
 
 ## Startup protocol
 
-1. Resolve active project
-2. Load `project.json`, `game_brief.json`
+Follow `shared/project_memory.md` → "Skill startup protocol", including
+the "no active project — guide through setup" pattern.
+
+1. Resolve active project. **If none exists**, route to `/slot-step-01`
+   → `/slot-step-02` → resume contact-sheet generation here in the same
+   conversation.
+2. Load `project.json`, `game_brief.json`.
 3. Read `project.json.style_anchor.key_art_path` (the locked key art) —
-   required for both modes
+   required for both modes. **If not locked**, route to `/slot-step-02`
+   first, then resume.
 4. Detect mode by counting approved symbols:
    - Iterate `project.json.assets.symbols.*.approved`
    - If <50% of manifest symbols have a non-null `approved` field → **ideation mode** (default)

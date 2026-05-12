@@ -19,13 +19,24 @@ Run this at:
 
 ## Startup protocol
 
-1. Resolve active project
-2. Load `project.json`, `game_brief.json`
+Follow `shared/project_memory.md` → "Skill startup protocol", including
+the "no active project — guide through setup" pattern.
+
+1. Resolve active project. **If none exists**, the user is asking to
+   audit something that hasn't been built — route to `/slot-step-01`
+   to set up a project, then explain that there's nothing to audit
+   yet and surface the next reasonable step (`/slot-step-02` to
+   generate key art). The audit can run once any assets are approved.
+2. Load `project.json`, `game_brief.json`.
 3. Read all references:
-   - `style_anchor.key_art_path` (the original locked anchor)
-   - GDD source images from Drive if `gdd_source.file_id` is set and the
-     brief's color direction feels uncertain
-4. List all approved assets in scope
+   - `style_anchor.key_art_path` (the original locked anchor — if
+     unlocked, route to `/slot-step-02` first since the audit grades
+     consistency against the anchor)
+   - GDD source images from Drive if `gdd_source.file_id` is set and
+     the brief's color direction feels uncertain
+4. List all approved assets in scope. If literally nothing has been
+   approved yet, tell the user honestly: there's nothing to grade.
+   Suggest running the relevant design skill first.
 
 ## Workflow
 

@@ -309,8 +309,11 @@ Every skill follows this exact sequence on invocation:
    → Yes: use that GameID to construct project_root, update active-project pointer
    → No: read ~/.h5g-slot-active-project.json
         → File exists: use it
-        → File missing: list folders in the active PROJECT_BASE and ask user to pick
-                        OR offer to start a new project via /slot-step-01
+        → File missing: route to "no active project — guide through setup"
+                        (see below) instead of asking the user to pick
+                        from a list. The list approach assumes the user
+                        already has projects on disk; many first-time
+                        users don't.
 ```
 
 When constructing a NEW `project_root` from a GameID + username, resolve
@@ -327,9 +330,90 @@ as a fallback). Persist the resolved absolute `project_root` into
 
 ### Step 2: Load project.json
 
-Read `{project_root}/project.json`. If it doesn't exist:
-- Skill is `/slot-step-01`: this is fine, you're creating it
-- Any other skill: stop and tell the user to run `/slot-step-01` first
+Read `{project_root}/project.json`. If it doesn't exist, route to the
+"no active project — guide through setup" path below. Exception:
+`/slot-step-01` is the project-creator itself, so a missing
+`project.json` is the expected state — create it from scratch (or seed
+from `/slot-step-00`'s GDD extraction).
+
+### The "no active project — guide through setup" pattern
+
+When a generation skill (`/slot-step-02` through `/slot-step-10`) or a
+review skill (`/slot-compare`) is invoked and there's no active project
+to operate on, **do not dead-end the user**. Guide them through setup
+and resume the original request automatically. The pattern:
+
+1. **Acknowledge what they asked for.** "You asked to generate the HP1
+   symbol — but there's no active project on this machine yet, so I'll
+   set one up first and then come back to HP1."
+2. **Route to the right setup step.** Default to `/slot-step-01` (lock
+   the brief). If the user mentions a GDD already exists on Drive, route
+   to `/slot-step-00` first (which seeds the brief from the GDD), then
+   `/slot-step-01` to refine it.
+3. **Keep the chain in one conversation.** Run the setup step
+   conversationally — don't make the user re-invoke the original
+   command after setup completes. The original request lives in the
+   conversation history; just continue with it once the prerequisite is
+   met.
+4. **Walk the prerequisite chain.** Some skills have multiple
+   prerequisites. `/slot-step-03` needs both a locked brief AND a
+   locked key art, so the chain may be:
+   `original /slot-step-03 ask → /slot-step-01 → /slot-step-02 →
+   resume /slot-step-03`. Each link of the chain only runs once per
+   project, so this is a one-time onboarding cost.
+5. **Don't lecture.** Briefly explain *why* the prerequisite is needed
+   (e.g., "the key art is the style anchor every symbol reads as a
+   reference") but stay focused on getting the user to their original
+   ask. Don't dump the full plugin tour — that's `/slot-tutorial`'s
+   job.
+
+The full prerequisite chain per skill:
+
+| Skill | Needs | If missing, route to |
+|---|---|---|
+| `/slot-step-02` | active project + locked brief | `/slot-step-01` |
+| `/slot-step-03` | the above + locked key art (`style_anchor.key_art_path` set) | `/slot-step-02` |
+| `/slot-step-04` | the above | `/slot-step-02` (ideation mode runs without symbols) |
+| `/slot-step-05` | the above (sheet optional) | `/slot-step-02` |
+| `/slot-step-06` | the above (sheet + base BG strongly recommended) | `/slot-step-02` |
+| `/slot-step-07` | the above + a source UI mock | ask user for source path; if no project at all, `/slot-step-01` |
+| `/slot-step-08` | active project with at least one approved asset to audit | `/slot-step-01` if no project; otherwise the relevant design skill |
+| `/slot-step-09` | active project + at least one approved 2K asset | the relevant design skill (often `/slot-step-03`) |
+| `/slot-step-10` | active project + at least one approved asset | the relevant design skill |
+| `/slot-compare` | active project (CROSS-PROJECT mode needs a second one) | `/slot-step-01` for the missing project |
+
+`/slot-step-00`, `/slot-step-01`, `/slot-help`, `/slot-setup`,
+`/slot-tutorial` do not need an active project — they either create one
+or are project-agnostic.
+
+### Example dialogue
+
+User: `/slot-step-03 generate HP1`
+(no `~/.h5g-slot-active-project.json` exists)
+
+Skill response:
+```
+You asked to generate HP1 (the high-pay symbol), but there's no active
+project on this machine yet. /slot-step-03 needs a locked brief AND a
+locked key art before it can generate symbols on-style, so I'll walk
+you through both quickly, then come back to HP1.
+
+  Setup steps I'm about to run:
+    1. /slot-step-01 — lock the game brief (theme, palette, style, tier
+       plan, symbol manifest). This takes 2–5 minutes.
+    2. /slot-step-02 — generate and lock the master key art. Becomes
+       the visual style anchor every symbol reads.
+    3. Return to HP1 generation automatically.
+
+Do you have a Game Design Document on Drive for this game, or are you
+pitching a fresh concept? (If you have a GDD, I'll prepend /slot-step-00
+to seed the brief from it; if not, we'll lock the brief from scratch.)
+```
+
+The user replies, and the skill runs through the chain. When the brief
+and key art are both locked, the skill returns to its original
+responsibility (generating HP1) without asking the user to re-invoke
+`/slot-step-03`.
 
 ### Step 3: Read the style anchor (the key art)
 

@@ -18,7 +18,15 @@ before sending, anchored to the locked key art and symbol set.
 4. Read the approved symbol sheet (`project.json.assets.sheet.approved`)
    if available — it sets the brightness/saturation ceiling for the
    background (background must always rank below the symbols)
-5. If key art isn't locked, stop and run `/slot-step-02` first
+5. **If no active project**, follow the "no active project — guide
+   through setup" pattern in `shared/project_memory.md`: route to
+   `/slot-step-01` (and `/slot-step-02` for the key art), then resume
+   background generation here in the same conversation.
+6. **If key art isn't locked yet** (`project.json.style_anchor.key_art_path`
+   missing), route to `/slot-step-02` first — every background reads the
+   locked key art as a style reference. After it's locked, return here
+   to generate the background the user originally asked for. Don't make
+   the user re-invoke `/slot-step-05`.
 
 ## Workflow
 

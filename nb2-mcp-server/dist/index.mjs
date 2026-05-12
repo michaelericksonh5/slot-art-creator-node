@@ -71253,7 +71253,20 @@ function resolveOutputDir(rawOut) {
   if (!rawOut) return path3.join(os.homedir(), "Pictures", "claude_nb2");
   const expanded = rawOut.startsWith("~") ? path3.join(os.homedir(), rawOut.slice(1)) : rawOut;
   if (path3.isAbsolute(expanded)) return expanded;
-  return path3.join(os.homedir(), "Pictures", "claude_nb2", rawOut);
+  throw new Error(
+    `output_dir must be absolute. Got: "${rawOut}" (relative).
+\u2192 Inside a /slot-step-* skill, pass:
+    path.join(project_root, "<Category>")
+  where <Category> is one of Key_Art, Symbol_Sheets, Symbol_Art,
+  Backgrounds, Avatars, Bezels, HUD, Paytables, Win_Banners,
+  Bonus_Screens, Multipliers, Logos, Lobby_Tiles, or QA_Reports.
+  See shared/asset_naming.md for the full category list.
+\u2192 For ad-hoc generation outside a project workflow, pass an absolute
+  path like "~/Pictures/claude_nb2" (tilde is expanded) or omit
+  output_dir entirely to fall back to that default.
+\u2192 If you don't have an active project yet, run /slot-step-01 to set
+  one up \u2014 the resulting project_root is the prefix every skill joins.`
+  );
 }
 function ensureDir(dir) {
   fs3.mkdirSync(dir, { recursive: true });

@@ -31,13 +31,27 @@ the same project. Default to **ASSET** when the user names asset IDs
 
 ## Startup protocol
 
+Follow `shared/project_memory.md` → "Skill startup protocol", including
+the "no active project — guide through setup" pattern.
+
 1. Resolve the active project from `~/.h5g-slot-active-project.json` or
-   from the user's arg. For CROSS-PROJECT mode, also resolve the second
-   project the same way (env var or arg).
+   from the user's GameID arg. **If none exists**, the user is asking
+   to compare assets that don't exist — route to `/slot-step-01` to
+   set up a project, then explain that there's nothing to compare yet
+   and surface the relevant design skill (likely `/slot-step-02` for
+   key art iterations, which is the most common comparison target).
+   Resume the comparison here once at least two candidates exist.
+
+   For **CROSS-PROJECT mode**, also resolve the second project the
+   same way. If the user names a second project that doesn't exist on
+   disk, ask them to point you at the right path or GameID — don't
+   substitute a fabricated location.
 2. Load `project.json` from each project in scope.
 3. Detect mode (or accept user override).
 4. Do **not** modify anything. This skill writes no JSON, generates no
-   art, calls no MCP generation tools.
+   art, calls no MCP generation tools. The "guide through setup"
+   handoff above is the only thing that routes the user to another
+   skill, and even that doesn't modify state from inside this skill.
 
 ## Workflow
 

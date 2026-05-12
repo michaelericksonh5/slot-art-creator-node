@@ -14,13 +14,24 @@ instead.
 
 ## Startup protocol
 
-1. Resolve active project
-2. Load `project.json`
+Follow `shared/project_memory.md` → "Skill startup protocol", including
+the "no active project — guide through setup" pattern.
+
+1. Resolve active project. **If none exists**, the user is asking to
+   upscale something that hasn't been generated — route to
+   `/slot-step-01` to set up a project, then explain that there's
+   nothing approved yet to upscale. Suggest the design skills
+   (`/slot-step-02` for key art, `/slot-step-03` for symbols, …) so
+   the user can build up assets, then return here.
+2. Load `project.json`.
 3. Identify which approved assets to upscale. Common targets:
    - All approved symbols (HP/MP/LP/Wild/Scatter)
    - The locked key art (already at 4K — skip if so)
    - Approved backgrounds (often need 4K for marketing)
    - Approved logos
+
+   If nothing is approved yet, tell the user honestly and route to the
+   appropriate design skill — never invent a source asset.
 
 ## Workflow
 
