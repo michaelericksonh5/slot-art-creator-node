@@ -42,12 +42,88 @@ Required fields (full schema in `GAME_BRIEF_TEMPLATE.md`):
 - `style_lock` — exactly one phrase from `shared/nb2_prompting.md` §9.4
 - `palette_leads` — `primary`, `accents`, `forbidden_on_lp` (named colors only, no hex)
 - `grid` — e.g. `"5x4"`
-- `tier_plan` — canonical: 3 specials + 2 HP + 2 MP + 5–6 LP. One LP family.
+- `tier_plan` — canonical baseline: 3 specials + 2 HP + 2 MP + 5–6 LP.
+  One LP family. Modern feature-rich games (Loot Link, Hold-and-Spin,
+  Billionaire's series) ship 20–45 symbols including WYS/SF
+  feature-token families — don't force them down to 13.
 - `wild` — what it IS, how it BREAKS the theme
-- `scatter` — label and shape
-- `symbol_manifest` — `{id, tier, subject, role}` for every symbol
-- `mode_list` — `["base", "free spins", "bonus pick-me", ...]`
+- `scatter` — label and shape (or note that the game uses a `WY` symbol with the scatter role from the WYS family)
+- `jackpot_tier_names` — when the game has jackpot symbols, set this
+  explicit mapping (`{"JP1": "Grand", "JP2": "Major", "JP3": "Minor",
+  "JP4": "Mini"}` for the most common modern ordering — but check the
+  GDD; 9 of 11 catalog games use JP1=Grand but a few use JP1=Mini)
+- `symbol_manifest` — full schema `{id, tier, family, subject, role,
+  mechanic, notes}` for every symbol the game ships. **Walk every
+  symbol** including the WYS / SF families, the jackpot tiers, and
+  any compound prefixes (BWY, WJP, etc.) — see Step 2b below
+- `mode_list` — `["base", "free spins", "bonus pick-me", "wheel", ...]`
 - `rtp` — informational only
+
+### Step 2b — Walk the full symbol manifest
+
+The catalog of 26 shipped H5G games shows modern feature games carry
+**20–45 distinct symbols** including extensive WYS / SF feature
+families and compound prefixes. Don't shortcut the manifest to just
+HP/MP/LP/Wild/Scatter — that misses the actual production complexity.
+
+When the user has a GDD, the manifest comes from `/slot-step-00`'s
+GDD extraction (which maps GDD prose into the family + mechanic
+fields). When the user is pitching fresh without a GDD, walk them
+through every family the game uses:
+
+1. **Pay tiers (always)** — HP1/HP2 (2 high-pay characters or iconic
+   objects), MP1/MP2 (2 mid-pay objects), LP1–LP6 (5–6 low-pay; ask
+   whether card royals, themed objects, gems, or suits).
+2. **Wild (almost always)** — WD1 standard, plus any variants (WD2
+   sticky, WD3 expanding, etc.). For each variant, capture the
+   `mechanic` (sticky / stacked / expanding / walking / respin /
+   transforming / multiplier / duplicating / scatter-wild-hybrid).
+3. **Scatter / Bonus** — either a legacy `SC` symbol OR a `WY`
+   symbol with `mechanic: scatter` (newer H5G pattern). Plus
+   optionally a `BO` symbol if the game has a separate bonus
+   trigger.
+4. **WYS family (most modern feature games)** — Ask: "Does the game
+   have coins, portals, or spherical feature tokens?" If yes, walk
+   every `WY<N>` / `WYS<N>` the GDD specifies. For each, capture
+   the role (hold-and-spin coin, WYSIWYG collector, scatter, random-
+   wilds shooter, collector+multiplier, adder, HP-equivalent payout,
+   Loot Link trigger). The catalog shows games ship 1–9 WYS symbols.
+5. **SF family (Loot Link / Hotspot / Mystery games)** — Ask: "Does
+   the game have hotspot multipliers, collectors, path-formers, or
+   mystery symbols?" If yes, walk every `SF<N>` and capture the role
+   (mystery transform / hotspot multiplier or adder or combiner or
+   collapse or persist / upgradable collector / immediate-payout
+   collector / bonus value collector / transforming collector /
+   path-forming prize / lock-and-respin / jackpot coin / bonus-game
+   trigger).
+6. **Jackpot tiers (when present)** — Walk JP1 through JP4 (or
+   JP1–JP6 for 6-tier games). Explicitly set
+   `brief.jackpot_tier_names` BEFORE filling the manifest entries
+   so the tier labels are consistent. Default to JP1=Grand for newer
+   games unless the GDD says otherwise.
+7. **Loot Link family (when the game has Loot Link / Hotspot
+   mechanics)** — Either via the canonical COL / ACT / HOT_*
+   prefixes OR via generic SF / WY / BWY labels (the catalog shows
+   real GDDs use both). Capture the mechanic per symbol.
+8. **Blocker (cluster/grid-clear games)** — BL standalone, OR BL1
+   and BL2 if the game uses mode-specific blockers or damage-tier
+   blockers.
+9. **Pay multipliers (when present)** — D2_HP1, D3_HP1, SPLIT_HP1,
+   MULT_x10, DHP1 (H5G alias for D2_HP1), etc.
+10. **Pachinko / Drop Zone (when the game is pachinko-style)** —
+    BALL, PEG, BUCKET_x100, etc.
+11. **Compound prefixes (modern combo games)** — BWY (bonus+WYS),
+    WJP (wild+jackpot), WDWY (wild+WYS scatter-wild hybrid), WDSF
+    (wild+SF), MUWD (multiplier wild), MUWDBO (multiplier wild +
+    bonus), SFWY (SF+WYS). When the GDD describes a symbol that
+    does two things, use a compound prefix rather than a single
+    primitive — the visual will reflect both roles.
+12. **Replacement (R1+)** — only if the GDD calls it out.
+
+Full prefix vocabulary + family routing lives in
+`shared/symbol_vocabulary.md`. The manifest's `mechanic` field is
+what the art skills later read to pick the right template overlay,
+so capture it specifically (don't write "TBD" — ask the user instead).
 
 ### Step 3 — Build the Style Anchor
 

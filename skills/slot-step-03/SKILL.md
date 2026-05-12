@@ -1,6 +1,6 @@
 ---
 name: slot-step-03
-description: STEP 3 — Generate individual reel symbols for any H5G symbol family — high-pay (HP), mid-pay (MP), low-pay (LP), wilds and wild variants (sticky / stacked / expanding / walking / respin / transforming / multiplier / duplicating / scatter-wild hybrid), classic scatter (SC), coin / hold-and-spin (WY), bonus trigger (BO), Loot Link / Hotspot family (COL, ACT, HOT_x*, HOT_ADD, HOT_COMB, HOT_COLLAPSE, HOT_PERSIST, BAG, BAG_BO, MOJ), mystery / special feature (SF), blocker / dead (BL), jackpot tiers (JP1–JP6), pay-multiplier variants (D2_, D3_, SPLIT_, MULT_), and pachinko / Drop Zone pieces (BALL, PEG, BUCKET_x*). Each symbol reads the locked key art as a style anchor, validates the prompt against the visual hierarchy before generating, does an inline QA check immediately after, and auto-iterates on blocking issues. Run after /slot-step-02 is locked. Use this skill whenever the user asks to generate, regenerate, or refine any individual reel symbol or a full symbol set — even when they just name the family or mechanic (e.g. "make the coin scatter", "redo the loot link collector", "generate the jackpot tiers") without explicitly saying "symbol".
+description: STEP 3 — Generate individual reel symbols for any H5G symbol family — high-pay (HP), mid-pay (MP), low-pay (LP), wilds and wild variants (sticky / stacked / expanding / walking / respin / transforming / multiplier / duplicating / scatter-wild hybrid), classic scatter (SC), WYS family (WY, WY1–WY10+, WYS, WYS1+ — coins, portals, spherical feature-tokens with eight brief-driven roles including hold-and-spin coin, WYSIWYG collector, scatter, random-wilds shooter, collector+multiplier, adder, HP-equivalent payout, Loot Link trigger), bonus trigger (BO), Loot Link / Hotspot family (COL, ACT, HOT_x*, HOT_ADD, HOT_COMB, HOT_COLLAPSE, HOT_PERSIST, BAG, BAG_BO, MOJ), SF family (SF, SF1–SF11+ — special-feature tokens with thirteen brief-driven roles including mystery, hotspot operators, collectors, path-formers, lock-and-respin, jackpot coin, bonus trigger), blocker / dead (BL, BL1, BL2+), jackpot tiers (JP1–JP6, with per-game numeric ordering read from brief.jackpot_tier_names), pay-multiplier variants (D2_, D3_, SPLIT_, MULT_, DHP), pachinko / Drop Zone pieces (BALL, PEG, BUCKET_x*), and compound prefixes (BWY, WJP, WDWY, WDSF, MUWD, MUWDBO, SFWY) that combine two roles into one symbol. Each symbol reads the locked key art as a style anchor, validates the prompt against the visual hierarchy before generating, does an inline QA check immediately after, and auto-iterates on blocking issues. Run after /slot-step-02 is locked. Use this skill whenever the user asks to generate, regenerate, or refine any individual reel symbol or a full symbol set — even when they just name the family or mechanic (e.g. "make the coin scatter", "redo the loot link collector", "generate the jackpot tiers", "regenerate BWY1") without explicitly saying "symbol". Forward-compatible: if a GDD introduces a prefix that isn't in the documented list, the skill routes by visual identity from the brief's subject and surfaces the new prefix as a vocabulary-extension request.
 ---
 
 # Step 3 — Symbol Designer
@@ -54,31 +54,72 @@ type you're generating. Don't read all of them.
 
 If you're not sure what prefix the brief is using, read
 `shared/symbol_vocabulary.md` first — it documents the full H5G prefix
-system (HP / MP / LP / WD / SC / WY / BO / SF / BL / JP / R).
+system (HP, MP, LP, WD, SC, SW, WY/WYS, BO, BAG, MOJ, SF, BL, JP,
+COL, ACT, HOT_*, D2_/D3_/SPLIT_/MULT_, DHP, BALL/PEG/BUCKET, R, and
+the compound prefixes BWY/WJP/WDWY/WDSF/MUWD/MUWDBO/SFWY) along with
+the routing-by-role principle.
 
-| Prefix being generated | Symbol type | Read this file FIRST |
+#### Route by family (and by mechanic when prefix is ambiguous)
+
+H5G GDDs across the catalog of 26 shipped games use the same prefix
+for **multiple mechanics** (e.g. `WY1` is a hold-and-spin coin in
+some games, a WYSIWYG collector in others, a scatter in others).
+The routing here picks a **family template** (visual identity), and
+the brief's `mechanic` field on each symbol selects which role
+overlay to apply from inside that template. The full principle is
+documented in `shared/symbol_vocabulary.md` → "Routing by manifest
+role, not literal prefix".
+
+| Prefix being generated | Family | Read this file FIRST |
 |---|---|---|
-| `HP1`–`HP4` | High-pay (character / iconic object) | `HP_TEMPLATE.md` |
-| `MP1`–`MP3` | Mid-pay (themed object) | `MP_TEMPLATE.md` |
-| `LP1`–`LP6` | Low-pay (cards / suits / gems / themed) | `LP_TEMPLATE.md` |
-| `WD` (basic) | Standard wild | `WILD_TEMPLATE.md` |
-| `WD2`+ / variant wild | Sticky / Stacked / Expanding / Walking / Respin / Transforming / Multiplier / Duplicating | `WILD_VARIANTS_TEMPLATE.md` |
+| `HP1`–`HP4` | High-pay | `HP_TEMPLATE.md` |
+| `MP1`–`MP3` | Mid-pay | `MP_TEMPLATE.md` |
+| `LP1`–`LP6` | Low-pay | `LP_TEMPLATE.md` |
+| `WD` (basic) | Wild | `WILD_TEMPLATE.md` |
+| `WD2`+ / variant wild | Wild variants (sticky / stacked / expanding / walking / respin / transforming / multiplier / duplicating) | `WILD_VARIANTS_TEMPLATE.md` |
 | `SW` | Scatter-Wild hybrid (Book of Dead style) | `WILD_VARIANTS_TEMPLATE.md` (Scatter-Wild section) |
-| `SC` | Classic scatter | `SCATTER_TEMPLATE.md` |
-| `WY1`–`WY4` | Coin / Hold-and-Spin family | `COIN_TEMPLATE.md` |
-| `BO` | Bonus trigger (non-scatter) | `BONUS_TRIGGER_TEMPLATE.md` |
+| `SC` (legacy prefix) | Scatter | `SCATTER_TEMPLATE.md` |
+| `WY`, `WY1`–`WY10+`, `WYS`, `WYS1`+ | **WYS family** — coin / portal / spherical feature-tokens. Eight brief-driven roles: coin · WYSIWYG collector · **scatter (newer games)** · random-wilds shooter · collector+multiplier · adder · HP-equivalent payout · Loot Link trigger | `COIN_TEMPLATE.md` (WYS Family Template) |
+| `BO`, `BO1`+ | Bonus trigger | `BONUS_TRIGGER_TEMPLATE.md` |
 | `BAG`, `BAG_BO` | Money bag scatter / Bonus bag | `LOOTLINK_TEMPLATE.md` (Bag section) |
 | `MOJ` | Money emoji trigger | `LOOTLINK_TEMPLATE.md` (Money emoji section) |
-| `COL` | Collector | `LOOTLINK_TEMPLATE.md` (Collector section) |
-| `ACT` | Activator | `LOOTLINK_TEMPLATE.md` (Activator section) |
+| `COL` | Loot Link Collector | `LOOTLINK_TEMPLATE.md` (Collector section) |
+| `ACT` | Loot Link Activator | `LOOTLINK_TEMPLATE.md` (Activator section) |
 | `HOT_x*` / `HOT_ADD` / `HOT_COMB` / `HOT_COLLAPSE` / `HOT_PERSIST` | Loot Link / Hotspot operators | `LOOTLINK_TEMPLATE.md` |
-| `SF` | Mystery / Special Feature | `MYSTERY_TEMPLATE.md` |
-| `BL` | Blocker / Dead / Obstacle | `BLOCKER_TEMPLATE.md` |
-| `JP1`–`JP6` | Jackpot tiers (4-tier or 6-tier) | `JACKPOT_TEMPLATE.md` |
+| `SF`, `SF1`–`SF11+` | **SF family** — special-feature symbols (coin / portal / spherical / closed-object). Thirteen brief-driven roles: mystery transform · hotspot multiplier/adder/combiner/collapse/persist · upgradable collector · immediate-payout collector · bonus value collector · transforming collector · path-forming prize · lock-and-respin · jackpot coin · bonus-game trigger | `MYSTERY_TEMPLATE.md` (SF Family Template) |
+| `BL`, `BL1`, `BL2`+ | Blocker / Dead / Obstacle (numbered variants for mode-specific or damage-tier patterns) | `BLOCKER_TEMPLATE.md` |
+| `JP1`–`JP6` | Jackpot tiers (4-tier OR 6-tier). **Numeric ordering varies per game** — always read `brief.jackpot_tier_names` | `JACKPOT_TEMPLATE.md` |
 | `R1`+ | Replacement (clarify mechanic first) | confirm with user, then route by visual treatment |
 | `D2_<base>` / `D3_<base>` / `SPLIT_<base>` | Double / Triple / Split (pay-multiplier overlays) | `SPECIAL_MECHANICS_TEMPLATE.md` |
+| `DHP1`+ | Double HP (H5G alias for `D2_HP1`) | `SPECIAL_MECHANICS_TEMPLATE.md` |
 | `MULT_x*` | Non-wild multiplier | `SPECIAL_MECHANICS_TEMPLATE.md` |
 | `BALL` / `PEG` / `BUCKET_x*` | Pachinko-style game pieces | `PACHINKO_TEMPLATE.md` |
+
+#### Compound prefixes — first-class symbols with combined roles
+
+Compound prefixes combine two role/family signals in one symbol ID.
+They follow the same `<PREFIX>_NNN.png` naming as primitives
+(`BWY_001.png`, `WJP_001.png`, etc.) and route to a **dominant base
+template + secondary overlay**.
+
+| Compound prefix | Base template (dominant) | Secondary overlay from |
+|---|---|---|
+| `BWY`, `BWY1`+ | `COIN_TEMPLATE.md` (WYS family) | bonus-trigger cues from `BONUS_TRIGGER_TEMPLATE.md` |
+| `WJP`, `WJP1`+ | `WILD_VARIANTS_TEMPLATE.md` | jackpot-contribution overlay from `JACKPOT_TEMPLATE.md` |
+| `WDWY`, `WDWY1`+ | `WILD_VARIANTS_TEMPLATE.md` (scatter-wild hybrid section) | WYS coin/portal silhouette from `COIN_TEMPLATE.md` |
+| `WDSF`, `WDSF1`+ | `WILD_VARIANTS_TEMPLATE.md` | SF sphere silhouette from `MYSTERY_TEMPLATE.md` |
+| `MUWD`, `MUWD1`+ | `WILD_VARIANTS_TEMPLATE.md` (multiplier-wild section) | — (alias) |
+| `MUWDBO`, `MUWDBO1`+ | `WILD_VARIANTS_TEMPLATE.md` (multiplier-wild section) | bonus burst from `BONUS_TRIGGER_TEMPLATE.md` |
+| `SFWY`, `SFWY1`+ | `MYSTERY_TEMPLATE.md` (SF family) | WYS coin/portal cues from `COIN_TEMPLATE.md` |
+
+#### Unknown prefix — fallback for future H5G symbols
+
+If a brief uses a prefix not in either table above (a new H5G symbol
+type that hasn't made it into the docs yet), match by **visual
+identity from the brief's `subject` text** to the closest existing
+family, route there, and surface the unknown prefix to the user in
+the Step 7 next-step nudge so the vocabulary can be extended. See
+`shared/symbol_vocabulary.md` → "Unknown / future prefix fallback".
 
 Each template file contains:
 - Tier rules (background color, palette, lighting)
@@ -97,9 +138,11 @@ underlying structure all templates follow:
 
 | Symbol | Tier phrase |
 |---|---|
-| Jackpot | "fills entire cell, edge to edge" |
+| Jackpot | "fills entire cell, edge to edge" — and **read `brief.jackpot_tier_names`** to know which tier each `JP<N>` represents in this specific game; the catalog of 26 shipped H5G games shows 9 of 11 modern numeric-jackpot games use `JP1 = Grand`, not `JP1 = Mini` |
 | Wild | "barely contained fills frame edge to edge, large and dominant" |
 | Scatter | "prominent, circular badge-shaped, fills cell" |
+| WYS family (`WY` / `WYS`) | "fills the cell, prominent, slightly larger than the LP/MP symbols" — coin / portal / spherical silhouette; role overlay cues come from the brief's `mechanic` field |
+| SF family (`SF`) | "prominent, fills the cell, more visually weighted than MP/LP" — spherical token or closed-object silhouette; role overlay from the brief's `mechanic` field |
 | HP | "large and prominent, more valuable than all mid and low tier symbols" |
 | MP | "generous size, visible padding, one tier below the high-pay characters" |
 | LP | "small and understated, generous empty space" |
@@ -212,9 +255,10 @@ When the user asks for "all symbols":
 
 ## References
 
+- `shared/symbol_vocabulary.md` — the master prefix-and-family reference. Read this when a brief uses an unfamiliar prefix, a compound prefix, or when the `mechanic` field of a `WY`/`SF` symbol is ambiguous.
 - `shared/qa_preflight.md` (pre/post generation protocol)
 - `shared/project_memory.md` (state schema)
-- `shared/asset_naming.md` (per-symbol counter)
+- `shared/asset_naming.md` (per-symbol counter + compound-prefix label table)
 - `shared/nb2_prompting.md` §9.2 (master formula), §9.5 (export BG), §9.7 (anti-patterns)
 - `shared/art_principles.md` §3 (symbols), §3.5 (cell-fill table)
 - `shared/chat_image_staging.md` — required when the user pastes/attaches
