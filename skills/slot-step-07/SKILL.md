@@ -60,7 +60,22 @@ Fill the template's placeholders from the brief's `theme_summary`,
 
 ### Step 4 — Generate (edit operation)
 
-Call `mcp__nb2node__nb2_edit`:
+**Pick the right tool first.** Text-heavy source UIs (paytables, logos,
+HUDs with baked button labels, partner reference UIs full of copy)
+preserve their wording more reliably with gpt-image-2; everything else
+preserves layout better with NB2. Decision rule:
+
+| Source UI has visible required text? | `OPENAI_API_KEY` set? | Use this tool |
+|---|---|---|
+| yes (labels, wordmarks, pay values) | yes | `mcp__nb2node__gpt2_edit` |
+| yes | no | `mcp__nb2node__nb2_edit` (be ready for 2–4 attempts to keep text legible; verify every label at the QA gate) |
+| no (pure chrome — bezel, panel, decorative banner) | either | `mcp__nb2node__nb2_edit` |
+
+See `shared/gpt_image2_prompting.md` — its routing table lists this
+skill explicitly. Both tools use the same arg shape; the only difference
+is the field name for the source.
+
+**API args (NB2 path — pure chrome reskins):**
 
 | API arg | Value |
 |---|---|
@@ -71,6 +86,18 @@ Call `mcp__nb2node__nb2_edit`:
 | `output_dir` | `{project_root}` |
 | `asset_name` | `"<SurfaceLabel>_reskin"`, e.g. `"Bezel_reskin"`, `"HUD_reskin"` (the MCP server appends `_NNN.png` and auto-increments) |
 | `extra_references` | absolute path — resolve `style_anchor.key_art_path` against `project_root`, then pass `[<absolute>]` to lock the new theme. |
+
+**API args (gpt2 path — text-heavy source UIs):**
+
+| API arg | Value |
+|---|---|
+| `prompt` | same composed reskin prompt; gpt-image-2 honours the layout-preservation discipline as long as the source is the first reference |
+| `extra_references` | `[<absolute source path>, <absolute key art path>]` — gpt2_edit treats the array as compositional inputs, so source goes first |
+| `aspect_ratio` | match source |
+| `image_size` | `"2K"` (the stable production ceiling) |
+| `quality` | `"high"` |
+| `output_dir` | `{project_root}` |
+| `asset_name` | same convention as NB2 |
 
 ### Step 5 — Inline QA check — 8-axis layout-preservation rubric
 

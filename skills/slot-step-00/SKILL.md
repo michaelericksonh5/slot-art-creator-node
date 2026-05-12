@@ -49,11 +49,17 @@ Then ask: **"What's the game name or title of the GDD on Drive?"**
 
 Search the canonical GDD folder
 (`https://drive.google.com/drive/folders/1SfzTV7n6CPlNXjMTR-RfRLtXIaJ-wCtr`)
-using:
+restricting to that folder so unrelated team-wide hits don't pollute results:
 
 ```
-fullText contains '<game name>' and mimeType != 'application/vnd.google-apps.folder'
+'1SfzTV7n6CPlNXjMTR-RfRLtXIaJ-wCtr' in parents
+  and fullText contains '<game name>'
+  and mimeType != 'application/vnd.google-apps.folder'
+  and trashed = false
 ```
+
+Drive CQL uses `'<folder_id>' in parents` (not `parentId = '<folder_id>'`)
+— the latter is invalid and silently returns nothing.
 
 Use the **highest version** if multiple are found. Confirm with the user.
 
@@ -64,10 +70,12 @@ all return clean text. Do not download or convert to PDF.
 
 ### Step 3 — Read reference images (if any)
 
-Search the same folder for image files:
+Search the same folder for image files using the correct CQL form:
 
 ```
-parentId = '<folder_id>' and (mimeType = 'image/png' or mimeType = 'image/jpeg')
+'<folder_id>' in parents
+  and (mimeType = 'image/png' or mimeType = 'image/jpeg')
+  and trashed = false
 ```
 
 Call `read_file_content` on each — Claude sees them visually. Use them to
@@ -75,13 +83,24 @@ sharpen palette, mood, and style decisions before locking the brief.
 
 ### Step 4 — Bootstrap the project folder
 
+Resolve `<PROJECT_BASE>` using the standard order from
+`shared/project_memory.md` → "Resolving `<PROJECT_BASE>` at runtime":
+
+1. `SLOT_ART_PROJECT_BASE` env var if set
+2. The H5G shared Drive Stream path
+   (`H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\`
+   on Windows, the equivalent `/Volumes/GoogleDrive/Shared drives/...` on
+   Mac) — only if it exists on this machine
+3. `~/slot-art-projects/` per-user fallback
+
+`username` comes from `os.userInfo().username` (or `%USERNAME%` on Windows
+/ `$USER` on Mac/Linux as a fallback). Do not hardcode it.
+
 Construct the project root:
 
 ```
-H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\{GameID}_{username}
+<PROJECT_BASE>/{GameID}_{username}
 ```
-
-Where `username` = current OS username (`merickson`).
 
 Create the folder if it doesn't exist. Inside it, create:
 
@@ -130,7 +149,7 @@ Show a summary table:
 
 ```
 GameID           : 4470
-Project root     : H:\...\4470_merickson
+Project root     : <resolved PROJECT_BASE>/4470_<username>
 Game name        : Jungle Kingdom
 Grid             : 5x4
 Symbols          : 13 (extracted)
@@ -144,7 +163,7 @@ Open questions   : 2 (style_lock, palette — to be locked in /slot-01)
 
 ```
 ✓ Step 0 — GDD Connect complete.
-  Project active: 4470_merickson
+  Project active: {GameID}_{username}
   Folder: <project_root>
   Open:   file:///<project_root with / separators>
 

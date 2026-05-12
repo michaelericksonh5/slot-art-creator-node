@@ -17,8 +17,10 @@ Follow the standard startup from `shared/project_memory.md`:
 1. **Resolve project.** Did the user pass a GameID arg? Use it. Otherwise
    read `~/.h5g-slot-active-project.json`. If neither exists, ask the user
    for a GameID and create the project folder.
-2. **Construct project root.**
-   `H:\Shared drives\Content Management - AI\Production_AI 2\Asset_Creation_Suite\{GameID}_{username}\`
+2. **Construct project root.** Resolve `<PROJECT_BASE>` per
+   `shared/project_memory.md` (env var → H5G Drive Stream → `~/slot-art-projects/`),
+   then join `<PROJECT_BASE>/{GameID}_{username}/`. `username` comes from
+   `os.userInfo().username` — never hardcoded.
 3. **Load existing state.** If `project.json` exists, this is an iteration —
    show the user what's locked and ask what to change. If not, create from
    scratch (or seeded from `/slot-step-00` output).
@@ -66,9 +68,14 @@ special symbols only. Maintain a consistent <style_lock> rendering
 technique across the entire set.
 ```
 
-Save the filled-in string as `style_anchor` in both `game_brief.json`
-and the `brief` field of `project.json`. Every downstream skill reads
-this field and prepends it verbatim to every prompt.
+Save the filled-in string to **`project.json.style_anchor.text`** — this
+is the canonical location every downstream skill reads (see the field
+contract in `shared/project_memory.md` → "`style_anchor` field contract").
+Mirror the same string to `game_brief.json.style_anchor` for human
+readability when the brief is reviewed standalone, but treat
+`project.json.style_anchor.text` as the source of truth. Do NOT write it
+under `project.json.brief` — that field holds the structured brief
+(theme, palette, manifest…), not the style anchor.
 
 ### Step 4 — Confirm with user
 
@@ -78,13 +85,15 @@ Show the brief AND the style anchor, ask for sign-off. Get explicit
 ### Step 5 — Persist
 
 Atomic-write to BOTH:
-- `{project_root}/game_brief.json` — human-readable mirror
-- `{project_root}/project.json` (`brief` field) — embedded in the master state
-
-Update `project.json`:
-- `current_step: "brief_locked"`
-- `next_step: "/slot-step-02"`
-- `updated_at: <ISO timestamp>`
+- `{project_root}/game_brief.json` — human-readable mirror (includes the
+  full structured brief AND `style_anchor` as a string for convenience)
+- `{project_root}/project.json` — the master state. Update these fields:
+  - `brief` — the full structured brief (theme, palette, manifest, …)
+  - `style_anchor.text` — the 60–90-word block from Step 3 (canonical
+    location every downstream skill reads)
+  - `current_step: "brief_locked"`
+  - `next_step: "/slot-step-02"`
+  - `updated_at: <ISO timestamp>`
 
 Update `~/.h5g-slot-active-project.json` to point here.
 
@@ -97,7 +106,7 @@ Update `~/.h5g-slot-active-project.json` to point here.
   Style lock  : stylized semi-realistic slot game art
   Palette     : deep midnight indigo with antique gold and burning crimson
   Symbols     : 13 (3 special, 2 HP, 2 MP, 6 LP card royals)
-  Saved to    : H:\...\4470_merickson\game_brief.json
+  Saved to    : <project_root>/game_brief.json + project.json
   Folder: <project_root>
   Open:   file:///<project_root with / separators>
 

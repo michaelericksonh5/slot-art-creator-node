@@ -60,5 +60,13 @@ one canvas only, <aspect> aspect ratio.
 
 ## After generating
 
-Write the approved sheet path to `game_brief.json` → `symbol_sheet_path`.
-Pass it as a reference when generating individual cells to anchor the style.
+Append the new filename to `project.json.assets.sheet.iterations`. If the
+user approves it, also set `project.json.assets.sheet.approved` to that
+filename — this follows the canonical asset record shape in
+`shared/project_memory.md`. Downstream skills (`/slot-step-03`,
+`/slot-step-06`) read `project.json.assets.sheet.approved`, resolve it
+against `project_root`, and pass the resulting absolute path to NB2 as a
+reference to anchor symbol-set style.
+
+There is no `game_brief.json.symbol_sheet_path` field — that was the old
+v0 location and is no longer read by any skill.

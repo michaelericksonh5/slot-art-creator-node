@@ -115,6 +115,7 @@ skill can find the active project without asking the user every time.
   "brief": { "...full game_brief.json contents..." },
 
   "style_anchor": {
+    "text": "You are generating art assets for a mobile slot machine game (\"Phoenix of Ardashir\" — a mystical regal phoenix awakens over ancient gold). Every output must be optimized for small phone screens — every element must be recognizable by silhouette alone when small on a phone. Use bold, clean shapes — no intricate micro-textures, no dense filigree that collapses at thumbnail size. High contrast between foreground and the flat background. Warm saturated colors signal high pay; cool muted colors signal low pay. Gold is reserved for premium and special symbols only. Maintain a consistent stylized semi-realistic slot game art rendering technique across the entire set.",
     "key_art_path": "Key_003.png",
     "locked_at": "2026-05-06T16:00:00Z",
     "notes": "Approved by user — all downstream art reads this as visual reference"
@@ -184,6 +185,23 @@ skill can find the active project without asking the user every time.
   }
 }
 ```
+
+### `style_anchor` field contract
+
+`project.json.style_anchor` is an **object** with four fields. Every
+downstream skill reads from it by name — don't relocate these fields.
+
+| Field | Type | Written by | Read by |
+|---|---|---|---|
+| `text` | string (60–90 words) | `/slot-step-01` from the §9.2.1 template | every NB2 / gpt-image-2 generation skill — prepended verbatim to every prompt body |
+| `key_art_path` | bare filename (resolve against `project_root`) | `/slot-step-02` on user approval | every skill that passes the key art as a reference image (`/slot-step-03`–`/slot-step-10`) |
+| `locked_at` | ISO timestamp | `/slot-step-02` on user approval | `/slot-step-08` (audit), human ops |
+| `notes` | optional string | `/slot-step-02` or user edit | human ops |
+
+`game_brief.json` may carry a `style_anchor` string mirror and a
+`key_art_path` mirror for human readability, but the canonical write
+target and the canonical read source for downstream skills is always
+`project.json.style_anchor`.
 
 ### Asset record shape (the universal pattern)
 

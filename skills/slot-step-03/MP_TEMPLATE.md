@@ -7,7 +7,7 @@ card/gem fillers (that's LP).
 
 These templates use the **bracketed-block prompt format** from
 `shared/nb2_prompting.md` §9.2. The game's **Style Anchor** (§9.2.1) is
-prepended to every prompt verbatim — it lives in `project.json.style_anchor`.
+prepended to every prompt verbatim — it lives in `project.json.style_anchor.text`.
 
 ## Tier rules
 

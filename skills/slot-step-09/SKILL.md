@@ -136,8 +136,12 @@ Compare each output to the source:
 | Detail | No new details added | Add: "do not invent or add detail" |
 | Resolution | Output is meaningfully higher than source | If too close, retry with stronger size cue |
 
-Any FAIL → patch prompt and regenerate (max 2 retries). After 2 failures,
-stop and report what NB2 was unable to preserve.
+Any FAIL → patch prompt and regenerate. Cap at **3 attempts total per
+asset** (initial call + up to 2 retries). After the third failure, stop
+and report which axes NB2 was unable to preserve and what you tried — at
+that point the source is likely the problem (too low-res, too ambiguous,
+or stylistically incompatible with NB2's upscale mode). This matches the
+"3 iterations max" rule in `REVIEW_RUBRIC.md` → "When to stop iterating".
 
 ### Step 6 — Update state
 
@@ -182,7 +186,7 @@ Type `/slot-` to see the full numbered workflow.
 - **Preserve, don't regenerate.** Every output is a higher-res version of
   the source — no new detail, no style drift, no palette shift.
 - **Original stays.** Never overwrite the 2K source.
-- **Auto-iterate on failure.** Up to 2 retries with patched prompts.
+- **Auto-iterate on failure.** 3 attempts max per asset (initial + 2 retries) — matches `REVIEW_RUBRIC.md`.
 
 ## References
 

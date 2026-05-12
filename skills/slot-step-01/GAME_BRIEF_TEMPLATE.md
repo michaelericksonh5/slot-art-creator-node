@@ -90,8 +90,8 @@ reads. Keep it small, named-color only, and locked once approved.
     "wild": "black",
     "scatter": "black"
   },
-  "key_art_path": "string | null — path to the master key art PNG; written by slot-step-02 so other skills auto-reference it for style continuity",
-  "symbol_sheet_path": "string | null — path to the latest approved symbol contact sheet; written by slot-step-04",
+  "style_anchor": "string | null — 60–90-word block from /slot-step-01; this is a human-readable mirror of project.json.style_anchor.text (which is the canonical location every downstream skill reads)",
+  "key_art_path": "string | null — bare filename of the locked key art; human-readable mirror of project.json.style_anchor.key_art_path (the canonical location). Written by /slot-step-02 on approval.",
   "gdd_source": {
     "file_id": "string | null — Google Drive file ID; set by /slot-step-00",
     "file_name": "string | null — full filename including version and extension",

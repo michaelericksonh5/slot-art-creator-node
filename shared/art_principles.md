@@ -72,7 +72,7 @@ Pick **one** LP family; **never mix**:
   saturation, value}**.
 - **Asymmetry budget** — aim for **40–50% asymmetric** silhouettes in any set.
 
-### Cell-fill by tier (use as prompt phrasing)
+### §3.5 Cell-fill by tier (use as prompt phrasing)
 
 | Tier | Approx fill | Phrase to use in prompt |
 |---|---|---|

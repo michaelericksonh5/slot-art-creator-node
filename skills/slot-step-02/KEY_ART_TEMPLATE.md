@@ -55,7 +55,15 @@ professional slot game art.
 
 ## After approving the master
 
-Write the approved file path back to `game_brief.json` → `key_art_path`.
-Every downstream skill (slot-step-03, slot-step-05,
-slot-step-06) reads `style_anchor.key_art_path` from `project.json`
-and passes the image to NB2 as a reference to lock the visual identity.
+Write the approved bare filename (e.g. `Key_003.png`) to
+**`project.json.style_anchor.key_art_path`** — the canonical location
+every downstream skill reads. Also set `style_anchor.locked_at` to the
+current ISO timestamp. See the field contract in
+`shared/project_memory.md` → "`style_anchor` field contract".
+
+`game_brief.json.key_art_path` may carry a mirror string for human
+readability, but downstream skills (`/slot-step-03`, `/slot-step-05`,
+`/slot-step-06`, `/slot-step-09`, `/slot-step-10`) all read
+`project.json.style_anchor.key_art_path`, join it with
+`project_root`, and pass the resulting absolute path as a reference
+image — that's what locks the visual identity of every later asset.

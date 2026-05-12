@@ -91,6 +91,24 @@ in this order so each can reference the prior approved chrome:
 
 ### Step 4 — Generate
 
+**Pick the right tool first.** UI chrome splits across two model families
+— pick before composing the API args:
+
+| Surface | Has visible required text? | Preferred tool (if `OPENAI_API_KEY` set) | Fallback (NB2-only) |
+|---|---|---|---|
+| `paytable` | yes (PAY TABLE header, pay values) | `gpt2_generate` | `nb2_generate` |
+| `logo_<lockup>` | yes (the wordmark spelling matters) | `gpt2_generate` | `nb2_generate` |
+| `banner_<tier>` if tier label baked in | usually no (composited at runtime) | `nb2_generate` (or `gpt2_edit` for runtime-baked labels) | `nb2_generate` |
+| `bezel`, `hud`, `bonus_screen`, `multiplier_xN`, `lobby_tile` | no | `nb2_generate` | `nb2_generate` |
+
+`gpt2_generate` accepts the same `output_dir` / `asset_name` shape as
+`nb2_generate`. Keep `image_size: "2K"` for gpt2 even on hero lockups —
+its 4K targets are experimental and unreliable for production; upscale
+the approved 2K result with `nb2_upscale` if you need 4K marketing
+output. See `shared/gpt_image2_prompting.md` for the full routing table.
+
+**API args (NB2 path — most surfaces):**
+
 | API arg | Value |
 |---|---|
 | `prompt` | composed prompt |
@@ -98,7 +116,19 @@ in this order so each can reference the prior approved chrome:
 | `image_size` | `"2K"` default |
 | `output_dir` | `{project_root}` |
 | `asset_name` | the surface label, e.g. `"Bezel"`, `"HUD"`, `"Banner_big"`, `"Logo_hero"` (the MCP server appends `_NNN.png` and auto-increments) |
-| `references` | absolute paths — resolve `style_anchor.key_art_path`, `assets.sheet.approved`, and `assets.backgrounds.base.approved` against `project_root` first, then pass the resolved absolutes. |
+| `references` | absolute paths — resolve `style_anchor.key_art_path`, `assets.sheet.approved`, and `assets.backgrounds.base.approved` against `project_root` first, then pass the resolved absolutes. Filter null/undefined entries. |
+
+**API args (gpt2 path — paytable, logos, or anything text-heavy):**
+
+| API arg | Value |
+|---|---|
+| `prompt` | composed prompt (gpt-image-2 reasons better when the structural intent — row count, label positions, wordmark spelling — is stated explicitly) |
+| `aspect_ratio` | match surface |
+| `image_size` | `"2K"` (the stable production ceiling) |
+| `quality` | `"high"` for hero / marketing surfaces |
+| `output_dir` | `{project_root}` |
+| `asset_name` | same convention as NB2 |
+| `extra_references` (gpt2_edit only) | absolute paths to approved symbol PNGs when composing them into a layout |
 
 ### Step 5 — Inline QA check (Gate 2)
 

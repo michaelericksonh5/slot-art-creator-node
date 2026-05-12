@@ -1,6 +1,6 @@
 ---
 name: slot-step-03
-description: STEP 3 — Generate individual reel symbols (HP, MP, LP, Wild, Scatter, Jackpot, Bonus). Each symbol reads the locked key art as a style anchor, validates the prompt against the visual hierarchy before generating, does an inline QA check immediately after, and auto-iterates on blocking issues. Run after /slot-step-02 is locked.
+description: STEP 3 — Generate individual reel symbols for any H5G symbol family — high-pay (HP), mid-pay (MP), low-pay (LP), wilds and wild variants (sticky / stacked / expanding / walking / respin / transforming / multiplier / duplicating / scatter-wild hybrid), classic scatter (SC), coin / hold-and-spin (WY), bonus trigger (BO), Loot Link / Hotspot family (COL, ACT, HOT_x*, HOT_ADD, HOT_COMB, HOT_COLLAPSE, HOT_PERSIST, BAG, BAG_BO, MOJ), mystery / special feature (SF), blocker / dead (BL), jackpot tiers (JP1–JP6), pay-multiplier variants (D2_, D3_, SPLIT_, MULT_), and pachinko / Drop Zone pieces (BALL, PEG, BUCKET_x*). Each symbol reads the locked key art as a style anchor, validates the prompt against the visual hierarchy before generating, does an inline QA check immediately after, and auto-iterates on blocking issues. Run after /slot-step-02 is locked. Use this skill whenever the user asks to generate, regenerate, or refine any individual reel symbol or a full symbol set — even when they just name the family or mechanic (e.g. "make the coin scatter", "redo the loot link collector", "generate the jackpot tiers") without explicitly saying "symbol".
 ---
 
 # Step 3 — Symbol Designer

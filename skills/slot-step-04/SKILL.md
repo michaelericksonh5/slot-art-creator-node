@@ -114,7 +114,7 @@ Call `mcp__nb2node__nb2_generate`:
 | `image_size` | `"4K"` (sheets render many cells; need the resolution) |
 | `output_dir` | `{project_root}` |
 | `asset_name` | `"Sheet"` (the MCP server appends `_NNN.png` and auto-increments) |
-| `references` | absolute paths — resolve each filename in `project.json` against `project_root` first. Pass `[key_art_path, HP1_approved, LP1_approved, WD1_approved]` as absolute paths to anchor the style and palette range. |
+| `references` | absolute paths — resolve each filename in `project.json` against `project_root` first. **Mode A (ideation)**: only the key art is reliably available, so pass `[style_anchor.key_art_path]` plus any GDD reference images you read in earlier. **Mode B (assemble)**: pass `[style_anchor.key_art_path, HP1_approved, MP1_approved, LP1_approved, WD1_approved]` (skip any whose `.approved` is null — never pass a literal "null"). Filter null/undefined paths before the call; `uploadLocalFile` inside the MCP tool will throw ENOENT if you don't. |
 
 ### Step 5 — Inline QA check (Gate 2)
 
