@@ -16,6 +16,11 @@ opt-in for the surfaces where its strengths matter.
 
 ## Install
 
+> **What is a marketplace?**
+> Claude Code and Cowork discover plugins through *marketplace registries* — a small JSON index file hosted on GitHub that lists available plugins and where to find them. The H5G marketplace (`https://github.com/michaelericksonh5/claude-plugins`) is that index. Adding the marketplace URL is a one-time step; once it's added, any plugin in the registry shows up in the listing and can be installed with one click. Future updates are picked up automatically on the next sync.
+>
+> The plugin code itself lives in a separate repo (`slot-art-creator-node` — the one you're reading now), but for a marketplace install you never need to clone it. Claude pulls the pre-built MCP bundle directly from the registry.
+
 Two paths. Pick the one that matches what you're doing:
 
 | Path | Best for | Summary |
@@ -55,10 +60,12 @@ the workflow overview, or jump straight to `/slot-step-00` if you have a GDD or
 3. Click **Customize** in the left sidebar
 4. Click **Browse plugins**
 5. In the **Personal** section, click **+** > **Create plugin** > **Add marketplace**
+   *(the label says "Create plugin" but this is how Cowork adds an external marketplace registry — you're not building anything new)*
 6. Paste this URL and click **Add**:
    ```
    https://github.com/michaelericksonh5/claude-plugins
    ```
+   This is the H5G plugin registry — a different repo from `slot-art-creator-node`. Adding it makes all H5G plugins discoverable inside Cowork.
 7. After Cowork syncs (~5 seconds), `slot-art-creator-node` appears in the marketplace listing — click **Install**.
 8. Open the plugin's settings inside Cowork. You'll see env-var fields for `GEMINI_API_KEY`, `FAL_KEY`, and `OPENAI_API_KEY` — paste your keys there (**not into chat** — credentials in chat get persisted in conversation history). Either Gemini or fal.ai alone unlocks the four NB2 tools; OpenAI is optional and enables the two `gpt2_*` tools (`gpt2_generate`, `gpt2_edit`) for text-heavy surfaces like paytables, logos, and banners. See [API keys](#api-keys) for where to get them.
 9. **Restart Claude Desktop once** so the MCP server picks up the keys.
