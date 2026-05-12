@@ -266,6 +266,91 @@ When the user asks for "all symbols":
 4. After the full set, suggest `/slot-step-04` to assemble the
    contact sheet for review.
 
+## Mode-variant generation (`mode:<freespins|bonus|pickme|wheel>`)
+
+Some games re-render specific symbols when the game enters a non-base
+mode (free spins, bonus game, pick-em). When the user invokes this
+skill with a `mode:` argument (or asks "make a free-spins variant of
+HP1"), the workflow shifts to mode-variant mode:
+
+**Read `shared/mode_variants.md` first.** It's the canonical
+doctrine: which tiers can have variants, how much each tier is
+allowed to diverge from base, the recolor budget, and the
+`nb2_edit` vs `nb2_generate` routing decision tree. The summary
+below points to the parts of that doc you need at gen time.
+
+### Mode-variant workflow
+
+1. **Verify the symbol can have a mode variant.** Per
+   `shared/mode_variants.md` per-tier delta rules:
+   - LP/MP → **refuse**. LP and MP must stay identical across
+     modes. If the user asks for `LP1 mode:freespins`, push back
+     and explain why.
+   - HP → glow bump only, no repaint.
+   - Wild → glow bump in free spins; full repaint allowed in bonus.
+   - Scatter/Bonus trigger → palette shift in bonus mode only.
+   - Jackpot → typically static; verify against the brief before
+     generating.
+   - WYS/SF family → route by the member's `mechanic` field (LP-equivalent
+     roles get LP rules; HP-equivalent get HP rules; etc.).
+   - Compound prefixes → route by dominant family.
+2. **Pick the MCP tool.** Tier-discipline shifts (glow bump,
+   saturation shift) → `nb2_edit` with `source` = the base-mode
+   approved asset. Full repaints (different palette family, different
+   subject treatment) → `nb2_generate` with `references` = `[base-mode
+   approved, key art]`. When in doubt, ask the user which kind of
+   variant they want before generating.
+3. **File naming.** `<symbol_id>_<mode>_NNN.png`, e.g.
+   `WD1_freespins_001.png`, `HP1_bonus_002.png`. The MCP server
+   appends `_NNN.png` and scans `Symbol_Art/` for existing files
+   with the same `<symbol_id>_<mode>` prefix to auto-increment.
+4. **Iteration record discipline.** Append to
+   `project.json.assets.symbols.<SymbolID>.modes.<mode>.iterations` per
+   `shared/project_memory.md` → "Writing an iteration record". The
+   record's `parent_path` is the base-mode approved asset path for
+   `nb2_edit`-based variants; `null` for `nb2_generate`-based
+   variants. Both forms always set `references` to include the
+   key art at minimum.
+5. **Approval.** When the user approves a mode variant, set
+   `project.json.assets.symbols.<SymbolID>.modes.<mode>.approved` to
+   that iteration's `path`. The base-mode `approved` is NOT
+   touched — base and mode-variant approvals are independent.
+6. **Recolor budget reminder.** If the project already has 3+
+   populated `modes` blocks across all symbols, surface a YELLOW
+   nudge: "This will be the 4th mode variant in the game — the
+   recolor budget per `shared/mode_variants.md` is 3-4 maximum.
+   Continue?"
+
+### Example: free-spins variant of an approved Wild
+
+```
+User: "Make a free-spins variant of WD1 with a stronger glow"
+
+Skill flow:
+- Confirm: tier-discipline shift (glow bump) → nb2_edit, parent_path = base
+- Read: project.json.assets.symbols.WD1.approved = "Symbol_Art/WD1_002.png"
+- Prompt: glow-bump prompt referencing the base wild's silhouette
+- API: nb2_edit({
+    source: path.join(project_root, "Symbol_Art/WD1_002.png"),
+    prompt: <glow-bump prompt with style_anchor.text prepended>,
+    extra_references: [path.join(project_root, "Key_Art/Key_Art_003.png")],
+    output_dir: path.join(project_root, "Symbol_Art"),
+    asset_name: "WD1_freespins",
+  })
+- Result: "Symbol_Art/WD1_freespins_001.png"
+- Iteration record:
+    path: "Symbol_Art/WD1_freespins_001.png"
+    parent_path: "Symbol_Art/WD1_002.png"  ← base-mode lineage captured
+    references: ["Key_Art/Key_Art_003.png"]
+    model: <reported by MCP>
+    attempt_index: 1
+    timestamp: <reported by MCP>
+- Append to project.json.assets.symbols.WD1.modes.freespins.iterations
+- On approval: project.json.assets.symbols.WD1.modes.freespins.approved =
+    "Symbol_Art/WD1_freespins_001.png"
+- Base-mode approved (WD1_002.png) is NOT touched.
+```
+
 ## Hard rules
 
 - **Never** use internal codenames, project numbers, or car names as subjects
@@ -278,6 +363,7 @@ When the user asks for "all symbols":
 ## References
 
 - `shared/symbol_vocabulary.md` — the master prefix-and-family reference. Read this when a brief uses an unfamiliar prefix, a compound prefix, or when the `mechanic` field of a `WY`/`SF` symbol is ambiguous.
+- `shared/mode_variants.md` — the per-mode rendering doctrine. Read this whenever the user asks for `mode:<freespins|bonus|pickme|wheel>` variants, or asks "make a free-spins version of HP1". Covers per-tier delta rules, recolor budget, nb2_edit vs nb2_generate routing, and the `modes` schema slot.
 - `shared/qa_preflight.md` (pre/post generation protocol)
 - `shared/project_memory.md` (state schema)
 - `shared/asset_naming.md` (per-symbol counter + compound-prefix label table)

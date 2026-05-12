@@ -211,6 +211,17 @@ falls out of the per-wheel rubric rather than the universal-RED list):
 - Wheel slice tier ordering inverts the pay spectrum (e.g. jackpot
   slice is cool slate while a low-value slice is warm gold)
 
+**Mode variants (when any symbol has populated `modes`) — auto-RED items 14-15:**
+- **(14)** An LP or MP symbol has a populated `modes` block. LP and
+  MP must stay identical across modes per
+  `shared/mode_variants.md` per-tier delta rules — recoloring them
+  destroys the player's visual baseline. The fix is to delete the
+  offending `modes.<mode>` sub-record (and remove the mode-suffixed
+  PNG files from the category folder).
+- **(15)** Recolor budget exceeded. If more than 4 symbols across
+  the game have populated `modes` blocks, surface RED with the count.
+  Per `shared/mode_variants.md` "Recolor budget", 3-4 is the maximum.
+
 ### Step 5 — Write the report
 
 Save to `{project_root}/QA_Reports/QA_NNN.md`. Scan `QA_Reports/`

@@ -229,6 +229,34 @@ can trace the derived file back to its origin by inspection. The `_4K`
 and `_resized` suffixes used in earlier versions of this plugin are
 **retired** — do not use them in new generations.
 
+### Mode variants — `<symbol>_<mode>_NNN.png`
+
+Mode variants are per-symbol re-renderings for non-base game modes
+(free spins, bonus, pick-em, wheel). They are **not** derived files —
+they're fresh generations or edits that coexist with the base-mode
+asset. See `shared/mode_variants.md` for the design doctrine
+(which tiers can have variants, the recolor budget, when to use
+`nb2_edit` vs `nb2_generate`).
+
+| Mode | Suffix pattern | Example |
+|---|---|---|
+| Base (default) | no mode token | `WD1_001.png`, `HP1_002.png` |
+| Free spins | `_freespins` | `WD1_freespins_001.png` |
+| Bonus | `_bonus` | `JP1_bonus_001.png` |
+| Pick-em | `_pickme` | `SF1_pickme_001.png` |
+| Wheel | `_wheel` | rarely used; wheels themselves live in `Wheels/` |
+
+Mode variants live in the same category folder as the base asset
+(`Symbol_Art/` for symbols, `Avatars/` for avatars when applicable),
+keyed by the mode-suffixed filename. The MCP server's auto-increment
+scans the folder for files matching `<symbol_id>_<mode>_*` and picks
+the next index.
+
+Storage in `project.json`: mode variants land in the per-symbol
+`modes.<mode>` sub-record, never in the top-level `iterations` array
+(which is reserved for base mode). See `shared/project_memory.md` →
+"modes slot for mode-variant assets" for the schema.
+
 ---
 
 ## How to compute the next filename
