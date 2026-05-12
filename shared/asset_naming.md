@@ -128,7 +128,7 @@ to the MCP tool so files land in the right place automatically.
 | Coin / Hold-and-Spin | `Symbol_Art/` | `WY1`–`WY4` | `WY1_001.png`, `WY2_001.png` |
 | Bonus trigger | `Symbol_Art/` | `BO` | `BO_001.png` |
 | Mystery / Special Feature | `Symbol_Art/` | `SF` | `SF_001.png` |
-| Blocker / Dead | `Symbol_Art/` | `BL` | `BL_001.png` |
+| Blocker / Dead | `Symbol_Art/` | `BL`, `BL1`, `BL2`+ | `BL_001.png`, `BL1_001.png`, `BL2_001.png` (numbered variants when a game ships multiple blocker types for different modes) |
 | Jackpot tiers | `Symbol_Art/` | `JP1`–`JP6` | `JP1_001.png`, `JP6_001.png` |
 | Replacement | `Symbol_Art/` | `R1`+ | `R1_001.png` |
 | Money bag scatter | `Symbol_Art/` | `BAG`, `BAG_BO` | `BAG_001.png`, `BAG_BO_001.png` |
@@ -137,7 +137,16 @@ to the MCP tool so files land in the right place automatically.
 | Loot Link Activator | `Symbol_Art/` | `ACT` | `ACT_001.png` |
 | Hotspot multiplier | `Symbol_Art/` | `HOT_x<N>` | `HOT_x2_001.png`, `HOT_x10_001.png` |
 | Hotspot operators | `Symbol_Art/` | `HOT_ADD`, `HOT_COMB`, `HOT_COLLAPSE`, `HOT_PERSIST` | `HOT_ADD_001.png` |
-| Double / Triple | `Symbol_Art/` | `D2_<base>`, `D3_<base>` | `D2_HP1_001.png` |
+| WYSIWYG variant naming | `Symbol_Art/` | `WYS`, `WYS1`–`WYS2+` | `WYS_001.png`, `WYS1_001.png`, `WYS2_001.png` |
+| Bonus + WYS compound | `Symbol_Art/` | `BWY`, `BWY1`+ | `BWY_001.png`, `BWY1_001.png` |
+| Wild + Jackpot compound | `Symbol_Art/` | `WJP`, `WJP1`+ | `WJP_001.png`, `WJP1_001.png` |
+| Wild + WYS compound (scatter-wild hybrid) | `Symbol_Art/` | `WDWY`, `WDWY1`+ | `WDWY1_001.png` |
+| Wild + SF compound | `Symbol_Art/` | `WDSF`, `WDSF1`+ | `WDSF1_001.png` |
+| Multiplier + Wild compound | `Symbol_Art/` | `MUWD`, `MUWD1`+ | `MUWD1_001.png` |
+| Multiplier + Wild + Bonus compound | `Symbol_Art/` | `MUWDBO`, `MUWDBO1`+ | `MUWDBO1_001.png` |
+| SF + WYS compound | `Symbol_Art/` | `SFWY`, `SFWY1`+ | `SFWY1_001.png` |
+| Double HP (alias) | `Symbol_Art/` | `DHP`, `DHP1`+ | `DHP1_001.png` |
+| Double / Triple base | `Symbol_Art/` | `D2_<base>`, `D3_<base>` | `D2_HP1_001.png` |
 | Split symbol | `Symbol_Art/` | `SPLIT_<base>` | `SPLIT_HP1_001.png` |
 | Non-wild multiplier | `Symbol_Art/` | `MULT_x<N>` | `MULT_x10_001.png` |
 | Pachinko ball | `Symbol_Art/` | `BALL` or `BALL_<tier>` | `BALL_001.png`, `BALL_gold_001.png` |

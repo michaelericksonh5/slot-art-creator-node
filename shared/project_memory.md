@@ -168,11 +168,17 @@ skill can find the active project without asking the user every time.
         "upscaled": "Symbol_Art/HP1_002_upscl_x2.png",
         "resized": []
       },
-      "HP2": { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
-      "MP1": { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
-      "LP1": { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
-      "WD1":    { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
-      "SC":     { "iterations": [], "approved": null, "upscaled": null, "resized": [] }
+      "HP2":  { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "MP1":  { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "LP1":  { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "WD1":  { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "SC":   { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "WY1":  { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "SF1":  { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "JP1":  { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "BWY1": { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "WJP1": { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
+      "BL":   { "iterations": [], "approved": null, "upscaled": null, "resized": [] }
     },
     "backgrounds": {
       "base":      { "iterations": [], "approved": null, "upscaled": null, "resized": [] },
