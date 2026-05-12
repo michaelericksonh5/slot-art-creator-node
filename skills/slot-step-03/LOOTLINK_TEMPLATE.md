@@ -12,6 +12,13 @@ If a brief lists any of these symbol prefixes, generate using the
 patterns below: `COL`, `ACT`, `HOT_x2`+, `HOT_ADD`, `HOT_COMB`,
 `HOT_COLLAPSE`, `HOT_PERSIST`, `BAG`, `MOJ`.
 
+This template uses the **bracketed-block prompt format** from
+`shared/nb2_prompting.md` §9.2. The game's **Style Anchor** (§9.2.1)
+is prepended to every prompt verbatim — it lives in
+`project.json.style_anchor.text`. The `<style_lock>` / `<reference>`
+placeholders below are substituted with the same text at
+prompt-assembly time.
+
 ### Real-world GDDs often use SF / WY / BWY for Loot Link symbols
 
 The prefix vocabulary above (`COL`, `ACT`, `HOT_*`, etc.) is the

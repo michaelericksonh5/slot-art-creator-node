@@ -172,14 +172,21 @@ permissions, etc.), the user can edit the `.env` file directly:
 Once the user reports keys are set, verify the file looks right:
 
 1. **Read** `~/.h5g-slot-art-creator/.env` (Windows: `%USERPROFILE%\.h5g-slot-art-creator\.env`).
-2. Confirm at least one of `GEMINI_API_KEY=` or `FAL_KEY=` is present and
-   has a non-empty value after the `=` sign.
-3. Do **NOT** print the key values back to the user (they'd end up in chat).
-   Just confirm presence: "I see GEMINI_API_KEY is set" / "FAL_KEY is set"
-   or "still empty."
+2. Confirm at least one of `GEMINI_API_KEY=` or `FAL_KEY=` is present
+   and has a non-empty value after the `=` sign. This is the minimum
+   to unlock the four NB2 tools.
+3. Also check `OPENAI_API_KEY=`. If set, the two gpt2 tools
+   (`gpt2_generate`, `gpt2_edit`) are available too — surface this in
+   the Step 5 summary. If empty, that's fine; gpt2 is optional and
+   text-heavy surfaces (paytables, logos, banners) will fall back to
+   NB2 with reduced text fidelity.
+4. Do **NOT** print the key values back to the user (they'd end up in
+   chat). Just confirm presence: "I see GEMINI_API_KEY is set" /
+   "FAL_KEY is set" / "OPENAI_API_KEY is set" or "still empty."
 
-If both are still empty after the user said "done," ask them where they
-saved the keys — they may have edited the wrong file or used the wrong UI.
+If both NB2-eligible keys (`GEMINI_API_KEY`, `FAL_KEY`) are still
+empty after the user said "done," ask them where they saved the keys
+— they may have edited the wrong file or used the wrong UI.
 
 For Cowork users where keys live in the plugin's env-var UI (not in `.env`),
 the file check won't apply. In that case, trust the user's confirmation and

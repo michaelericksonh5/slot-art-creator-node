@@ -81,11 +81,23 @@ in this order so each can reference the prior approved chrome:
 1. `bezel` — sets the metallic/palette baseline for chrome
 2. `hud` — fits below the bezel
 3. `banners` — escalation series (small → big → mega → epic)
-4. `bonus_screen` variants — free-spins, pick-me, wheel
-5. `multipliers` — denomination series
-6. `paytable` — composes from approved symbols
-7. `lobby_tile` — marketing surface (often last)
-8. `logo` lockups — often a parallel track to gameplay UI
+4. `bonus_screen` variants — free-spins intro, pick-me intro, wheel
+   intro (the bonus-mode entry screens, NOT the wheel graphic itself)
+5. `wheel_<variant>` — full bonus-wheel graphics (jackpot / bonus /
+   multiplier / pickem). Each variant is a single complete PNG
+   (outer frame + slices + hub + pointer in one graphic) landing in
+   `Wheels/`. Generate the jackpot wheel first if the brief has
+   `jackpot_tier_names` so subsequent wheels can reference it for
+   slice-color and frame consistency.
+6. `multipliers` — denomination series
+7. `paytable` — composes from approved symbols
+8. `lobby_tile` — marketing surface (often last)
+9. `logo` lockups — often a parallel track to gameplay UI
+10. `avatar_<id>` — in-game animated characters (`Avatar1`–`Avatar5`).
+    Games with zero avatars skip this surface. When present,
+    generate after the symbol set is locked so the cast's
+    brightness/saturation can be tuned to sit between HP and MP
+    intensity.
 
 ### Step 3 — Pre-generation validation (Gate 1)
 

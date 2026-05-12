@@ -65,28 +65,36 @@ Pass the staged path as `source` to `nb2_upscale` in Step 4. See
 
 ### Step 2 — Build the 6-part preservation prompt
 
-Use the template in `UPSCALE_TEMPLATE.md`. The structure is:
+**Read `UPSCALE_TEMPLATE.md` and use it verbatim as the prompt
+template.** It is the canonical source: it documents the 10-item
+visual inventory you fill in BEFORE writing the prompt, the 6-part
+prompt structure (opening + preservation bullets + material
+restatement + enhance-only allowance + hard negatives + closing
+deliverable), and the per-tier worked examples. Do not improvise a
+prompt from memory — NB2's bias is to regenerate rather than upscale,
+and the template's structure is what forces it into upscale mode.
 
-```
-Upscale this image to 4K resolution. Preserve exactly:
+As a sanity-check, every assembled upscale prompt should
+unambiguously cover these six preservation axes (the schema underneath
+the prompt template):
 
-1. SUBJECT — the exact same character/object/scene; same pose, same expression,
-   same details, same composition
-2. PALETTE — exact same colors; do not shift hue, saturation, or warmth
-3. STYLE — exact same render style; do not change brushwork or finish
-4. EDGES — preserve every visible edge; do not smooth, simplify, or add detail
-5. BACKGROUND — exact same background; flat solid black/white preserved exactly
-6. ASPECT RATIO — exact same proportions; do not crop or extend canvas
+1. **Subject** — the exact same character/object/scene; same pose,
+   expression, details, composition
+2. **Palette** — exact same colors; no hue / saturation / warmth shifts
+3. **Style** — exact same render style; no change in brushwork or finish
+4. **Edges** — preserve every visible edge; no smoothing or added detail
+5. **Background** — exact same background; flat solid black/white preserved exactly
+6. **Aspect ratio** — exact same proportions; no crop or canvas extension
 
-Output: a higher-resolution version of the input image with the same
-visual content. Do NOT regenerate. Do NOT redesign. Do NOT add or remove
-detail. Just increase resolution while preserving every visible element.
-```
+If any axis is silent or contradicted in the assembled prompt, go back
+to `UPSCALE_TEMPLATE.md` and pull in the missing bullets — the audit
+list in Step 3 below depends on all six being present.
 
 ### Step 3 — Pre-generation validation (Gate 1)
 
 - [ ] Source image path exists and is a real PNG
-- [ ] All 6 preservation clauses present in the prompt
+- [ ] All 6 preservation axes covered in the prompt (Subject, Palette,
+      Style, Edges, Background, Aspect ratio)
 - [ ] No hex / resolution / aspect ratio strings in prompt body
 - [ ] No instructions that contradict preservation (no "improve", "enhance", "add detail")
 

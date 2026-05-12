@@ -6,9 +6,13 @@ description: STEP 1 — Lock the game brief (theme, palette, style, tier plan, s
 # Step 1 — Game Brief
 
 This is the foundation of every project. The brief locks theme, palette,
-style, tier structure, and the full symbol manifest. Every other skill
-(02 through 10) reads it as the source of truth — so getting it right
-here is cheap, and getting it wrong here is expensive.
+style, tier structure, and the full symbol manifest. The brief captures
+**design intent**; at lock time it's mirrored into `project.json`,
+which is the **runtime canonical state** every other skill (02 through
+10) reads. When the two ever disagree, `project.json` wins — see
+`GAME_BRIEF_TEMPLATE.md` for the full contract. Getting the brief
+right here is cheap; getting it wrong is expensive because every
+downstream skill inherits the locked values via `project.json`.
 
 ## Startup protocol
 

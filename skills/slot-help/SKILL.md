@@ -50,7 +50,11 @@ tell you if you've skipped a prerequisite.
   /slot-step-00     Pull a Game Design Document from Drive (optional — skip if pitching fresh)
   /slot-step-01     Lock the game brief: theme, palette, style, tier plan, symbol manifest
   /slot-step-02     Generate master key art — becomes the visual style anchor
-  /slot-step-03     Generate individual reel symbols (HP, MP, LP, Wild, Scatter, ...)
+  /slot-step-03     Generate individual reel symbols — HP, MP, LP, Wild, Scatter,
+                    Bonus, Jackpot, Blocker, WYS family (coins / portals), SF family
+                    (feature tokens), Loot Link, pay-multiplier variants, pachinko
+                    pieces, and compound prefixes (BWY, WJP, WDWY, SFWY, ...).
+                    JP tier ordering is per-game — read brief.jackpot_tier_names.
   /slot-step-04     Full symbol contact sheet (IDEATION before /slot-step-03 or ASSEMBLE after)
   /slot-step-05     Background scenes — base, free-spins, bonus, pick-me, wheel
   /slot-step-06     UI surfaces + bonus wheels + in-game avatars — bezel, HUD, paytable,

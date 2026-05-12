@@ -133,7 +133,11 @@ fabricate. The target schema is `skills/slot-step-01/GAME_BRIEF_TEMPLATE.md`
 Real H5G GDDs use prose like "the Phoenix bonus coin pays a random
 value and contributes to the Loot Link feature" — the extraction
 needs to translate that into the structured manifest fields
-`{id, tier, family, subject, role, mechanic}`. The mapping rules:
+`{id, tier, family, subject, role, mechanic, notes}` (the brief
+schema documented in `slot-step-01/GAME_BRIEF_TEMPLATE.md`). The
+`notes` field is optional but useful for GDD prose that doesn't fit
+cleanly into `mechanic` — e.g. "only appears in free spins", "links
+to the bonus reel". The mapping rules:
 
 | GDD says about a symbol... | Pick `family` | Set `mechanic` to |
 |---|---|---|
@@ -166,7 +170,7 @@ needs to translate that into the structured manifest fields
 | "double / triple / split" with D2_/D3_/SPLIT_ prefix | `SpecialMechanics` | `double pay` / `triple pay` / `split pay` |
 | "Double HP" with DHP prefix (Eagles' Flight pattern) | `SpecialMechanics` | `double pay` |
 | "pachinko ball / peg / bucket" | `Pachinko` | `pachinko ball` / `pachinko peg` / `pachinko bucket` |
-| Compound — symbol does TWO things (bonus + WY payout, wild + jackpot contribution, etc.) | family of the **dominant** role | combined mechanic, e.g. `bonus trigger + coin` (for BWY) or `wild + jackpot contribution` (for WJP) |
+| Compound — symbol does TWO things (bonus + WY payout, wild + jackpot contribution, etc.) | family of the **dominant** role | combined mechanic, e.g. `bonus trigger + coin payout` (for BWY) or `wild + jackpot contribution` (for WJP). Match the canonical `GAME_BRIEF_TEMPLATE.md` worked example wording when in doubt. |
 
 If the GDD uses a prefix not in the documented vocabulary, route by
 the symbol's visual description from the GDD's art spec — match to

@@ -21,8 +21,11 @@
  *
  *   OPENAI_API_KEY  — OpenAI's gpt-image-2 model (separate from NB2).
  *                     Enables the gpt2_generate and gpt2_edit tools — best
- *                     for assets with accurate in-image text, photorealism
- *                     at 4K, or compositional multi-reference edits.
+ *                     for assets with accurate in-image text (paytables,
+ *                     logos, text-heavy banners) and compositional
+ *                     multi-reference edits. gpt-image-2 supports 1K/2K
+ *                     image_size; for 4K delivery, generate at 2K with
+ *                     gpt2_* then run nb2_upscale.
  *                     https://platform.openai.com/api-keys
  *
  * Routing when both NB2 keys are set:

@@ -7,6 +7,12 @@ that matches the symbol in the brief.
 If a symbol type ISN'T listed here and isn't in any other template,
 stop and ask the user to clarify the mechanic before generating.
 
+This template uses the **bracketed-block prompt format** from
+`shared/nb2_prompting.md` §9.2. The game's **Style Anchor** (§9.2.1)
+is prepended to every prompt verbatim — it lives in
+`project.json.style_anchor.text`. The `<style_lock>` placeholder
+below is substituted with the same text at prompt-assembly time.
+
 ---
 
 ## Split / Double / Triple symbols (including `DHP` alias)
