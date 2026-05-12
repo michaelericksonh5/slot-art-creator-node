@@ -168,9 +168,15 @@ Typical patterns from the H5G catalog (per `shared/symbol_vocabulary.md`):
 | Pachinko / Drop Zone | 0 variants (pachinko pieces are mechanically distinct, not mode-variant) |
 | Wheel-feature game | 0-1 variants (the wheel's slice graphics live separately in `Wheels/` — they're not "symbol mode variants") |
 
-`/slot-step-08` flags as **YELLOW** when a project has more than 4
-populated `modes` slots. Flag as **RED** if any LP or MP slot has
-a non-null `modes` block (LP/MP should never have mode variants).
+`/slot-step-08` recolor-budget grading:
+- 0-3 mode-variant symbols → GREEN
+- 4 mode-variant symbols → GREEN (cap reached but defensible)
+- 5 mode-variant symbols → **YELLOW** (over recommended budget; designer should justify in the brief)
+- 6+ mode-variant symbols → **RED** (clearly over budget — recolor sprawl will confuse players and inflate production)
+
+Plus an unconditional **RED** for any LP or MP slot with a non-null
+`modes` block — LP/MP should never have mode variants, regardless of
+the total count.
 
 ---
 

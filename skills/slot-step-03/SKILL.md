@@ -315,11 +315,14 @@ below points to the parts of that doc you need at gen time.
    `project.json.assets.symbols.<SymbolID>.modes.<mode>.approved` to
    that iteration's `path`. The base-mode `approved` is NOT
    touched — base and mode-variant approvals are independent.
-6. **Recolor budget reminder.** If the project already has 3+
-   populated `modes` blocks across all symbols, surface a YELLOW
-   nudge: "This will be the 4th mode variant in the game — the
-   recolor budget per `shared/mode_variants.md` is 3-4 maximum.
-   Continue?"
+6. **Recolor budget reminder.** Recommended cap is 3-4 mode-variant
+   symbols per game. Surface a YELLOW nudge when the user is about to
+   produce the **5th** mode-variant symbol ("This will be the 5th
+   mode-variant symbol — past the recommended 3-4 cap per
+   `shared/mode_variants.md`. The brief should justify it. Continue?").
+   At **6+** mode-variant symbols, `/slot-step-08` will surface a
+   RED auto-escalation (per its auto-RED item 15). Either pattern
+   means stop and verify against the brief.
 
 ### Example: free-spins variant of an approved Wild
 

@@ -358,7 +358,16 @@ The fields are:
 
 ### Writing an iteration record (checklist for skills)
 
-When a generation skill (`/slot-step-02` / `/slot-step-03` / `/slot-step-04` / `/slot-step-05` / `/slot-step-06` / `/slot-step-07` / `/slot-step-09` / `/slot-step-10`) finishes an MCP call and needs to persist the result, this is the **canonical write protocol**:
+When a generation skill (`/slot-step-02` / `/slot-step-03` / `/slot-step-04` / `/slot-step-05` / `/slot-step-06` / `/slot-step-07`) finishes an MCP call and needs to persist the result, this is the **canonical write protocol**.
+
+`/slot-step-09` (upscale) and `/slot-step-10` (smart-resize) are
+deliberately **out of scope** here — they don't touch `iterations[]`.
+Upscale writes a single string path to the `upscaled` field;
+smart-resize appends `{aspect, dimensions, path}` objects to `resized`.
+Provenance for those derived files lives in the per-PNG `.meta.json`
+sidecar the MCP server already writes. See `/slot-step-09/SKILL.md`
+Step 6 → "Provenance" and `/slot-step-10/SKILL.md` Step 6 →
+"Provenance" for the rationale.
 
 1. **Build the iteration record object.** Every field from "Iteration record shape" above must be present (use `null` only where the table explicitly allows it).
 2. **Fill `prompt` with the FULLY RENDERED prompt** — exactly what you sent to the MCP tool. All `<style_lock>`, `<palette_leads.primary>`, `<theme>`, `<mystery.subject>`, etc. substituted with the locked values from `project.json.brief` and `project.json.style_anchor.text`. Template form is recoverable from git; the rendered form is the actually-useful artifact.

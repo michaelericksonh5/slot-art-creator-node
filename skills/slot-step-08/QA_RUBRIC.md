@@ -254,7 +254,7 @@ section just enforces the numeric thresholds.
 | Check | RED | YELLOW | GREEN |
 |---|---|---|---|
 | LP/MP mode variant exists | Any `assets.symbols.LP*.modes` or `MP*.modes` is non-null | (n/a — binary) | LP/MP `modes` are all null |
-| Recolor budget | More than 4 symbols across the game have populated `modes` | Exactly 4 (budget reached) | ≤3 symbols |
+| Recolor budget | 6+ symbols across the game have populated `modes` | Exactly 5 symbols (over recommended 3-4, designer must justify) | ≤4 symbols |
 | Tier-discipline silhouette preservation | Mode variant's `bounding_box` differs from base by >20% in either dimension | 10-20% difference | <10% (silhouette preserved) |
 | Tier-discipline palette family | Mode variant's `dominant_color_oklch[0].h` differs from base by >60° (palette family changed when only a glow bump was requested) | 30-60° drift | <30° (palette family preserved) |
 | Mode variant lineage | `modes.<mode>.iterations[0].parent_path` is null for an `nb2_edit`-based variant | (n/a — should be deterministic) | `parent_path` set to base-mode approved asset |
@@ -302,7 +302,7 @@ Flag RED immediately if:
 12. A bonus wheel's background is anything other than flat solid black (it composites over the bonus-mode background at runtime).
 13. A jackpot wheel's slice labels contradict `brief.jackpot_tier_names` (e.g. the slice for `JP1` says `Grand` when the brief maps `JP1 = Mini`, or vice versa).
 14. An LP or MP symbol has a populated `modes` block. LP and MP must stay identical across modes per `shared/mode_variants.md` per-tier delta rules — recoloring them destroys the player's visual baseline. The fix is to delete the offending `modes.<mode>` sub-record.
-15. A game has more than 4 symbols with populated `modes` blocks (recolor budget cap). Per `shared/mode_variants.md` "Recolor budget — per-game upper limit", recoloring beyond 4 symbols inflates production cost without proportional UX gain and confuses the symbol set.
+15. A game has **6 or more** symbols with populated `modes` blocks (recolor sprawl). Per `shared/mode_variants.md` "Recolor budget — per-game upper limit", 5 symbols is over the recommended budget and surfaces as YELLOW; 6 or more is RED because recoloring that many symbols inflates production cost without proportional UX gain and confuses the symbol set.
 
 ---
 

@@ -218,9 +218,11 @@ falls out of the per-wheel rubric rather than the universal-RED list):
   destroys the player's visual baseline. The fix is to delete the
   offending `modes.<mode>` sub-record (and remove the mode-suffixed
   PNG files from the category folder).
-- **(15)** Recolor budget exceeded. If more than 4 symbols across
-  the game have populated `modes` blocks, surface RED with the count.
-  Per `shared/mode_variants.md` "Recolor budget", 3-4 is the maximum.
+- **(15)** Recolor budget exceeded. If **6 or more** symbols across
+  the game have populated `modes` blocks, surface RED with the count
+  (5 symbols is YELLOW — over the recommended 3-4 budget, designer
+  must justify; 6+ is RED). Per `shared/mode_variants.md` "Recolor
+  budget".
 
 ### Step 5 — Write the report
 

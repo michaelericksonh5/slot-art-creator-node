@@ -301,25 +301,43 @@ in `Symbol_Art/` without touching `HP1_001.png`. The user reviews both
 and tells you which to mark as approved.
 
 The approved version is recorded in `project.json.assets.symbols.HP1`.
-Paths stored in `project.json` are **relative to `project_root`,
-including the subfolder**:
+Each `iterations[]` entry is an **iteration record object** per
+`shared/project_memory.md` → "Iteration record shape", capturing
+`{path, prompt, references, model, image_size, aspect_ratio,
+attempt_index, parent_path, timestamp}`. `approved` stays as a flat
+path string pointing at one of the `iterations[].path` values:
 
 ```json
 "symbols": {
   "HP1": {
     "iterations": [
-      "Symbol_Art/HP1_001.png",
-      "Symbol_Art/HP1_002.png",
-      "Symbol_Art/HP1_003.png"
+      {
+        "path": "Symbol_Art/HP1_001.png",
+        "prompt": "<rendered prompt>",
+        "references": ["Key_Art/Key_Art_003.png"],
+        "model": "gemini-3.1-flash-image-preview",
+        "image_size": "2K",
+        "aspect_ratio": "1:1",
+        "attempt_index": 1,
+        "parent_path": null,
+        "timestamp": "2026-05-06T16:32:11Z"
+      },
+      { "path": "Symbol_Art/HP1_002.png", "..." },
+      { "path": "Symbol_Art/HP1_003.png", "..." }
     ],
     "approved": "Symbol_Art/HP1_002.png"
   }
 }
 ```
 
-At use time, resolve to absolute by `path.join(project_root, stored)`.
+At use time, resolve to absolute by `path.join(project_root, <path>)`.
 This means iteration 002 is the one downstream skills should reference,
 even though 003 came later (e.g. user preferred 002 after seeing 003).
+
+**Legacy flat-string `iterations` arrays** from pre-v1.5.7 projects
+are still readable per the migration shim documented in
+`shared/project_memory.md`. The next write to any slot naturally
+upgrades the whole array to objects.
 
 ---
 
