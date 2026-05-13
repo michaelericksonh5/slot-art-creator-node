@@ -1,6 +1,6 @@
 ---
 name: slot-step-01
-description: STEP 1 — Lock the game brief (theme, palette, style, tier plan, symbol manifest) into project.json. This is the foundation every later skill reads. Run after /slot-step-00 (if you have a GDD) or as the first step if pitching a fresh concept. Always run before /slot-step-02.
+description: STEP 1 — Lock the game brief (theme, palette, style, tier plan, symbol manifest) into project.json. This is the foundation every later skill reads. Run after /slot-step-00 (if you have a GDD) or as the first step if pitching a fresh concept. Always run before /slot-step-02. Use when the user describes a game theme, pitches a concept ("let's make a [X] game", "I want a [theme] slot"), discusses what symbols to include, or wants to set up or update the game brief. Also use when continuing a project that has a GDD loaded but no art direction locked yet — apply the user's theme description to the existing active project, never start a new one.
 ---
 
 # Step 1 — Game Brief
@@ -20,14 +20,23 @@ Follow the standard startup from `shared/project_memory.md`:
 
 1. **Resolve project.** Did the user pass a GameID arg? Use it. Otherwise
    read `~/.h5g-slot-active-project.json`. If neither exists, ask the user
-   for a GameID and create the project folder.
+   for a GameID and create the project folder. **Never ask for a GameID
+   when an active-project pointer already exists** — that pointer
+   establishes the project; use it.
 2. **Construct project root.** Resolve `<PROJECT_BASE>` per
    `shared/project_memory.md` (env var → H5G Drive Stream → `~/slot-art-projects/`),
    then join `<PROJECT_BASE>/{GameID}_{username}/`. `username` comes from
    `os.userInfo().username` — never hardcoded.
-3. **Load existing state.** If `project.json` exists, this is an iteration —
-   show the user what's locked and ask what to change. If not, create from
-   scratch (or seeded from `/slot-step-00` output).
+3. **Load existing state.** If `project.json` exists, use the active
+   project — do not propose a new one or ask for a new GameID. Read the
+   existing brief and style anchor. When `current_step` is `gdd_loaded`
+   (a GDD was extracted but art direction hasn't been locked yet), art
+   fields like `theme_summary`, `palette`, and `style_lock` will be null —
+   that's the expected state for a pure engineering GDD. Treat the user's
+   theme description or game concept as input for filling those null fields
+   on the **existing** project. Map their theme description to the game
+   that's already loaded. If `project.json` doesn't exist, create from
+   scratch (or seed from `/slot-step-00` output).
 
 ## Workflow
 

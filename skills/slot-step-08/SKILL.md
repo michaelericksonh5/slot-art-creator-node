@@ -1,6 +1,6 @@
 ---
 name: slot-step-08
-description: STEP 8 — Final production audit for a complete deliverable. Reviews the full symbol set, background suite, or UI collection as a unified whole. Each generation skill does inline checks per asset; this skill does cross-asset consistency review and produces a structured RED/YELLOW/GREEN sign-off report for handoff. Run when a set is done.
+description: STEP 8 — Final production audit for a complete deliverable. Reviews the full symbol set, background suite, or UI collection as a unified whole. Each generation skill does inline checks per asset; this skill does cross-asset consistency review and produces a structured RED/YELLOW/GREEN sign-off report for handoff. Run when a set is done. Use when the user asks to "audit the symbols", "QA the art", "check if this is production-ready", "review the full set", "get a sign-off report", "is this ready to ship", or "run the final check".
 ---
 
 # Step 8 — Final Production Audit
