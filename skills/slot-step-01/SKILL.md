@@ -35,25 +35,30 @@ Follow the standard startup from `shared/project_memory.md`:
    `subject` fields will be null — that's the expected state for a pure
    engineering GDD with no art direction.
 
-   **Critical: when the user provides a theme description, never silently
-   decide whether it belongs to the active project or a new game.** Engineering
-   GDDs commonly use an internal codename (e.g. "Tesla") that has no
-   resemblance to the visual theme the user will describe later (e.g.
-   "mythical Greek Zeus fishing"). That mismatch is normal and expected —
-   codenames aren't themes. When the active brief has null art fields and
-   the user describes a visual theme, surface the connection explicitly
-   before proceeding:
+   **Critical: `game_name` from a GDD is always a preproduction codename
+   — never a visual theme.** H5G games are developed under internal
+   codenames (like "Tesla", "Chevy", "Blazing Stampede") that have zero
+   relationship to the actual art direction. "Tesla" is not about cars.
+   "Chevy" is not about trucks. The codename is just a project identifier.
+   Never look at `game_name` and infer anything about what the game looks
+   like, what the symbols are, or what the theme is. The visual theme
+   comes exclusively from: (1) the user's description, or (2) explicit art
+   direction sections in the GDD.
+
+   When the active brief has null art fields and the user describes a
+   visual theme, confirm the connection before applying it — don't silently
+   decide it's a different game just because the codename and theme don't
+   match:
 
    > "You have an active project — **Game [ID] ([game_name])** — with a GDD
    > loaded but no visual theme set yet. I'm going to apply your theme to
    > this project. Quick check: are you designing the art direction for
    > game [ID], or did you want to start a completely separate project?"
 
-   Also check `brief.open_questions` for a codename flag (e.g. "GDD uses
-   '[name]' as codename — confirm this is the player-facing title"). If
-   present, ask the user for the real player-facing game title as part of
-   locking the brief — the codename must never appear in any creative-
-   facing output.
+   Always ask for the real player-facing title when locking the brief —
+   the codename must never appear in any prompt, style anchor, or
+   creative-facing output. This is unconditional: even if `open_questions`
+   doesn't flag it, the `game_name` from a GDD needs confirmation.
 
    If `project.json` doesn't exist, create from scratch (or seed from
    `/slot-step-00` output).
@@ -69,7 +74,12 @@ have a pitch. Ask once for whichever is missing.
 
 Required fields (full schema in `GAME_BRIEF_TEMPLATE.md`):
 
-- `game_name` — user-facing theme name, NEVER the internal codename
+- `game_name` — the real player-facing title confirmed by the user. H5G
+  GDDs always use internal preproduction codenames (e.g. "Tesla", "Chevy")
+  that have no relationship to the game's visual theme or subject matter.
+  Always ask the user "What's the player-facing title for this game?" when
+  locking the brief. Never use the GDD's `game_name` as the final title
+  without explicit confirmation.
 - `mood` — 1–2 words
 - `theme_summary` — ≤ 2 sentences
 - `style_lock` — exactly one phrase from `shared/nb2_prompting.md` §9.4

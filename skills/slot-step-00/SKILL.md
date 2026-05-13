@@ -131,7 +131,7 @@ fabricate. The target schema is `skills/slot-step-01/GAME_BRIEF_TEMPLATE.md`
 
 | Field in `game_brief.json` | Where to look in the GDD |
 |---|---|
-| `game_name` | Title — use marketing/player-facing name, NEVER internal codenames |
+| `game_name` | The name as it appears in the GDD — which is always a preproduction codename at H5G (e.g. "Tesla", "Chevy"). Record it as-is for now and always add an open question flagging it: "game_name: GDD uses '[name]' as codename — confirm the player-facing title in /slot-step-01 before locking the brief." Never attempt to infer the visual theme from the codename. |
 | `theme_summary` | Overview / concept |
 | `grid` | Math spec ("5x3", "5x4", "5x6", "3x5") |
 | `tier_plan.lp_family` | Are LPs card royals (`card_royals`), themed objects (`themed_objects`), gems (`gems`), or suits (`suits`)? Most newer H5G games use themed objects. |
