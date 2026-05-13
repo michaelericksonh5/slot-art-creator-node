@@ -29,6 +29,8 @@ playbook every design skill in `slot-art-creator` follows.
     ignore Y" clause to prevent NB2 from copying reference BG colors
   - **§9.2.3 Bracketed-block templates per symbol type** — HP, MP, LP,
     Wild, Scatter
+  - **§9.2.4 Universal mobile constraints** — single source of truth for
+    edge definition, texture discipline, color simplicity, composition
 - **Reel frame / bezel section** — thickness vocabulary, grid-dimension
   rule, ultra-thin/thin templates
 - **Background section** — 9:16 skeleton with the four hard rules
@@ -154,6 +156,21 @@ below is the single source of truth for those.
 Be explicit about both halves — both *what* to inherit and *what* to ignore.
 The vague phrasing "match the style" is not enough.
 
+### §9.2.4 Universal mobile constraints
+
+**These rules apply to every symbol at every tier.** Rather than repeating them in full in every template, each `[MOBILE CONSTRAINTS]` block below references this section and adds only tier-specific notes.
+
+**Prompt phrases to use (translate the principle, never use pixel counts):**
+
+- *Edge definition:* `"warm luminous rim light tracing the silhouette, clear separation from background"` (painterly/semi-real/fantasy styles) **or** `"bold clean outer outline, strong contrast against background"` (stylized 2D style). Use whichever matches the locked style phrase — keep it consistent across the entire set.
+- *Texture discipline:* `"no fine-scale textures, no hatching, no chainmail or mesh fills — bold macro shapes only"`
+- *Color simplicity:* `"3–5 broad color regions across the symbol face"`
+- *Composition:* `"centered, small even margin from canvas edges, flat solid [black/white] background, no gradients"`
+
+These four phrases together form the baseline `[MOBILE CONSTRAINTS]` for any symbol. Add tier-specific notes after them.
+
+---
+
 ### §9.2.3 Bracketed-block templates per symbol type
 
 Each template below assumes the Style Anchor (§9.2.1) is prepended verbatim.
@@ -187,14 +204,9 @@ flat black around it.
 <subject pose, identity, mood — 2–3 sentences>.
 
 [MOBILE CONSTRAINTS]
-Recognizable as a tiny thumbnail on a phone. Bold clean outer outline, clearly
-visible at 64 px — this is the primary readability mechanism at small sizes.
-Maximum three to five decorative motifs on the plaque frame. No fine-scale
-textures, no hatching, no chainmail or mesh fills — bold macro shapes only.
-3–5 broad color regions across the symbol face. High contrast between subject,
-enamel field, and outer black frame. Centered composition, perfectly upright,
-small even margin from canvas edges. Flat solid black background, no
-gradients, no patterns.
+Apply universal mobile constraints (§9.2.4). Maximum three to five decorative
+motifs on the plaque frame. High contrast between subject, enamel field, and
+outer frame. Perfectly upright, flat solid black background.
 
 high quality game asset, sharp clean edges, professional slot game art,
 mobile-optimized icon, clear strong silhouette at small sizes.
@@ -222,8 +234,7 @@ visibly one tier below the HP plaques in frame complexity and outer scale.
 <subject brief>.
 
 [MOBILE CONSTRAINTS]
-Clear silhouette at thumbnail size. Visible padding around the subject.
-Centered. Flat solid black background, no gradients.
+Apply universal mobile constraints (§9.2.4). Visible padding around the subject.
 
 high quality game asset, professional slot game art, mobile-optimized icon.
 ```
@@ -253,8 +264,7 @@ object is the entire visual content.
 <one-line subject>. Small and understated.
 
 [MOBILE CONSTRAINTS]
-Clear silhouette at tiny thumbnail size. Flat solid white background, no
-gradients. Generous empty space. Sharp clean edges.
+Apply universal mobile constraints (§9.2.4). Generous empty space. Flat solid white background.
 
 professional slot game art. (Do not use the word "detailed".)
 ```
@@ -283,8 +293,7 @@ character or motif (if any) is secondary to the readable WILD text.
 Barely contained — fills the frame edge to edge.
 
 [MOBILE CONSTRAINTS]
-Centered on flat solid black background, no gradients. Clear silhouette
-at thumbnail size. Sharp clean edges.
+Apply universal mobile constraints (§9.2.4). Flat solid black background.
 
 professional slot game art.
 ```
@@ -308,8 +317,7 @@ The word "<scatter_label>" (default: "SCATTER") clearly readable.
 A premium thematic icon — golden ticket, bonus coin, glowing emblem.
 
 [MOBILE CONSTRAINTS]
-Centered on flat solid black background, no gradients. Clear silhouette
-at thumbnail size.
+Apply universal mobile constraints (§9.2.4). Flat solid black background.
 
 high quality game asset, professional slot game art.
 ```
@@ -445,7 +453,7 @@ prevent textured mat generation.
 - Mixing LP types (cards + gems + fruit = broken set).
 - White, busy reel backgrounds.
 - **Mid-frequency textures** — fine scales, chainmail, fine hatching, basket-weave, dense filigree. These destroy readability at thumbnail size. Use bold macro-shapes and 3–5 broad color planes instead.
-- **Omitting the outer stroke.** Always include "bold clean outer outline" in the `[RENDER STYLE]` block. At reel-cell size the outline is the primary readability mechanism — not the interior detail.
+- **No edge definition.** Always include rim lighting or a hard outline (per the style lock — see §9.2.4) in the `[RENDER STYLE]` block. At reel-cell size, subject/background separation is the primary readability mechanism — interior detail is invisible at thumbnail.
 
 ### Anti-pattern gallery
 
@@ -454,9 +462,10 @@ prevent textured mat generation.
 - `intricately carved dragon letter A` → letter shape lost under decoration.
 - `detailed painterly cherry LP` → "detailed" forbidden on LP; cherry should
   be flat and small.
-- `scaly dragon with fine chainmail armor and filigree border` → all three
-  texture families (scales + chainmail + filigree) collapse to noise at 64 px.
-  Replace with bold silhouette shapes and 3–5 broad color planes.
+- `scaly dragon with fine chainmail armor and filigree border` → scales +
+  chainmail + filigree all collapse to noise at thumbnail. Replace with bold
+  silhouette shapes, 3–5 broad color planes, and a warm rim light tracing the
+  dragon's silhouette.
 
 ---
 

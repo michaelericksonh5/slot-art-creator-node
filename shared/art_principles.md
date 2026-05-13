@@ -61,24 +61,26 @@ Pick **one** LP family; **never mix**:
 `warm` on LP — not even trim. Letter/suit reads first; theme is decoration
 *behind* the letter.
 
-### Outer stroke — primary readability mechanism
+### Edge definition — primary readability mechanism
 
-At reel-cell size (roughly 200–300 px on a modern phone), the **outer
-stroke is the single most important readability element.** It separates the
-symbol from its neighbor and from the background. Without a confident outer
-stroke, symbols merge into visual noise at thumbnail.
+At reel-cell size, the subject must read as a clean, confident silhouette
+against the dark background. **This is the single most important readability
+element.** Without clear edge definition, symbols merge into visual noise at
+thumbnail.
 
-**Rules:**
-- Every symbol in the set gets a **hard outer stroke** — same weight, same
-  approach (never mixed across the set).
-- Default: **2–4 px at 1K source size**, scaled proportionally for 2K/4K.
-- Use in prompts: "bold clean outer outline, [N] px, [color]" — never omit
-  this from the `[RENDER STYLE]` block.
-- LP outer stroke color: cool/neutral, matches the tier's muted palette.
-- HP/Special outer stroke color: warm gold, or luminous emissive if the symbol
-  is a Wild/Scatter.
-- **The stroke must read at 64×64 px.** If it vanishes at thumbnail, it
-  doesn't belong.
+Two techniques achieve this. **Pick one per game and stay consistent** —
+never mix within a set:
+
+| Technique | Use when | Prompt language |
+|---|---|---|
+| **Rim lighting / edge glow** | Painterly, semi-realistic, oil, fantasy styles | "warm luminous rim light tracing the silhouette, clear edge separation from background" |
+| **Hard outer outline** | Stylized 2D illustrated style | "bold clean outer outline, strong contrast against background" |
+
+Rim lighting is generally more premium — it integrates with the lighting
+model naturally. Hard outline is appropriate (and correct) for the stylized
+2D style. Both serve the same goal: **unambiguous subject/background
+separation at thumbnail size.** Never rely on interior detail for this —
+detail is invisible at 64 px. The edge is what reads.
 
 ### Mid-frequency texture ban
 
@@ -228,7 +230,7 @@ Across **every** symbol in the set:
 
 - Silhouette black-fill at 64 px (peer recognition ≥85%).
 - Readable at 25% source size.
-- Outer stroke present, weight matches set policy, visible at 64 px.
+- Edge definition present (rim light or hard outline per style lock), clearly separates subject from background at 64 px.
 - No mid-frequency textures (scales, chainmail, hatching, filigree) — see §3.
 - 3–5 color regions max across symbol face — see §3.
 - Light direction matches upper-left ~10 o'clock.
