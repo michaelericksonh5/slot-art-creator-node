@@ -31,12 +31,32 @@ Follow the standard startup from `shared/project_memory.md`:
    project — do not propose a new one or ask for a new GameID. Read the
    existing brief and style anchor. When `current_step` is `gdd_loaded`
    (a GDD was extracted but art direction hasn't been locked yet), art
-   fields like `theme_summary`, `palette`, and `style_lock` will be null —
-   that's the expected state for a pure engineering GDD. Treat the user's
-   theme description or game concept as input for filling those null fields
-   on the **existing** project. Map their theme description to the game
-   that's already loaded. If `project.json` doesn't exist, create from
-   scratch (or seed from `/slot-step-00` output).
+   fields like `theme_summary`, `palette`, `style_lock`, and all symbol
+   `subject` fields will be null — that's the expected state for a pure
+   engineering GDD with no art direction.
+
+   **Critical: when the user provides a theme description, never silently
+   decide whether it belongs to the active project or a new game.** Engineering
+   GDDs commonly use an internal codename (e.g. "Tesla") that has no
+   resemblance to the visual theme the user will describe later (e.g.
+   "mythical Greek Zeus fishing"). That mismatch is normal and expected —
+   codenames aren't themes. When the active brief has null art fields and
+   the user describes a visual theme, surface the connection explicitly
+   before proceeding:
+
+   > "You have an active project — **Game [ID] ([game_name])** — with a GDD
+   > loaded but no visual theme set yet. I'm going to apply your theme to
+   > this project. Quick check: are you designing the art direction for
+   > game [ID], or did you want to start a completely separate project?"
+
+   Also check `brief.open_questions` for a codename flag (e.g. "GDD uses
+   '[name]' as codename — confirm this is the player-facing title"). If
+   present, ask the user for the real player-facing game title as part of
+   locking the brief — the codename must never appear in any creative-
+   facing output.
+
+   If `project.json` doesn't exist, create from scratch (or seed from
+   `/slot-step-00` output).
 
 ## Workflow
 
