@@ -133,7 +133,7 @@ archive the runner-ups under their versioned names (don't delete —
 they're decent fallbacks if the winner has a subtle issue you catch
 later).
 
-For a single-call run:
+For a single-call run, call `mcp__nb2node__nb2_upscale`:
 
 | API arg | Value |
 |---|---|
