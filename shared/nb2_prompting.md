@@ -93,7 +93,7 @@ lever in the playbook.
 …exact feature list + "one head, two eyes…" count assertions…
 
 [MOBILE CONSTRAINTS]
-…thumbnail readability, motif cap, contrast, centered, padding…
+…thumbnail readability, outer stroke visible at 64 px, 3–5 color regions max, motif cap, contrast, centered, padding…
 
 <quality tag line>
 ```
@@ -187,8 +187,11 @@ flat black around it.
 <subject pose, identity, mood — 2–3 sentences>.
 
 [MOBILE CONSTRAINTS]
-Recognizable as a tiny thumbnail on a phone. Maximum three to five decorative
-motifs on the plaque frame. Bold clean shapes, high contrast between subject,
+Recognizable as a tiny thumbnail on a phone. Bold clean outer outline, clearly
+visible at 64 px — this is the primary readability mechanism at small sizes.
+Maximum three to five decorative motifs on the plaque frame. No fine-scale
+textures, no hatching, no chainmail or mesh fills — bold macro shapes only.
+3–5 broad color regions across the symbol face. High contrast between subject,
 enamel field, and outer black frame. Centered composition, perfectly upright,
 small even margin from canvas edges. Flat solid black background, no
 gradients, no patterns.
@@ -377,8 +380,9 @@ reflects a premium adult aesthetic. Cartoon, cel-shaded, flat vector, and
 children's-game-adjacent styles are not appropriate for this product category
 and must not be used as a style_lock.
 
-- `bold painterly slot game art, slightly stylized` — dimensional brushwork, rich lighting; the workhorse style for most themes
-- `stylized semi-realistic slot game art` — photo-referenced forms with stylized rendering; strong for character and action themes
+- `stylized 2D illustrated slot game art, bold and graphic` — clean bold shapes, strong outlines, vivid saturated color; the dominant mobile-first style across the industry (IGT, High 5, Playtika); scales best to small screens; first choice for any theme where readability matters most
+- `bold painterly slot game art, slightly stylized` — dimensional brushwork, rich lighting; strong mid-tier choice when the theme calls for warmth and texture over flatness
+- `stylized semi-realistic slot game art` — photo-referenced forms with stylized rendering; strong for character and action themes that need anatomical believability
 - `dark fantasy oil painting game art` — dramatic chiaroscuro, gothic/mythological weight; suits underworld, dragon, demon themes
 - `baroque oil painting slot art, richly detailed` — opulent textures, gilded edges, warm drama; suits treasure, royalty, historical themes
 - `epic mythology slot art, oil-glazed highlights` — heroic scale, ancient-world grandeur; suits Greek, Norse, Egyptian, Aztec themes
@@ -440,6 +444,8 @@ prevent textured mat generation.
 - Intricate backgrounds behind reels.
 - Mixing LP types (cards + gems + fruit = broken set).
 - White, busy reel backgrounds.
+- **Mid-frequency textures** — fine scales, chainmail, fine hatching, basket-weave, dense filigree. These destroy readability at thumbnail size. Use bold macro-shapes and 3–5 broad color planes instead.
+- **Omitting the outer stroke.** Always include "bold clean outer outline" in the `[RENDER STYLE]` block. At reel-cell size the outline is the primary readability mechanism — not the interior detail.
 
 ### Anti-pattern gallery
 
@@ -448,6 +454,9 @@ prevent textured mat generation.
 - `intricately carved dragon letter A` → letter shape lost under decoration.
 - `detailed painterly cherry LP` → "detailed" forbidden on LP; cherry should
   be flat and small.
+- `scaly dragon with fine chainmail armor and filigree border` → all three
+  texture families (scales + chainmail + filigree) collapse to noise at 64 px.
+  Replace with bold silhouette shapes and 3–5 broad color planes.
 
 ---
 
