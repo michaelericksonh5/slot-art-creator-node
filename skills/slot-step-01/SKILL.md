@@ -82,7 +82,13 @@ Required fields (full schema in `GAME_BRIEF_TEMPLATE.md`):
   without explicit confirmation.
 - `mood` — 1–2 words
 - `theme_summary` — ≤ 2 sentences
-- `style_lock` — exactly one phrase from `shared/nb2_prompting.md` §9.4
+- `style_lock` — exactly one phrase from `shared/nb2_prompting.md` §9.4.
+  H5G games are adult casino entertainment — the style must reflect a
+  premium adult aesthetic (painterly, cinematic, semi-realistic, dark
+  fantasy, baroque, art deco, hyper-detailed illustration). Cartoon,
+  cel-shaded, flat vector, and children's-game-adjacent styles are never
+  appropriate and must not be offered or accepted, even if the user
+  suggests one.
 - `palette_leads` — `primary`, `accents`, `forbidden_on_lp` (named colors only, no hex)
 - `grid` — e.g. `"5x4"`
 - `tier_plan` — canonical baseline: 3 specials + 2 HP + 2 MP + 5–6 LP.

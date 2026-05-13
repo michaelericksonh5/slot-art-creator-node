@@ -372,12 +372,20 @@ mobile-optimized icon, clear silhouette at small size
 
 ## §9.4 Style library (pick one per game; lock it)
 
-- `bold cartoon game art style`
-- `stylized 2D mobile game illustration`
-- `flat vector game icon design` (LP-leaning)
-- `bold painterly slot game art, slightly stylized` (HP-leaning)
-- `cel-shaded game art, bold outlines`
-- `stylized semi-realistic slot game art`
+H5G slot games are adult casino entertainment. Every style in this library
+reflects a premium adult aesthetic. Cartoon, cel-shaded, flat vector, and
+children's-game-adjacent styles are not appropriate for this product category
+and must not be used as a style_lock.
+
+- `bold painterly slot game art, slightly stylized` — dimensional brushwork, rich lighting; the workhorse style for most themes
+- `stylized semi-realistic slot game art` — photo-referenced forms with stylized rendering; strong for character and action themes
+- `dark fantasy oil painting game art` — dramatic chiaroscuro, gothic/mythological weight; suits underworld, dragon, demon themes
+- `baroque oil painting slot art, richly detailed` — opulent textures, gilded edges, warm drama; suits treasure, royalty, historical themes
+- `epic mythology slot art, oil-glazed highlights` — heroic scale, ancient-world grandeur; suits Greek, Norse, Egyptian, Aztec themes
+- `hyper-detailed fantasy illustration, painterly` — intricate but bold, premium collectible feel; suits fantasy kingdoms, wizard, quest themes
+- `art deco illustrated slot game art, gilded` — geometric elegance, gold and jewel tones; suits 1920s, jazz, prohibition, luxury themes
+- `cinematic photorealistic slot game art` — high-fidelity rendering, dramatic lighting; suits modern themes (sports, cars, heist, celebrity)
+- `noir photorealistic game art, dramatic contrast` — deep shadows, high contrast, atmospheric; suits crime, detective, gangster themes
 
 Do **not** mix styles within a game. Keep the style phrase identical across
 every prompt in the set.
